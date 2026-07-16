@@ -8,17 +8,24 @@ import { getSetting } from '@/lib/settings'
 
 export async function getLLM(): Promise<OpenAI> {
   if (_client) return _client
-  let apiKey = await getSetting('secret.openai_api_key')
+
+  let apiKey = (process.env.OPENAI_API_KEY || '').replace(/^"|"$/g, '')
   let baseURL = 'https://api.openai.com/v1'
 
   if (!apiKey) {
-    apiKey = await getSetting('secret.emergent_llm_key', 'EMERGENT_LLM_KEY')
-    baseURL = process.env.EMERGENT_LLM_BASE_URL || 'https://integrations.emergentagent.com/llm'
+    apiKey = await getSetting('secret.openai_api_key')
   }
 
   if (!apiKey) {
-    apiKey = process.env.OPENAI_API_KEY || ''
-    if (apiKey) baseURL = 'https://api.openai.com/v1'
+    apiKey = (process.env.EMERGENT_LLM_KEY || '').replace(/^"|"$/g, '')
+    baseURL = (process.env.EMERGENT_LLM_BASE_URL || 'https://integrations.emergentagent.com/llm').replace(/^"|"$/g, '')
+  }
+
+  if (!apiKey) {
+    apiKey = await getSetting('secret.emergent_llm_key')
+    if (apiKey) {
+      baseURL = (process.env.EMERGENT_LLM_BASE_URL || 'https://integrations.emergentagent.com/llm').replace(/^"|"$/g, '')
+    }
   }
 
   if (!apiKey) throw new Error('OpenAI / Emergent API key is not configured')

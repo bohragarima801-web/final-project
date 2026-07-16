@@ -4,8 +4,14 @@ import { getSetting } from '@/lib/settings'
 
 export async function createClient() {
   const cookieStore = await cookies()
-  const sbUrl = await getSetting('secret.supabase_url', 'NEXT_PUBLIC_SUPABASE_URL')
-  const sbKey = await getSetting('secret.supabase_anon_key', 'NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  
+  let sbUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^"|"$/g, '')
+  let sbKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^"|"$/g, '')
+
+  if (!sbUrl || !sbKey) {
+    sbUrl = await getSetting('secret.supabase_url')
+    sbKey = await getSetting('secret.supabase_anon_key')
+  }
 
   return createServerClient(
     sbUrl,

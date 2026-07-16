@@ -6,8 +6,15 @@ import { getSetting } from '@/lib/settings'
 
 export async function getRazorpay(): Promise<Razorpay> {
   if (_instance) return _instance
-  const key_id = await getSetting('secret.razorpay_key_id', 'RAZORPAY_KEY_ID')
-  const key_secret = await getSetting('secret.razorpay_key_secret', 'RAZORPAY_KEY_SECRET')
+  
+  let key_id = (process.env.RAZORPAY_KEY_ID || '').replace(/^"|"$/g, '')
+  let key_secret = (process.env.RAZORPAY_KEY_SECRET || '').replace(/^"|"$/g, '')
+
+  if (!key_id || !key_secret) {
+    key_id = await getSetting('secret.razorpay_key_id')
+    key_secret = await getSetting('secret.razorpay_key_secret')
+  }
+
   if (!key_id || !key_secret) {
     throw new Error('RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are not configured')
   }
