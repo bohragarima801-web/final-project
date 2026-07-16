@@ -13,6 +13,15 @@ const nextConfig = {
     '*.preview.emergentcf.cloud',
     '*.cluster-12.preview.emergentcf.cloud',
   ],
+  async redirects() {
+    return [
+      {
+        source: '/store',
+        destination: '/products',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
