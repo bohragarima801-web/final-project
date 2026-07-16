@@ -1,0 +1,2 @@
+import { PublicPageShell } from '@/components/public-page-shell'
+export default function Page() { return <PublicPageShell badge="🕊️ About" title="About Devyajnam" subtitle="Sanatan Seva Online" description="Devyajnam bridges devotion with technology — bringing India's most sacred pujas, temples, prasad, and spiritual guidance to devotees worldwide. Founded with a mission to preserve and share the Sanatan tradition." /> }
