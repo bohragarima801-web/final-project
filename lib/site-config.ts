@@ -19,7 +19,7 @@ export const siteConfig = {
   url: getSafeUrl(),
   ogImage: '/og.jpg',
   keywords: [
-    'Devyajnam', 'Online Puja', 'VIP Puja', 'Temple Booking', 'Sanatan',
+    'दिव्ययज्ञम्', 'Devyajnam', 'Online Puja', 'VIP Puja', 'Temple Booking', 'Sanatan',
     'Prasad', 'Donation', 'Chadhawa', 'Astrology', 'Kundali',
   ],
   contact: {

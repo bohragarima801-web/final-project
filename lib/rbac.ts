@@ -1,4 +1,4 @@
-// Role-Based Access Control for Devyajnam
+// Role-Based Access Control for दिव्ययज्ञम्
 // 9 roles matching Sanatan Seva Online spec.
 
 export const ROLES = {

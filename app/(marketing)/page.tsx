@@ -84,10 +84,14 @@ export default async function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <Badge variant="secondary" className="mb-4">🕊️ Sanatan Seva • Online</Badge>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight">
-                <span className="text-om-gradient">{customSiteName}</span>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight">
+                <span className="inline-block bg-gradient-to-r from-[#FF512F] via-[#F09819] to-[#DD2476] bg-clip-text text-transparent drop-shadow-sm hover:scale-105 transition-transform duration-300">
+                  {customSiteName}
+                </span>
                 <br />
-                {customHeroTitle}
+                <span className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground block mt-3 leading-tight">
+                  Book <span className="bg-gradient-to-r from-[#f953c6] to-[#b91d73] bg-clip-text text-transparent">Sacred Pujas</span>, <span className="bg-gradient-to-r from-[#FF5F6D] to-[#FFC371] bg-clip-text text-transparent">Anywhere.</span>
+                </span>
               </h1>
               <p className="mt-5 text-lg text-muted-foreground max-w-xl leading-relaxed">
                 {customHeroSubtitle}
