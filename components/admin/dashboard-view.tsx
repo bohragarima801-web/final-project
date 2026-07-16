@@ -71,14 +71,14 @@ export function DashboardView({
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-              Devyajnam Control Center
+              दिव्ययज्ञम् Control Center
             </h1>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
               LIVE PRODUCTION DB
             </span>
           </div>
           <p className="text-muted-foreground mt-1 text-sm">
-            Overview and real-time operations of Sanatan Seva Devyajnam.
+            Overview and real-time operations of Sanatan Seva दिव्ययज्ञम्.
           </p>
         </div>
         <div className="flex items-center gap-2 self-start md:self-center">

@@ -72,7 +72,7 @@ export default async function HomePage() {
   const customHeroCta = settings.homepage_hero_cta || 'Book a Puja'
   const customHeroCtaLink = settings.homepage_hero_cta_link || '/pujas'
   const customHeroImage = settings.homepage_hero_image || getPlaceholderSvg(22, 'Puja Ceremony')
-  const customSiteName = settings.site_name || 'Devyajnam'
+  const customSiteName = settings.site_name || 'दिव्ययज्ञम्'
 
   return (
     <div>

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminToken, ADMIN_COOKIE_NAME, getAdminCookieOptions } from '@/lib/admin-session'
+import { initSecrets } from '@/lib/secrets'
 
 export async function POST(req: NextRequest) {
   try {
+    // Ensure secrets from admin are loaded into process.env
+    await initSecrets()
+
     const { email, password } = await req.json()
 
     // Default or configured admin credentials

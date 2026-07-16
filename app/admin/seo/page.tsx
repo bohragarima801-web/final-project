@@ -20,9 +20,9 @@ export default function SeoPage() {
       <Card>
         <CardHeader><CardTitle>Global SEO Defaults</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2"><Label>Default Title Template</Label><Input defaultValue="%s | Devyajnam" /></div>
+          <div className="space-y-2"><Label>Default Title Template</Label><Input defaultValue="%s | दिव्ययज्ञम्" /></div>
           <div className="space-y-2"><Label>Default Keywords</Label><Input defaultValue="Online Puja, Sanatan, Temple, Prasad" /></div>
-          <div className="space-y-2 md:col-span-2"><Label>Default Description</Label><Textarea rows={3} defaultValue="Devyajnam — Book sacred pujas online, offer chadhawa & donate." /></div>
+          <div className="space-y-2 md:col-span-2"><Label>Default Description</Label><Textarea rows={3} defaultValue="दिव्ययज्ञम् — Book sacred pujas online, offer chadhawa & donate." /></div>
           <div className="space-y-2"><Label>OG Image URL</Label><Input placeholder="https://…" /></div>
           <div className="space-y-2"><Label>Google Search Console Verification</Label><Input placeholder="google-site-verification=…" /></div>
           <div className="md:col-span-2"><Button>Save SEO Settings</Button></div>

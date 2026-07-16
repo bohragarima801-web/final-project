@@ -12,7 +12,7 @@ const getSafeUrl = () => {
 }
 
 export const siteConfig = {
-  name: 'Devyajnam',
+  name: 'दिव्ययज्ञम्',
   tagline: 'दिव्ययज्ञम् — Sanatan Seva Online',
   description:
     'Book online pujas, offer chadhawa, donate to temples, order abhimantrit prasad, and access astrology services — all in one sacred platform.',

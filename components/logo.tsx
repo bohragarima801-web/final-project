@@ -14,7 +14,7 @@ export function Logo({
   siteName?: string;
   tagline?: string;
 }) {
-  const displayTitle = siteName || 'Devyajnam'
+  const displayTitle = siteName || 'दिव्ययज्ञम्'
   const displayTagline = tagline || 'Sanatan Seva'
 
   return (

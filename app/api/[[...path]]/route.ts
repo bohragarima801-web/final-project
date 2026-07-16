@@ -24,7 +24,7 @@ async function handleRoute(request: NextRequest, ctx: { params: Promise<{ path?:
     if ((route === '/' || route === '/health') && method === 'GET') {
       return cors(NextResponse.json({
         ok: true,
-        service: 'Devyajnam API',
+        service: 'दिव्ययज्ञम् API',
         version: '1.0.0',
         timestamp: new Date().toISOString(),
       }))

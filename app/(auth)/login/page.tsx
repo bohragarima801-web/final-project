@@ -70,7 +70,7 @@ function CustomerLoginForm() {
     <Card className="w-full max-w-md shadow-lg border border-muted-foreground/10 bg-card/80 backdrop-blur-sm">
       <CardHeader className="text-center pb-4">
         <CardTitle className="text-2xl font-bold text-foreground">लॉगिन (Login)</CardTitle>
-        <CardDescription>Sign in to your Devyajnam customer portal</CardDescription>
+        <CardDescription>Sign in to your दिव्ययज्ञम् customer portal</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-4">

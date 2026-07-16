@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import prisma from '@/lib/prisma'
+import { initSecrets } from '@/lib/secrets'
 
 function cors(res: NextResponse) {
   res.headers.set('Access-Control-Allow-Origin', '*')
@@ -15,6 +16,9 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Ensure secrets from admin are loaded into process.env
+    await initSecrets()
+
     const body = await req.json()
     const {
       paymentId,

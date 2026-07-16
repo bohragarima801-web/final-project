@@ -40,7 +40,7 @@ export default function RegisterPage() {
             toast.success('Check your email to verify your account.')
             return
           } else {
-            toast.success('Welcome to Devyajnam!')
+            toast.success('Welcome to दिव्ययज्ञम्!')
             router.push('/dashboard')
             router.refresh()
             return
@@ -59,7 +59,7 @@ export default function RegisterPage() {
         }
         document.cookie = `customer_session=${encodeURIComponent(JSON.stringify(sessionData))}; path=/; max-age=86400; SameSite=Lax`
         
-        toast.success('🌼 स्वागतम! Welcome to Devyajnam (Development Account)!')
+        toast.success('🌼 स्वागतम! Welcome to दिव्ययज्ञम् (Development Account)!')
         router.push('/dashboard')
         router.refresh()
       } else {
@@ -74,7 +74,7 @@ export default function RegisterPage() {
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">स्वागतम</CardTitle>
-        <CardDescription>Create your Devyajnam account.</CardDescription>
+        <CardDescription>Create your दिव्ययज्ञम् account.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleRegister} className="space-y-4">

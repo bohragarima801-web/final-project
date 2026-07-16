@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getLLM, MODELS, SYSTEM_PROMPTS, type ChatMessage } from '@/lib/ai'
+import { initSecrets } from '@/lib/secrets'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -8,6 +9,9 @@ type Mode = 'pandit' | 'admin_content' | 'admin_blog' | 'admin_seo'
 
 export async function POST(req: NextRequest) {
   try {
+    // Ensure secrets from admin are loaded into process.env
+    await initSecrets()
+
     const body = await req.json()
     const {
       messages = [],

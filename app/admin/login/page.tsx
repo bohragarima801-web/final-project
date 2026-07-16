@@ -49,7 +49,7 @@ function LoginForm() {
           <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-3 shadow-lg">
             <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl">Devyajnam Admin</CardTitle>
+          <CardTitle className="text-2xl">दिव्ययज्ञम् Admin</CardTitle>
           <CardDescription>Sanatan Seva Control Center</CardDescription>
         </CardHeader>
         <CardContent>

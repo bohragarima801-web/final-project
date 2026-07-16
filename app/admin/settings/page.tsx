@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { Loader2, Globe, Sliders, Calendar, Trash, Plus, Video, Play, Image as ImageIcon } from 'lucide-react'
+import { Loader2, Globe, Sliders, Calendar, Trash, Plus, Video, Play, Image as ImageIcon, Key, Eye, EyeOff, ShieldAlert } from 'lucide-react'
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
@@ -17,7 +17,26 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'homepage' | 'social'>('general')
 
   // Brand identity
-  const [siteName, setSiteName] = useState('Devyajnam')
+  const [siteName, setSiteName] = useState('दिव्ययज्ञम्')
+
+  // Secrets and API Credentials
+  const [secretRazorpayKeyId, setSecretRazorpayKeyId] = useState('')
+  const [secretRazorpayKeySecret, setSecretRazorpayKeySecret] = useState('')
+  const [secretRazorpayWebhookSecret, setSecretRazorpayWebhookSecret] = useState('')
+  const [secretEmergentLlmKey, setSecretEmergentLlmKey] = useState('')
+  const [secretGeminiApiKey, setSecretGeminiApiKey] = useState('')
+  const [secretSupabaseUrl, setSecretSupabaseUrl] = useState('')
+  const [secretSupabaseAnonKey, setSecretSupabaseAnonKey] = useState('')
+  const [secretSupabaseServiceRoleKey, setSecretSupabaseServiceRoleKey] = useState('')
+  const [secretAdminEmail, setSecretAdminEmail] = useState('')
+  const [secretAdminPassword, setSecretAdminPassword] = useState('')
+  const [secretAdminJwtSecret, setSecretAdminJwtSecret] = useState('')
+
+  // Toggle visibility of secrets in UI
+  const [showRazorpaySecret, setShowRazorpaySecret] = useState(false)
+  const [showLlmSecret, setShowLlmSecret] = useState(false)
+  const [showSupabaseSecret, setShowSupabaseSecret] = useState(false)
+  const [showAdminSecret, setShowAdminSecret] = useState(false)
   const [tagline, setTagline] = useState('Sanatan Seva Online')
   const [logoUrl, setLogoUrl] = useState('')
 
@@ -60,7 +79,7 @@ export default function SettingsPage() {
         const data = await res.json()
         if (data.ok && data.config) {
           const cfg = data.config
-          setSiteName(cfg.site_name || 'Devyajnam')
+          setSiteName(cfg.site_name || 'दिव्ययज्ञम्')
           setTagline(cfg.site_tagline || 'Sanatan Seva Online')
           setLogoUrl(cfg.site_logo || '')
 
@@ -83,6 +102,19 @@ export default function SettingsPage() {
           setHeroImage(cfg.homepage_hero_image || '')
 
           setSocialPosts(cfg.social_posts || [])
+
+          // Secrets & Credentials
+          setSecretRazorpayKeyId(cfg.secret_razorpay_key_id || '')
+          setSecretRazorpayKeySecret(cfg.secret_razorpay_key_secret || '')
+          setSecretRazorpayWebhookSecret(cfg.secret_razorpay_webhook_secret || '')
+          setSecretEmergentLlmKey(cfg.secret_emergent_llm_key || '')
+          setSecretGeminiApiKey(cfg.secret_gemini_api_key || '')
+          setSecretSupabaseUrl(cfg.secret_supabase_url || '')
+          setSecretSupabaseAnonKey(cfg.secret_supabase_anon_key || '')
+          setSecretSupabaseServiceRoleKey(cfg.secret_supabase_service_role_key || '')
+          setSecretAdminEmail(cfg.secret_admin_email || '')
+          setSecretAdminPassword(cfg.secret_admin_password || '')
+          setSecretAdminJwtSecret(cfg.secret_admin_jwt_secret || '')
         }
       } catch (err) {
         console.error('Failed to load settings:', err)
@@ -147,6 +179,50 @@ export default function SettingsPage() {
     await handleSaveSetting('homepage_hero_cta', heroCta, 'CTA Button Label')
     await handleSaveSetting('homepage_hero_cta_link', heroCtaLink, 'CTA Link')
     await handleSaveSetting('homepage_hero_image', heroImage, 'Hero Background Image')
+  }
+
+  const handleSaveSecretSetting = async (key: string, value: any, label: string) => {
+    try {
+      setSavingKey(key)
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value, group: 'secrets' })
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success(`${label} updated successfully`)
+      } else {
+        toast.error(data.error || 'Failed to update secret')
+      }
+    } catch (err) {
+      toast.error('Network error saving secret')
+    } finally {
+      setSavingKey(null)
+    }
+  }
+
+  const saveRazorpaySecrets = async () => {
+    await handleSaveSecretSetting('secret_razorpay_key_id', secretRazorpayKeyId, 'Razorpay Key ID')
+    await handleSaveSecretSetting('secret_razorpay_key_secret', secretRazorpayKeySecret, 'Razorpay Key Secret')
+    await handleSaveSecretSetting('secret_razorpay_webhook_secret', secretRazorpayWebhookSecret, 'Razorpay Webhook Secret')
+  }
+
+  const saveLlmSecrets = async () => {
+    await handleSaveSecretSetting('secret_emergent_llm_key', secretEmergentLlmKey, 'Emergent LLM Key')
+    await handleSaveSecretSetting('secret_gemini_api_key', secretGeminiApiKey, 'Gemini API Key')
+  }
+
+  const saveSupabaseSecrets = async () => {
+    await handleSaveSecretSetting('secret_supabase_url', secretSupabaseUrl, 'Supabase URL')
+    await handleSaveSecretSetting('secret_supabase_anon_key', secretSupabaseAnonKey, 'Supabase Anon Key')
+    await handleSaveSecretSetting('secret_supabase_service_role_key', secretSupabaseServiceRoleKey, 'Supabase Service Role Key')
+  }
+
+  const saveAdminSecrets = async () => {
+    await handleSaveSecretSetting('secret_admin_email', secretAdminEmail, 'Admin Login Email')
+    await handleSaveSecretSetting('secret_admin_password', secretAdminPassword, 'Admin Login Password')
+    await handleSaveSecretSetting('secret_admin_jwt_secret', secretAdminJwtSecret, 'Admin JWT Secret Token')
   }
 
   const handleAddSocialPost = async () => {
@@ -223,6 +299,16 @@ export default function SettingsPage() {
           }`}
         >
           <Calendar className="h-3.5 w-3.5" /> Social Media Scheduler
+        </button>
+        <button
+          onClick={() => setActiveTab('secrets' as any)}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+            activeTab === ('secrets' as any)
+              ? 'bg-background text-foreground shadow-sm font-bold'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Key className="h-3.5 w-3.5" /> Site Secrets & APIs
         </button>
       </div>
 
@@ -542,6 +628,244 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {activeTab === ('secrets' as any) && (
+        <div className="space-y-6">
+          <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-amber-500">Security Warning & Auto-Applying Credentials</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Site secrets are stored securely in your private cloud database. Once saved, these configurations 
+                are automatically loaded and applied across the entire system — overriding server-side and client-side default credentials (including Razorpay checkout integration, AI chat, and Admin log-ins). Keep these values private and never share them.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Razorpay Configurations */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Key className="h-4 w-4 text-primary" /> Razorpay Payment Gateway
+                </CardTitle>
+                <CardDescription>Configure credentials to process online booking and product sales.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="rzp-key-id">Razorpay Key ID</Label>
+                  <Input 
+                    id="rzp-key-id" 
+                    value={secretRazorpayKeyId} 
+                    onChange={(e) => setSecretRazorpayKeyId(e.target.value)} 
+                    placeholder="rzp_live_..."
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="rzp-secret">Razorpay Key Secret</Label>
+                    <button 
+                      onClick={() => setShowRazorpaySecret(!showRazorpaySecret)}
+                      className="text-xs text-amber-500 font-medium hover:underline flex items-center gap-1"
+                    >
+                      {showRazorpaySecret ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showRazorpaySecret ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <Input 
+                    id="rzp-secret" 
+                    type={showRazorpaySecret ? "text" : "password"}
+                    value={secretRazorpayKeySecret} 
+                    onChange={(e) => setSecretRazorpayKeySecret(e.target.value)} 
+                    placeholder="••••••••••••••••"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="rzp-webhook">Razorpay Webhook Secret (Optional)</Label>
+                  <Input 
+                    id="rzp-webhook" 
+                    type={showRazorpaySecret ? "text" : "password"}
+                    value={secretRazorpayWebhookSecret} 
+                    onChange={(e) => setSecretRazorpayWebhookSecret(e.target.value)} 
+                    placeholder="••••••••••••••••"
+                  />
+                </div>
+                <Button 
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                  onClick={saveRazorpaySecrets}
+                  disabled={savingKey !== null}
+                >
+                  {savingKey && savingKey.startsWith('secret_razp') ? 'Saving…' : 'Save Razorpay Secrets'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* AI & LLM Systems */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Sliders className="h-4 w-4 text-primary" /> AI & LLM Services (Pandit AI)
+                </CardTitle>
+                <CardDescription>Setup artificial intelligence credentials for content writing and chat agents.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="emergent-key">Emergent LLM API Key (Universal Proxy)</Label>
+                    <button 
+                      onClick={() => setShowLlmSecret(!showLlmSecret)}
+                      className="text-xs text-amber-500 font-medium hover:underline flex items-center gap-1"
+                    >
+                      {showLlmSecret ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showLlmSecret ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <Input 
+                    id="emergent-key" 
+                    type={showLlmSecret ? "text" : "password"}
+                    value={secretEmergentLlmKey} 
+                    onChange={(e) => setSecretEmergentLlmKey(e.target.value)} 
+                    placeholder="api-key-..."
+                  />
+                  <p className="text-[10px] text-muted-foreground">Default system uses Emergent LLM Proxy to access Gemini / Claude endpoints safely.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="gemini-key">Direct Gemini API Key (Alternative)</Label>
+                  <Input 
+                    id="gemini-key" 
+                    type={showLlmSecret ? "text" : "password"}
+                    value={secretGeminiApiKey} 
+                    onChange={(e) => setSecretGeminiApiKey(e.target.value)} 
+                    placeholder="AIzaSy..."
+                  />
+                </div>
+                <Button 
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                  onClick={saveLlmSecrets}
+                  disabled={savingKey !== null}
+                >
+                  {savingKey && savingKey.startsWith('secret_emerg') ? 'Saving…' : 'Save LLM API Secrets'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Supabase Configurations */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-primary" /> Supabase Database & Auth
+                </CardTitle>
+                <CardDescription>Setup client-side and server-side connections to Supabase cloud service.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="sb-url">Supabase API URL</Label>
+                  <Input 
+                    id="sb-url" 
+                    value={secretSupabaseUrl} 
+                    onChange={(e) => setSecretSupabaseUrl(e.target.value)} 
+                    placeholder="https://your-project.supabase.co"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="sb-anon">Supabase Anonymous (Client) Key</Label>
+                    <button 
+                      onClick={() => setShowSupabaseSecret(!showSupabaseSecret)}
+                      className="text-xs text-amber-500 font-medium hover:underline flex items-center gap-1"
+                    >
+                      {showSupabaseSecret ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showSupabaseSecret ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <Input 
+                    id="sb-anon" 
+                    type={showSupabaseSecret ? "text" : "password"}
+                    value={secretSupabaseAnonKey} 
+                    onChange={(e) => setSecretSupabaseAnonKey(e.target.value)} 
+                    placeholder="eyJhbG..."
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sb-service">Supabase Service Role (Server) Key</Label>
+                  <Input 
+                    id="sb-service" 
+                    type={showSupabaseSecret ? "text" : "password"}
+                    value={secretSupabaseServiceRoleKey} 
+                    onChange={(e) => setSecretSupabaseServiceRoleKey(e.target.value)} 
+                    placeholder="secret-service-role-..."
+                  />
+                </div>
+                <Button 
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                  onClick={saveSupabaseSecrets}
+                  disabled={savingKey !== null}
+                >
+                  {savingKey && savingKey.startsWith('secret_supabase') ? 'Saving…' : 'Save Supabase Credentials'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Admin Portal Credentials */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-primary" /> Admin Security Settings
+                </CardTitle>
+                <CardDescription>Override credentials required to enter and manage this Control Center.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="admin-em">Admin Login Email</Label>
+                  <Input 
+                    id="admin-em" 
+                    type="email"
+                    value={secretAdminEmail} 
+                    onChange={(e) => setSecretAdminEmail(e.target.value)} 
+                    placeholder="admin@devyajnam.com"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="admin-pw">Admin Login Password</Label>
+                    <button 
+                      onClick={() => setShowAdminSecret(!showAdminSecret)}
+                      className="text-xs text-amber-500 font-medium hover:underline flex items-center gap-1"
+                    >
+                      {showAdminSecret ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {showAdminSecret ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <Input 
+                    id="admin-pw" 
+                    type={showAdminSecret ? "text" : "password"}
+                    value={secretAdminPassword} 
+                    onChange={(e) => setSecretAdminPassword(e.target.value)} 
+                    placeholder="••••••••••••••••"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="admin-jwt">Admin JWT Token Session Secret</Label>
+                  <Input 
+                    id="admin-jwt" 
+                    type={showAdminSecret ? "text" : "password"}
+                    value={secretAdminJwtSecret} 
+                    onChange={(e) => setSecretAdminJwtSecret(e.target.value)} 
+                    placeholder="session-jwt-encryption-secret"
+                  />
+                </div>
+                <Button 
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                  onClick={saveAdminSecrets}
+                  disabled={savingKey !== null}
+                >
+                  {savingKey && savingKey.startsWith('secret_admin') ? 'Saving…' : 'Save Admin Credentials'}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </div>
