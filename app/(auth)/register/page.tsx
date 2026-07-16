@@ -15,11 +15,29 @@ export default function RegisterPage() {
   const router = useRouter()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
+    
+    if (!fullName.trim()) {
+      toast.error('Name is required')
+      return
+    }
+    if (!phone.trim()) {
+      toast.error('WhatsApp number is required')
+      return
+    }
+    
+    // Strict email format regex check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      toast.error('Please enter a valid email address (e.g. devotee@example.com)')
+      return
+    }
+
     setLoading(true)
     try {
       const supabase = createClient()
@@ -27,7 +45,10 @@ export default function RegisterPage() {
         email,
         password,
         options: {
-          data: { full_name: fullName },
+          data: { 
+            full_name: fullName,
+            phone: phone,
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
@@ -57,8 +78,12 @@ export default function RegisterPage() {
             <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="phone">WhatsApp Number</Label>
+            <Input id="phone" type="tel" placeholder="e.g. +919999999999" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>

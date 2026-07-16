@@ -63,6 +63,18 @@ async function handleRoute(request: NextRequest, ctx: { params: Promise<{ path?:
       }
     }
 
+    // GET /newsletter (List subscribers for admin panel)
+    if (route === '/newsletter' && method === 'GET') {
+      try {
+        const subs = await prisma.newsletter.findMany({
+          orderBy: { subscribedAt: 'desc' },
+        })
+        return cors(NextResponse.json({ ok: true, data: subs }))
+      } catch (e: any) {
+        return cors(NextResponse.json({ ok: false, error: e?.message }, { status: 500 }))
+      }
+    }
+
     return cors(NextResponse.json({ ok: false, error: `Route ${route} not found` }, { status: 404 }))
   } catch (error: any) {
     console.error('API Error:', error)

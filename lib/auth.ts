@@ -36,6 +36,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           email: supaUser.email,
           emailVerified: !!supaUser.email_confirmed_at,
           fullName: (supaUser.user_metadata?.full_name as string) || null,
+          phone: (supaUser.user_metadata?.phone as string) || null,
           avatar: (supaUser.user_metadata?.avatar_url as string) || null,
           roleId: defaultRole?.id ?? null,
         },
