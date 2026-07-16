@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState('#FF8C21')
   const [accentColor, setAccentColor] = useState('#B12D2D')
   const [secondaryColor, setSecondaryColor] = useState('#F0B429')
+  const [bgColor, setBgColor] = useState('#fff9f2')
   const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [maintenanceMsg, setMaintenanceMsg] = useState('We’ll be back soon…')
 
@@ -62,6 +63,7 @@ export default function SettingsPage() {
         if (s['theme.primary']) setPrimaryColor(s['theme.primary'])
         if (s['theme.accent']) setAccentColor(s['theme.accent'])
         if (s['theme.secondary']) setSecondaryColor(s['theme.secondary'])
+        if (s['theme.background']) setBgColor(s['theme.background'])
         if (s['maintenance.enabled'] !== undefined) setMaintenanceMode(!!s['maintenance.enabled'])
         if (s['maintenance.message']) setMaintenanceMsg(s['maintenance.message'])
 
@@ -109,6 +111,7 @@ export default function SettingsPage() {
         'theme.primary': primaryColor,
         'theme.accent': accentColor,
         'theme.secondary': secondaryColor,
+        'theme.background': bgColor,
       }
     } else if (group === 'secrets') {
       payload = {
@@ -214,6 +217,47 @@ export default function SettingsPage() {
                 </div>
                 <Button onClick={() => handleSave('general')} disabled={saving} variant="outline">
                   Save Maintenance Config
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2 lg:col-span-1">
+              <CardHeader>
+                <CardTitle>Website Theme & Background</CardTitle>
+                <CardDescription>Customize branding colors and background color for the entire website.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Primary Color (Saffron)</Label>
+                  <div className="flex gap-2">
+                    <Input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer border rounded" />
+                    <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="#FF8C21" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Accent Color (Sindoor Red)</Label>
+                  <div className="flex gap-2">
+                    <Input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer border rounded" />
+                    <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} placeholder="#B12D2D" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secondary Color (Gold)</Label>
+                  <div className="flex gap-2">
+                    <Input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer border rounded" />
+                    <Input value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} placeholder="#F0B429" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Website Background Color</Label>
+                  <div className="flex gap-2">
+                    <Input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-12 h-10 p-1 cursor-pointer border rounded" />
+                    <Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} placeholder="#fff9f2" />
+                  </div>
+                </div>
+                <Button onClick={() => handleSave('theme')} disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Theme Colors
                 </Button>
               </CardContent>
             </Card>

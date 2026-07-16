@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
+import { prisma } from '@/lib/prisma'
 
 const FILE = path.join(process.cwd(), 'lib', 'data', 'customizations.json')
 
@@ -20,7 +21,22 @@ async function write(data: any) {
 
 export async function GET() {
   const data = await read()
-  return NextResponse.json({ ok: true, data }, {
+  
+  // Load theme settings from database to apply dynamically
+  const settings = await prisma.websiteSetting.findMany({
+    where: {
+      key: {
+        in: ['theme.primary', 'theme.accent', 'theme.secondary', 'theme.background'],
+      },
+    },
+  }).catch(() => [])
+
+  const theme: Record<string, string> = {}
+  settings.forEach((s) => {
+    theme[s.key] = s.value
+  })
+
+  return NextResponse.json({ ok: true, data: { ...data, theme } }, {
     headers: { 'Cache-Control': 'no-store' },
   })
 }
