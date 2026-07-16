@@ -15,15 +15,16 @@ export async function getSetting(key: string, envFallback?: string): Promise<str
     })
     if (setting && setting.value) {
       const val = typeof setting.value === 'string' ? setting.value : JSON.stringify(setting.value)
-      cache[key] = { value: val, expiry: now + CACHE_TTL_MS }
-      return val
+      const cleaned = val.replace(/^"|"$/g, '')
+      cache[key] = { value: cleaned, expiry: now + CACHE_TTL_MS }
+      return cleaned
     }
   } catch (e) {
     // DB unreachable or table doesn't exist
   }
 
   if (envFallback) {
-    const val = process.env[envFallback] || ''
+    const val = (process.env[envFallback] || '').replace(/^"|"$/g, '')
     cache[key] = { value: val, expiry: now + CACHE_TTL_MS }
     return val
   }
