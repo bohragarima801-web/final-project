@@ -24,6 +24,7 @@ export default function SettingsPage() {
   // Form states
   const [siteName, setSiteName] = useState('Devyajnam')
   const [siteTagline, setSiteTagline] = useState('Sanatan Seva Online')
+  const [logoUrl, setLogoUrl] = useState('')
   const [email, setEmail] = useState('seva@devyajnam.com')
   const [phone, setPhone] = useState('+91-99999-99999')
   const [whatsapp, setWhatsapp] = useState('+91-99999-99999')
@@ -43,6 +44,33 @@ export default function SettingsPage() {
   const [razorpayKeyId, setRazorpayKeyId] = useState('')
   const [razorpayKeySecret, setRazorpayKeySecret] = useState('')
 
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setLogoUrl(data.url)
+        toast.success('Logo uploaded!')
+      } else {
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Network error uploading logo')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
   const loadSettings = async () => {
     try {
       setLoading(true)
@@ -56,6 +84,7 @@ export default function SettingsPage() {
         // Populate fields
         if (s['site.name']) setSiteName(s['site.name'])
         if (s['site.tagline']) setSiteTagline(s['site.tagline'])
+        if (s['site.logo']) setLogoUrl(s['site.logo'])
         if (s['contact.email']) setEmail(s['contact.email'])
         if (s['contact.phone']) setPhone(s['contact.phone'])
         if (s['contact.whatsapp']) setWhatsapp(s['contact.whatsapp'])
@@ -96,6 +125,7 @@ export default function SettingsPage() {
       payload = {
         'site.name': siteName,
         'site.tagline': siteTagline,
+        'site.logo': logoUrl,
         'maintenance.enabled': maintenanceMode,
         'maintenance.message': maintenanceMsg,
       }
@@ -193,6 +223,35 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Tagline</Label>
                   <Input value={siteTagline} onChange={(e) => setSiteTagline(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Website Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full border bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
+                      ) : (
+                        <span className="text-xl font-bold">ॐ</span>
+                      )}
+                    </div>
+                    <div className="flex-grow flex gap-2">
+                      <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="Paste Logo Image URL or upload" />
+                      <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-3 py-2 text-sm font-medium shrink-0">
+                        {uploadingLogo ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Upload'
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={uploadingLogo}
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <Button onClick={() => handleSave('general')} disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

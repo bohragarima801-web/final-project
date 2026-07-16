@@ -22,11 +22,11 @@ async function write(data: any) {
 export async function GET() {
   const data = await read()
   
-  // Load theme settings from database to apply dynamically
+  // Load theme & identity settings from database to apply dynamically
   const settings = await prisma.websiteSetting.findMany({
     where: {
       key: {
-        in: ['theme.primary', 'theme.accent', 'theme.secondary', 'theme.background'],
+        in: ['theme.primary', 'theme.accent', 'theme.secondary', 'theme.background', 'site.logo', 'site.name'],
       },
     },
   }).catch(() => [])
