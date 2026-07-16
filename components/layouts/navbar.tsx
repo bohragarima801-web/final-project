@@ -74,9 +74,16 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
           <ThemeToggle />
 
           {user ? (
-            <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
-              <Link href="/dashboard"><User className="h-4 w-4 mr-1" /> {user.fullName?.split(' ')[0] || 'Account'}</Link>
-            </Button>
+            <div className="hidden sm:flex items-center gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link href="/dashboard"><User className="h-4 w-4 mr-1" /> {user.fullName?.split(' ')[0] || 'Account'}</Link>
+              </Button>
+              <form action="/auth/signout" method="post">
+                <Button type="submit" size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
+                  Logout
+                </Button>
+              </form>
+            </div>
           ) : (
             <Button asChild size="sm" className="hidden sm:inline-flex"><Link href="/login">Login</Link></Button>
           )}
@@ -97,7 +104,14 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
           <Link href="/ask-a-pandit" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary/5">Ask a Pandit ✨</Link>
           <div className="border-t border-border/60 my-2" />
           {user ? (
-            <Link href="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-primary">My Dashboard</Link>
+            <>
+              <Link href="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-primary">My Dashboard</Link>
+              <form action="/auth/signout" method="post" className="w-full">
+                <button type="submit" onClick={() => setOpen(false)} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-destructive hover:bg-destructive/5">
+                  Sign Out
+                </button>
+              </form>
+            </>
           ) : (
             <>
               <Link href="/login" className="px-3 py-2 rounded-md text-sm font-medium text-primary">Login</Link>
