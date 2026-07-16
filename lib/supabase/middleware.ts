@@ -8,61 +8,70 @@ export async function updateSession(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
 
-  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^"|"$/g, '')
-  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^"|"$/g, '')
+  try {
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^"|"$/g, '')
+    const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^"|"$/g, '')
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
+    if (!supabaseUrl || !supabaseAnonKey) {
+      // Safely skip if env vars are not set yet
+      return supabaseResponse
     }
-  )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            )
+            supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
 
-  const pathname = request.nextUrl.pathname
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  // Protected route groups
-  const isProtected =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/orders') ||
-    pathname.startsWith('/bookings') ||
-    pathname.startsWith('/profile')
-  // NOTE: /admin is intentionally NOT force-redirected via middleware so the panel
-  // can be previewed without a session. Access control is enforced in `app/admin/layout.tsx`.
+    const pathname = request.nextUrl.pathname
 
-  const isAuthPage =
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/register') ||
-    pathname.startsWith('/forgot-password')
+    // Protected route groups
+    const isProtected =
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/orders') ||
+      pathname.startsWith('/bookings') ||
+      pathname.startsWith('/profile')
+    // NOTE: /admin is intentionally NOT force-redirected via middleware so the panel
+    // can be previewed without a session. Access control is enforced in `app/admin/layout.tsx`.
 
-  if (!user && isProtected) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
-  }
+    const isAuthPage =
+      pathname.startsWith('/login') ||
+      pathname.startsWith('/register') ||
+      pathname.startsWith('/forgot-password')
 
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    if (!user && isProtected) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
+
+    if (user && isAuthPage) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+  } catch (e) {
+    console.error('[Middleware] Supabase session update error:', e)
   }
 
   return supabaseResponse
