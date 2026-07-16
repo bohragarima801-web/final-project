@@ -27,6 +27,11 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
+      const adminEmail = 'admin@devyajnam.com'
+      if (email.trim().toLowerCase() === adminEmail.toLowerCase()) {
+        throw new Error('Admin login is not allowed here. Please use the Admin Portal.')
+      }
+
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
@@ -42,6 +47,11 @@ export default function LoginPage() {
 
   async function handleMagicLink() {
     if (!email) { toast.error('Enter your email first'); return }
+    const adminEmail = 'admin@devyajnam.com'
+    if (email.trim().toLowerCase() === adminEmail.toLowerCase()) {
+      toast.error('Admin accounts must use the Admin Portal to log in.')
+      return
+    }
     setMagicLoading(true)
     try {
       const supabase = createClient()
