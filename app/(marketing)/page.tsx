@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/prisma'
 import { ensureDefaultCategoriesAndTemples } from '@/lib/data-defaults'
 import { DEFAULT_PLACEHOLDER_IMAGE } from '@/lib/utils'
+import { getWebsiteSettings } from '@/lib/settings'
 import {
   Flame, Sparkles, ShoppingBag, Star, ArrowRight,
   MapPin, Calendar, ShieldCheck, Video, Play,
@@ -37,6 +38,9 @@ const testimonials = [
 export default async function HomePage() {
   await ensureDefaultCategoriesAndTemples()
 
+  // Load website configurations
+  const settings = await getWebsiteSettings()
+
   // Fetch featured published pujas
   const dbPujas = await prisma.puja.findMany({
     where: { status: 'PUBLISHED', isFeatured: true },
@@ -54,6 +58,22 @@ export default async function HomePage() {
     vip: p.isVip
   })) : upcomingPujas
 
+  // Fetch active products for home page display
+  const products = await prisma.product.findMany({
+    where: { status: 'ACTIVE' },
+    include: { category: true },
+    take: 4,
+    orderBy: { createdAt: 'desc' }
+  })
+
+  // Customizable Hero Values with beautiful defaults
+  const customHeroTitle = settings.homepage_hero_title || 'Book Sacred Pujas, Anywhere.'
+  const customHeroSubtitle = settings.homepage_hero_subtitle || 'Live-streamed pujas from India’s most powerful temples — performed by certified pandits with your name & gotra. Prasad delivered to your doorstep.'
+  const customHeroCta = settings.homepage_hero_cta || 'Book a Puja'
+  const customHeroCtaLink = settings.homepage_hero_cta_link || '/pujas'
+  const customHeroImage = settings.homepage_hero_image || getPlaceholderSvg(22, 'Puja Ceremony')
+  const customSiteName = settings.site_name || 'Devyajnam'
+
   return (
     <div>
       {/* HERO */}
@@ -65,16 +85,16 @@ export default async function HomePage() {
             <div>
               <Badge variant="secondary" className="mb-4">🕊️ Sanatan Seva • Online</Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight">
-                <span className="text-om-gradient">दिव्ययज्ञम्</span>
+                <span className="text-om-gradient">{customSiteName}</span>
                 <br />
-                Book Sacred Pujas, Anywhere.
+                {customHeroTitle}
               </h1>
-              <p className="mt-5 text-lg text-muted-foreground max-w-xl">
-                Live-streamed pujas from India’s most powerful temples — performed by certified pandits with your name & gotra. Prasad delivered to your doorstep.
+              <p className="mt-5 text-lg text-muted-foreground max-w-xl leading-relaxed">
+                {customHeroSubtitle}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button size="lg" asChild>
-                  <Link href="/pujas">Book a Puja <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Button size="lg" asChild className="bg-primary hover:bg-primary/95 text-white">
+                  <Link href={customHeroCtaLink}>{customHeroCta} <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
                   <Link href="/ask-a-pandit"><Sparkles className="mr-2 h-4 w-4" /> Ask a Pandit ✨</Link>
@@ -89,7 +109,7 @@ export default async function HomePage() {
             <div className="relative">
               <div className="aspect-[4/5] rounded-3xl overflow-hidden diya-glow bg-gradient-to-br from-primary/30 to-accent/30">
                 <img
-                  src={getPlaceholderSvg(22, 'Puja Ceremony')}
+                  src={customHeroImage}
                   alt="Puja ceremony"
                   className="h-full w-full object-cover"
                 />
@@ -166,7 +186,7 @@ export default async function HomePage() {
                 <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/40">
                   <span className="text-lg font-bold text-primary">₹{parseFloat(p.price?.toString() || '0').toLocaleString('en-IN')}</span>
                   <Button size="sm" asChild>
-                    <Link href={`/bookings/new?pujaId=${p.id}`}>Book</Link>
+                    <Link href={`/bookings/new?pujaId=${p.id}`}>Book Now</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -174,6 +194,123 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* SPIRITUAL PRODUCTS SECTION */}
+      <section className="container py-16 bg-muted/30 border-y">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <Badge variant="outline" className="mb-3 bg-amber-50 border-amber-200 text-amber-800">🛍️ Divine Store</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold">Spiritual Store Products</h2>
+            <p className="mt-2 text-muted-foreground">Authentic, energised accessories and samagri for your spiritual rituals.</p>
+          </div>
+          <Button variant="outline" asChild><Link href="/products">Browse Store <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+        </div>
+
+        {products.length === 0 ? (
+          <Card className="border-dashed bg-background p-8 text-center text-muted-foreground">
+            No products available at the moment. Please update published items in the Admin Panel.
+          </Card>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => {
+              const hasSale = !!product.salePrice && parseFloat(product.salePrice.toString()) < parseFloat(product.price.toString())
+              const activePrice = hasSale ? product.salePrice : product.price
+
+              return (
+                <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-all flex flex-col justify-between bg-background border border-border/50">
+                  <div className="relative aspect-square overflow-hidden bg-muted">
+                    <img 
+                      src={product.coverImage || DEFAULT_PLACEHOLDER_IMAGE} 
+                      alt={product.name} 
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105" 
+                    />
+                    <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
+                      <Badge className="bg-black/80 text-white border-none text-[9px] font-bold uppercase tracking-wider">
+                        {product.category?.name || 'Spiritual'}
+                      </Badge>
+                      {product.isAbhimantrit && (
+                        <Badge className="bg-purple-600 border-none text-white font-extrabold text-[9px]">
+                          Energised
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-semibold line-clamp-1 group-hover:text-amber-600 transition-colors">{product.name}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{product.shortDescription || 'Authentic divine accessory.'}</p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/40">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-lg font-bold text-foreground">₹{parseFloat(activePrice?.toString() || '0').toLocaleString('en-IN')}</span>
+                        {hasSale && (
+                          <span className="text-xs text-muted-foreground line-through">₹{parseFloat(product.price.toString()).toLocaleString('en-IN')}</span>
+                        )}
+                      </div>
+                      <Button size="sm" asChild className="bg-amber-500 hover:bg-amber-600 text-black font-semibold h-8 text-xs">
+                        <Link href={`/cart/add?productId=${product.id}`}>Buy Now</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* DEVOTIONAL VIDEO CENTER & SCHEDULED BROADCASTS */}
+      {settings.social_posts && settings.social_posts.length > 0 && (
+        <section className="container py-16 bg-amber-500/[0.02]">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <Badge variant="outline" className="mb-3 bg-amber-100 text-amber-800 border-amber-200">📹 Devotional Media</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold">Scheduled Videos & Live Streams</h2>
+              <p className="mt-2 text-muted-foreground">Stay connected with direct access to divine video feeds and scheduled spiritual broadcasts.</p>
+            </div>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {settings.social_posts.map((post: any, i: number) => (
+              <Card key={post.id || i} className="overflow-hidden group hover:shadow-lg transition-all flex flex-col justify-between border-amber-200/50 bg-background">
+                <div className="relative aspect-[16/9] bg-muted overflow-hidden flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/30 transition-colors z-10">
+                    <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                      <Play className="h-6 w-6 text-white fill-white ml-0.5" />
+                    </div>
+                  </div>
+                  <img 
+                    src={`https://picsum.photos/seed/video-${post.id || i}/600/340`} 
+                    alt={post.title} 
+                    className="h-full w-full object-cover" 
+                  />
+                  <div className="absolute top-3 left-3 z-20 flex gap-1.5">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
+                      post.status === 'LIVE' ? 'bg-red-600 animate-pulse' : 'bg-blue-600'
+                    }`}>
+                      {post.status === 'LIVE' ? '● LIVE' : 'Scheduled'}
+                    </span>
+                    <span className="bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur">
+                      {post.platform}
+                    </span>
+                  </div>
+                </div>
+                <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">{post.title}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Broadcast: {post.scheduledAt}</p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground truncate max-w-[150px]">{post.url}</span>
+                    <Button size="sm" variant="outline" className="h-8 text-xs font-bold" asChild>
+                      <a href={post.url} target="_blank" rel="noopener noreferrer">View Stream</a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* LIVE EVENTS BANNER */}
       <section className="container py-10">
@@ -183,7 +320,7 @@ export default async function HomePage() {
               <Badge className="bg-red-500 text-white mb-3"><Play className="h-3 w-3 mr-1 fill-white" /> LIVE</Badge>
               <h2 className="text-3xl font-bold">Watch Live Aarti & Events</h2>
               <p className="mt-2 text-muted-foreground">Experience daily aarti from the most sacred temples — anytime, anywhere.</p>
-              <Button className="mt-5" asChild><Link href="/events">Watch Now</Link></Button>
+              <Button className="mt-5 text-white" asChild><Link href="/events">Watch Now</Link></Button>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {[1,2,3,4,5,6].map((i) => (
@@ -229,7 +366,7 @@ export default async function HomePage() {
       <section className="container pb-20">
         <div className="rounded-3xl om-gradient p-10 md:p-14 text-center text-white">
           <h2 className="text-3xl md:text-4xl font-bold">Begin your sacred journey today</h2>
-          <p className="mt-3 opacity-90 max-w-xl mx-auto">Join 100,000+ devotees who trust Devyajnam for their spiritual needs.</p>
+          <p className="mt-3 opacity-90 max-w-xl mx-auto">Join 100,000+ devotees who trust {customSiteName} for their spiritual needs.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button size="lg" variant="secondary" asChild><Link href="/register">Create Free Account</Link></Button>
             <Button size="lg" variant="outline" className="bg-transparent border-white/40 text-white hover:bg-white/10" asChild>

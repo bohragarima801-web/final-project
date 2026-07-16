@@ -14,7 +14,7 @@ export default async function ProductsPage() {
 
   // Fetch only published products
   const products = await prisma.product.findMany({
-    where: { status: 'PUBLISHED' },
+    where: { status: 'ACTIVE' },
     include: { category: true },
     orderBy: { createdAt: 'desc' }
   })

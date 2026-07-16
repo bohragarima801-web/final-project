@@ -29,14 +29,24 @@ const toolsMenu = [
   { title: 'Mala Counter', href: '/tools#mala', desc: 'Digital jaap tracker' },
 ]
 
-export function Navbar({ user }: { user?: { fullName?: string | null; email: string } | null }) {
+export function Navbar({ 
+  user,
+  logoUrl,
+  siteName,
+  tagline
+}: { 
+  user?: { fullName?: string | null; email: string } | null;
+  logoUrl?: string;
+  siteName?: string;
+  tagline?: string;
+}) {
   const [open, setOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between gap-4">
-        <Logo />
+        <Logo logoUrl={logoUrl} siteName={siteName} tagline={tagline} />
 
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (

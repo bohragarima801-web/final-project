@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
-import { ShoppingBag, Package, Edit, Trash2, Search, Star } from 'lucide-react'
+import { ShoppingBag, Package, Edit, Trash2, Search, Star, Upload, FileDown, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 
@@ -15,6 +15,11 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('All')
+
+  // CSV upload states
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [showCsvBox, setShowCsvBox] = useState(false)
 
   const loadProducts = async () => {
     try {
@@ -71,18 +76,149 @@ export default function ProductsPage() {
   })
 
   const totalCount = products.length
-  const activeCount = products.filter(p => p.status === 'PUBLISHED').length
+  const activeCount = products.filter(p => p.status === 'ACTIVE' || p.status === 'PUBLISHED').length
   const abhimantritCount = products.filter(p => p.isAbhimantrit).length
   const featuredCount = products.filter(p => p.isFeatured).length
 
+  const handleCsvUpload = async () => {
+    if (!csvFile) {
+      toast.error('Please select a CSV file first')
+      return
+    }
+
+    try {
+      setUploading(true)
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const text = e.target?.result as string
+        const res = await fetch('/api/admin/products/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ csvText: text })
+        })
+        const json = await res.json()
+        if (json.ok) {
+          toast.success(json.message || 'Import complete!')
+          setCsvFile(null)
+          setShowCsvBox(false)
+          loadProducts()
+        } else {
+          toast.error(json.error || 'Failed to import CSV')
+        }
+      }
+      reader.readAsText(csvFile)
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to read file')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const triggerDownloadTemplate = () => {
+    const headers = 'name,category,price,saleprice,sku,shortdescription,description,isabhimantrit,isfeatured,coverimage,weight,status\n'
+    const sample = 'Premium Brass Diya,Spiritual,1250,999,BD-01,Handcrafted premium brass diya,Made with 100% pure heavy brass for daily pooja ceremonies,true,true,https://picsum.photos/seed/diya/400/300,0.45,ACTIVE\nPure Gangajal,Pooja Samagri,150,,GJ-01,Holy Gangajal from Gangotri,Untouched and authentic pure water sourced directly from Gangotri Himalayas,false,false,https://picsum.photos/seed/gangajal/400/300,0.5,ACTIVE\n'
+    const blob = new Blob([headers + sample], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.setAttribute('href', url)
+    a.setAttribute('download', 'products_template.csv')
+    a.click()
+  }
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Products"
-        description="Prasad, rudraksha, idols, puja samagri & spiritual books."
-        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Products' }]}
-        action={{ label: 'Add Product', href: '/admin/products/new' }}
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <PageHeader
+          title="Products"
+          description="Prasad, rudraksha, idols, puja samagri & spiritual books."
+          breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Products' }]}
+        />
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+            onClick={() => setShowCsvBox(!showCsvBox)}
+          >
+            <Upload className="h-4 w-4" /> Bulk CSV Import
+          </Button>
+          <Link href="/admin/products/new">
+            <Button className="bg-primary hover:bg-primary/95 text-white">Add Product</Button>
+          </Link>
+        </div>
+      </div>
+
+      {showCsvBox && (
+        <Card className="border-amber-200 bg-amber-50/20">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-bold text-sm text-amber-950">Bulk CSV Product Update</h4>
+                <p className="text-xs text-amber-800 mt-1">
+                  Upload a CSV file containing your product catalog. Existing products matching by SKU, Name, or Slug will be updated in place, while new ones and missing categories will be created automatically in your category list!
+                </p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 pt-2">
+              <div className="border border-dashed border-muted-foreground/30 rounded-lg p-6 bg-background flex flex-col items-center justify-center text-center gap-2">
+                <Upload className="h-8 w-8 text-muted-foreground/80" />
+                <span className="text-xs text-muted-foreground font-medium">Drag and drop your file here, or click to browse</span>
+                <input 
+                  type="file" 
+                  accept=".csv"
+                  className="hidden" 
+                  id="csv-file-input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) setCsvFile(file)
+                  }}
+                />
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className="mt-1"
+                  onClick={() => document.getElementById('csv-file-input')?.click()}
+                >
+                  Choose File
+                </Button>
+                {csvFile && (
+                  <div className="text-xs font-semibold text-emerald-600 mt-2 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
+                    Selected: {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-bold text-foreground">Supported CSV Columns:</p>
+                  <code className="text-[10px] block bg-background p-2 rounded border font-mono whitespace-nowrap overflow-x-auto text-muted-foreground">
+                    name, category, price, saleprice, sku, shortdescription, description, isabhimantrit, isfeatured, coverimage, weight, status
+                  </code>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex items-center gap-1.5"
+                    onClick={triggerDownloadTemplate}
+                  >
+                    <FileDown className="h-3.5 w-3.5" /> Template
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                    disabled={!csvFile || uploading}
+                    onClick={handleCsvUpload}
+                  >
+                    {uploading ? 'Importing...' : 'Upload & Import Now'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard title="Total Products" value={String(totalCount)} icon={ShoppingBag} />
