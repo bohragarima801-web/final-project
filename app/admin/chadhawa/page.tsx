@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
 import { DataTableShell } from '@/components/admin/data-table-shell'
@@ -14,7 +15,11 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { Loader2, Plus, Trash2, Sparkles, Upload, Video, Image as ImageIcon } from 'lucide-react'
 
-export default function ChadhawaPage() {
+function ChadhawaManager() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') || 'all'
+
   const [offerings, setOfferings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -31,6 +36,7 @@ export default function ChadhawaPage() {
 
   async function loadOfferings() {
     try {
+      setLoading(true)
       const res = await fetch('/api/admin/chadhawa')
       const data = await res.json()
       if (data.ok) {
@@ -131,6 +137,40 @@ export default function ChadhawaPage() {
     }
   }
 
+  // Filter offerings based on active tab keyword matches
+  const filteredOfferings = offerings.filter((o) => {
+    const text = `${o.name} ${o.description || ''}`.toLowerCase()
+    if (activeTab === 'flowers') {
+      return text.includes('flower') || text.includes('garland') || text.includes('पुष्प') || text.includes('फूल')
+    }
+    if (activeTab === 'prasad') {
+      return text.includes('prasad') || text.includes('sweet') || text.includes('प्रसाद')
+    }
+    if (activeTab === 'bhog') {
+      return text.includes('bhog') || text.includes('भोग') || text.includes('food')
+    }
+    if (activeTab === 'deep-daan') {
+      return text.includes('deep') || text.includes('diya') || text.includes('lamp') || text.includes('दीपक') || text.includes('तेल')
+    }
+    if (activeTab === 'gau-seva') {
+      return text.includes('cow') || text.includes('gau') || text.includes('गौ') || text.includes('चारा') || text.includes('feed')
+    }
+    return true
+  })
+
+  const tabs = [
+    { label: 'All Offerings', value: 'all' },
+    { label: 'Flowers (फूल चढ़ावा)', value: 'flowers' },
+    { label: 'Prasad (प्रसाद सेवा)', value: 'prasad' },
+    { label: 'Bhog (भोग अर्पण)', value: 'bhog' },
+    { label: 'Deep Daan (दीप दान)', value: 'deep-daan' },
+    { label: 'Gau Seva (गौ सेवा)', value: 'gau-seva' }
+  ]
+
+  const changeTab = (val: string) => {
+    router.push(`/admin/chadhawa?tab=${val}`)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -148,6 +188,19 @@ export default function ChadhawaPage() {
         <KpiCard title="Total Offerings" value={offerings.length.toString()} icon={Sparkles} />
         <KpiCard title="Active Sevas" value={offerings.filter(o => o.isActive).length.toString()} iconClass="text-green-600" />
         <KpiCard title="Inactive Sevas" value={offerings.filter(o => !o.isActive).length.toString()} iconClass="text-muted" />
+      </div>
+
+      {/* Tabs Menu */}
+      <div className="flex gap-2 border-b pb-1 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => changeTab(t.value)}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all shrink-0 ${activeTab === t.value ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {showAddForm && (
@@ -252,7 +305,7 @@ export default function ChadhawaPage() {
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
         </div>
       ) : (
         <DataTableShell
@@ -310,9 +363,21 @@ export default function ChadhawaPage() {
               ),
             },
           ]}
-          rows={offerings}
+          rows={filteredOfferings}
         />
       )}
     </div>
+  )
+}
+
+export default function ChadhawaPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    }>
+      <ChadhawaManager />
+    </Suspense>
   )
 }
