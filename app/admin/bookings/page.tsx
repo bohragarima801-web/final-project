@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
 import { DataTableShell } from '@/components/admin/data-table-shell'
@@ -9,7 +10,11 @@ import { Button } from '@/components/ui/button'
 import { Ticket, Clock, CheckCircle2, XCircle, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function BookingsPage() {
+function BookingsManager() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') || 'all'
+
   const [bookings, setBookings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -50,6 +55,30 @@ export default function BookingsPage() {
     }
   }
 
+  // Filter bookings based on active tab query
+  const filteredBookings = bookings.filter((b) => {
+    const status = (b.status || '').toUpperCase()
+    if (activeTab === 'pending') return status === 'PENDING'
+    if (activeTab === 'confirmed') return status === 'CONFIRMED' || status === 'CONFIRM'
+    if (activeTab === 'completed') return status === 'COMPLETED'
+    if (activeTab === 'cancelled') return status === 'CANCELLED'
+    if (activeTab === 'refunds') return b.paymentStatus === 'REFUNDED'
+    return true
+  })
+
+  const tabs = [
+    { label: 'All Bookings', value: 'all' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Confirmed', value: 'confirmed' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Cancelled', value: 'cancelled' },
+    { label: 'Refund Requests', value: 'refunds' }
+  ]
+
+  const changeTab = (val: string) => {
+    router.push(`/admin/bookings?tab=${val}`)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -60,10 +89,23 @@ export default function BookingsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard title="Total" value={bookings.length.toString()} icon={Ticket} />
-        <KpiCard title="Pending" value={bookings.filter(b => b.status === 'PENDING').length.toString()} icon={Clock} iconClass="text-orange-500" />
-        <KpiCard title="Confirmed" value={bookings.filter(b => b.status === 'CONFIRMED').length.toString()} icon={CheckCircle2} iconClass="text-blue-500" />
-        <KpiCard title="Completed" value={bookings.filter(b => b.status === 'COMPLETED').length.toString()} icon={CheckCircle2} iconClass="text-green-600" />
-        <KpiCard title="Cancelled" value={bookings.filter(b => b.status === 'CANCELLED').length.toString()} icon={XCircle} iconClass="text-red-500" />
+        <KpiCard title="Pending" value={bookings.filter(b => b.status?.toUpperCase() === 'PENDING').length.toString()} icon={Clock} iconClass="text-orange-500" />
+        <KpiCard title="Confirmed" value={bookings.filter(b => b.status?.toUpperCase() === 'CONFIRMED').length.toString()} icon={CheckCircle2} iconClass="text-blue-500" />
+        <KpiCard title="Completed" value={bookings.filter(b => b.status?.toUpperCase() === 'COMPLETED').length.toString()} icon={CheckCircle2} iconClass="text-green-600" />
+        <KpiCard title="Cancelled" value={bookings.filter(b => b.status?.toUpperCase() === 'CANCELLED').length.toString()} icon={XCircle} iconClass="text-red-500" />
+      </div>
+
+      {/* Tabs Menu */}
+      <div className="flex gap-2 border-b pb-1 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => changeTab(t.value)}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all shrink-0 ${activeTab === t.value ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -79,7 +121,7 @@ export default function BookingsPage() {
               label: 'Devotee / Customer',
               render: (r) => (
                 <div className="flex flex-col text-xs">
-                  <span className="font-bold">{r.user?.fullName || 'Guest User'}</span>
+                  <span className="font-bold">{r.user?.fullName || r.user?.name || 'Guest User'}</span>
                   <span className="text-[10px] text-muted-foreground">{r.user?.email || 'No email'}</span>
                   {r.gotra && <span className="text-[10px] text-orange-600 font-semibold">Gotra: {r.gotra}</span>}
                 </div>
@@ -124,9 +166,22 @@ export default function BookingsPage() {
               )
             }
           ]}
-          rows={bookings}
+          rows={filteredBookings}
+          searchPlaceholder="Search bookings..."
         />
       )}
     </div>
+  )
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
+      </div>
+    }>
+      <BookingsManager />
+    </Suspense>
   )
 }
