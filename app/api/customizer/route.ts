@@ -45,6 +45,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const current = await read()
+    
+    // Save theme settings to database if provided
+    if (body.theme && typeof body.theme === 'object') {
+      for (const [k, v] of Object.entries(body.theme)) {
+        await prisma.websiteSetting.upsert({
+          where: { key: k },
+          update: { value: v as any },
+          create: { key: k, value: v as any, group: 'theme' }
+        })
+      }
+    }
+
     const merged = {
       globalCss: typeof body.globalCss === 'string' ? body.globalCss : current.globalCss,
       globalJs: typeof body.globalJs === 'string' ? body.globalJs : current.globalJs,

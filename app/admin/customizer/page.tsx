@@ -1,55 +1,96 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/admin/page-header'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { AdminTabs } from '@/components/admin/admin-tabs'
 import { toast } from 'sonner'
-import { Loader2, Save, Eye, Code2, Trash2 } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+import { Loader2, Save, Code2, Trash2, Palette, Sparkles, Layers } from 'lucide-react'
 
-export default function CustomizerPage() {
-  const params = useSearchParams()
-  const tab = params.get('tab') || 'global'
+function CustomizerManager() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') || 'theme'
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // CSS/JS codes
   const [globalCss, setGlobalCss] = useState('')
   const [globalJs, setGlobalJs] = useState('')
   const [pageCustom, setPageCustom] = useState<Record<string, { html?: string; css?: string; js?: string }>>({})
   const [selectedPath, setSelectedPath] = useState('/')
-  const [previewUrl, setPreviewUrl] = useState('/')
+
+  // Theme styling states
+  const [primaryColor, setPrimaryColor] = useState('#FF8C21')
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff')
+  const [fontFamily, setFontFamily] = useState('Outfit')
+
+  // Header/Footer branding
+  const [brandName, setBrandName] = useState('DivyaYagyam')
+  const [logoUrl, setLogoUrl] = useState('/logo.png')
+  const [copyrightText, setCopyrightText] = useState('© 2026 DivyaYagyam. All rights reserved. • हरि ओम् 🙏')
 
   useEffect(() => {
-    fetch('/api/customizer').then(r => r.json()).then(j => {
-      if (j.ok) {
-        setGlobalCss(j.data.globalCss || '')
-        setGlobalJs(j.data.globalJs || '')
-        setPageCustom(j.data.pageCustom || {})
-      }
-      setLoading(false)
-    })
+    fetch('/api/customizer')
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.ok) {
+          setGlobalCss(j.data.globalCss || '')
+          setGlobalJs(j.data.globalJs || '')
+          setPageCustom(j.data.pageCustom || {})
+          
+          // Theme config from database
+          const theme = j.data.theme || {}
+          setPrimaryColor(theme['theme.primary'] || '#FF8C21')
+          setBackgroundColor(theme['theme.background'] || '#ffffff')
+          setFontFamily(theme['theme.fontFamily'] || 'Outfit')
+          setBrandName(theme['site.name'] || 'DivyaYagyam')
+          setLogoUrl(theme['site.logo'] || '/logo.png')
+          setCopyrightText(theme['site.copyright'] || '© 2026 DivyaYagyam. All rights reserved. • हरि ओम् 🙏')
+        }
+        setLoading(false)
+      })
   }, [])
 
-  async function saveAll() {
+  async function handleSave() {
     setSaving(true)
     try {
       const res = await fetch('/api/customizer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ globalCss, globalJs, pageCustom }),
+        body: JSON.stringify({
+          globalCss,
+          globalJs,
+          pageCustom,
+          theme: {
+            'theme.primary': primaryColor,
+            'theme.background': backgroundColor,
+            'theme.fontFamily': fontFamily,
+            'site.name': brandName,
+            'site.logo': logoUrl,
+            'site.copyright': copyrightText
+          }
+        }),
       })
       const j = await res.json()
       if (!j.ok) throw new Error(j.error)
-      toast.success('✅ Customizations saved and applied site-wide')
+      toast.success('🎨 WordPress-style Theme & Customizations applied live successfully!')
     } catch (err: any) {
-      toast.error(err?.message || 'Save failed')
-    } finally { setSaving(false) }
+      toast.error(err?.message || 'Failed to save theme settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const changeTab = (val: string) => {
+    router.push(`/admin/customizer?tab=${val}`)
   }
 
   const pageEntry = pageCustom[selectedPath] || {}
@@ -57,84 +98,208 @@ export default function CustomizerPage() {
     setPageCustom({ ...pageCustom, [selectedPath]: { ...pageEntry, ...patch } })
   }
   function deletePageEntry(path: string) {
-    const cp = { ...pageCustom }; delete cp[path]; setPageCustom(cp)
+    const cp = { ...pageCustom }
+    delete cp[path]
+    setPageCustom(cp)
   }
+
+  const tabs = [
+    { label: 'Theme Styling (फॉन्ट/कलर)', value: 'theme' },
+    { label: 'Branding & Layout (ब्रांडिंग)', value: 'branding' },
+    { label: 'Custom CSS (सीएसएस)', value: 'css' },
+    { label: 'Custom JS (जावास्क्रिप्ट)', value: 'js' },
+    { label: 'Per-Page HTML (पेज ओवरराइड)', value: 'html' }
+  ]
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="🎨 Live Customizer"
-        description="Inject custom CSS/JS globally or per-page. Changes apply instantly across the site."
+        title="Live Site Theme Customizer"
+        description="WordPress-style control panel to edit fonts, colors, brand logo, footer details and inject HTML/CSS/JS code."
         breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Customizer' }]}
-        action={{ label: saving ? 'Saving…' : 'Save & Apply', icon: Save, onClick: saveAll }}
+        action={{ label: saving ? 'Saving…' : 'Save & Publish', icon: Save, onClick: handleSave }}
       />
 
-      <AdminTabs tabs={[
-        { label: 'Global CSS', value: 'global' },
-        { label: 'Global JS', value: 'js' },
-        { label: 'Per-Page', value: 'page' },
-        { label: 'Preview', value: 'preview' },
-      ]} />
+      {/* Tabs Menu */}
+      <div className="flex gap-2 border-b pb-1 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => changeTab(t.value)}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all shrink-0 ${activeTab === t.value ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading customizations…</div>
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
+        </div>
       ) : (
-        <>
-          {tab === 'global' && (
-            <Card>
+        <div className="grid gap-6">
+          {activeTab === 'theme' && (
+            <Card className="rounded-3xl border shadow-sm max-w-xl">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" /> Global CSS</CardTitle>
-                <p className="text-xs text-muted-foreground">Applies to every page on the site (marketing + dashboard + admin).</p>
+                <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Palette className="h-5 w-5 text-orange-600" /> Typography & Colors
+                </CardTitle>
+                <CardDescription className="text-xs">Select primary brand colors and typography styles.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Primary Font Family</Label>
+                  <Select value={fontFamily} onValueChange={setFontFamily}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Outfit">Outfit (Modern Elegant)</SelectItem>
+                      <SelectItem value="Inter">Inter (Sleek Tech)</SelectItem>
+                      <SelectItem value="Playfair Display">Playfair Display (Sacred Serif)</SelectItem>
+                      <SelectItem value="Roboto">Roboto (Clean sans-serif)</SelectItem>
+                      <SelectItem value="Cinzel">Cinzel (Divine Roman)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pColor">Primary Theme Accent</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="pColor"
+                        type="color"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="h-10 w-16 p-0 border cursor-pointer"
+                      />
+                      <span className="font-mono text-xs uppercase">{primaryColor}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bgColor">Body Background Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="bgColor"
+                        type="color"
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        className="h-10 w-16 p-0 border cursor-pointer"
+                      />
+                      <span className="font-mono text-xs uppercase">{backgroundColor}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'branding' && (
+            <Card className="rounded-3xl border shadow-sm max-w-xl">
+              <CardHeader>
+                <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-orange-600" /> Site Identity, Header & Footer
+                </CardTitle>
+                <CardDescription className="text-xs">Update your brand name, logo and footer copyright notes.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="brandN">Branding Site Name</Label>
+                  <Input
+                    id="brandN"
+                    placeholder="e.g. DivyaYagyam"
+                    value={brandName}
+                    onChange={(e) => setBrandName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="logoU">Branding Logo path / Image URL</Label>
+                  <Input
+                    id="logoU"
+                    placeholder="e.g. /logo.png"
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="copyT">Footer Copyright Text / Social links</Label>
+                  <Input
+                    id="copyT"
+                    placeholder="e.g. © 2026 DivyaYagyam. All rights reserved."
+                    value={copyrightText}
+                    onChange={(e) => setCopyrightText(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'css' && (
+            <Card className="rounded-3xl border shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Code2 className="h-5 w-5 text-orange-600" /> Custom Global CSS
+                </CardTitle>
+                <CardDescription className="text-xs">Custom CSS styles to modify layout, margins, buttons and background header decorations.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Textarea
                   value={globalCss}
                   onChange={(e) => setGlobalCss(e.target.value)}
                   rows={20}
-                  className="font-mono text-xs"
-                  placeholder={`/* e.g. */\nbody { font-feature-settings: 'ss01'; }\n.container { max-width: 1400px; }`}
+                  className="font-mono text-xs bg-slate-50 border p-3 rounded-2xl"
+                  placeholder={`/* e.g. custom changes */\n.text-primary {\n  color: ${primaryColor} !important;\n}`}
                 />
               </CardContent>
             </Card>
           )}
 
-          {tab === 'js' && (
-            <Card>
+          {activeTab === 'js' && (
+            <Card className="rounded-3xl border shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" /> Global JavaScript</CardTitle>
-                <p className="text-xs text-muted-foreground">Runs on every page. ⚠️ Use with caution.</p>
+                <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Code2 className="h-5 w-5 text-orange-600" /> Custom Global Javascript
+                </CardTitle>
+                <CardDescription className="text-xs">Inject scripts site-wide for analytics tools, popups or user chat widget hooks.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Textarea
                   value={globalJs}
                   onChange={(e) => setGlobalJs(e.target.value)}
                   rows={20}
-                  className="font-mono text-xs"
-                  placeholder={`// e.g. analytics, chat widgets, etc.\nconsole.log('Devyajnam custom JS loaded');`}
+                  className="font-mono text-xs bg-slate-50 border p-3 rounded-2xl"
+                  placeholder={`// Custom JS codes\nconsole.log("Sanatan Customizer Live Active!");`}
                 />
               </CardContent>
             </Card>
           )}
 
-          {tab === 'page' && (
+          {activeTab === 'html' && (
             <div className="grid gap-4 lg:grid-cols-3">
-              <Card>
-                <CardHeader><CardTitle className="text-base">Pages</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
+              <Card className="rounded-3xl border shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold text-slate-800">Select Page Path</CardTitle>
+                  <CardDescription className="text-xs">Customize layout per route</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex gap-2">
                     <Input value={selectedPath} onChange={(e) => setSelectedPath(e.target.value)} placeholder="/pujas" />
-                    <Button size="sm" onClick={() => setPageCustom({ ...pageCustom, [selectedPath]: pageCustom[selectedPath] || {} })}>Add</Button>
+                    <Button size="sm" className="rounded-xl" onClick={() => setPageCustom({ ...pageCustom, [selectedPath]: pageCustom[selectedPath] || {} })}>Add</Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">Enter path like <code>/pujas</code>, <code>/about</code>, <code>/dashboard</code>.</p>
-                  <div className="border rounded-md divide-y max-h-96 overflow-auto">
+                  <div className="border rounded-2xl divide-y max-h-96 overflow-auto bg-slate-50 p-2">
                     {Object.keys(pageCustom).length === 0 ? (
-                      <p className="p-3 text-xs text-muted-foreground text-center">No page overrides yet.</p>
+                      <p className="p-3 text-xs text-muted-foreground text-center">No per-page overrides configured.</p>
                     ) : Object.keys(pageCustom).map((p) => (
-                      <div key={p} className={`flex items-center justify-between p-2 text-xs cursor-pointer ${selectedPath === p ? 'bg-primary/5' : 'hover:bg-muted/50'}`}
+                      <div key={p} className={`flex items-center justify-between p-2 text-xs cursor-pointer rounded-lg mb-1 ${selectedPath === p ? 'bg-orange-50 text-orange-800 font-bold' : 'hover:bg-slate-200'}`}
                         onClick={() => setSelectedPath(p)}>
                         <code>{p}</code>
-                        <button onClick={(e) => { e.stopPropagation(); deletePageEntry(p) }} className="opacity-60 hover:opacity-100 hover:text-destructive">
-                          <Trash2 className="h-3 w-3" />
+                        <button onClick={(e) => { e.stopPropagation(); deletePageEntry(p) }} className="text-red-500 hover:text-red-700">
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     ))}
@@ -142,42 +307,41 @@ export default function CustomizerPage() {
                 </CardContent>
               </Card>
 
-              <Card className="lg:col-span-2">
-                <CardHeader className="flex-row items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" /> Editing <Badge variant="outline">{selectedPath}</Badge></CardTitle>
+              <Card className="lg:col-span-2 rounded-3xl border shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-orange-600" /> Per-Page HTML & Code Override for <Badge variant="outline">{selectedPath}</Badge>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div><Label className="text-xs">Custom CSS</Label>
-                    <Textarea value={pageEntry.css || ''} onChange={(e) => updatePageEntry({ css: e.target.value })}
-                      rows={6} className="font-mono text-xs" placeholder="h1 { color: crimson; }" />
-                  </div>
-                  <div><Label className="text-xs">Custom JavaScript</Label>
-                    <Textarea value={pageEntry.js || ''} onChange={(e) => updatePageEntry({ js: e.target.value })}
-                      rows={6} className="font-mono text-xs" placeholder="// runs when this page loads" />
-                  </div>
-                  <div><Label className="text-xs">HTML (injected into #__dvj_slot if present on page)</Label>
-                    <Textarea value={pageEntry.html || ''} onChange={(e) => updatePageEntry({ html: e.target.value })}
-                      rows={6} className="font-mono text-xs" placeholder="<div>custom widget…</div>" />
+                  <div>
+                    <Label className="text-xs">Override Page HTML</Label>
+                    <Textarea
+                      value={pageEntry.html || ''}
+                      onChange={(e) => updatePageEntry({ html: e.target.value })}
+                      rows={12}
+                      className="font-mono text-xs bg-slate-50 border p-3 rounded-2xl mt-1"
+                      placeholder="<!-- Inject custom HTML structures directly into the page layout -->"
+                    />
                   </div>
                 </CardContent>
               </Card>
             </div>
           )}
-
-          {tab === 'preview' && (
-            <Card>
-              <CardHeader className="flex-row items-center gap-2">
-                <CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4" /> Live Preview</CardTitle>
-                <Input value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} className="max-w-xs h-8 text-xs" />
-                <Button size="sm" onClick={saveAll}>Save first</Button>
-              </CardHeader>
-              <CardContent>
-                <iframe src={previewUrl} className="w-full h-[600px] rounded-md border bg-background" />
-              </CardContent>
-            </Card>
-          )}
-        </>
+        </div>
       )}
     </div>
+  )
+}
+
+export default function CustomizerPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
+      </div>
+    }>
+      <CustomizerManager />
+    </Suspense>
   )
 }

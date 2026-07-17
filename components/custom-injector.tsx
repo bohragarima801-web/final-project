@@ -53,6 +53,9 @@ export function CustomInjector() {
             rootVars += `--background: ${hexToHsl(theme['theme.background'])};`
             themeCss += `body { background-color: ${theme['theme.background']} !important; }`
           }
+          if (theme['theme.fontFamily']) {
+            themeCss += `* { font-family: '${theme['theme.fontFamily']}', sans-serif !important; }`
+          }
           if (rootVars) {
             themeCss += `:root { ${rootVars} }`
           }
