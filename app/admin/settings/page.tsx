@@ -44,6 +44,8 @@ export default function SettingsPage() {
   const [openaiApiKey, setOpenaiApiKey] = useState('')
   const [razorpayKeyId, setRazorpayKeyId] = useState('')
   const [razorpayKeySecret, setRazorpayKeySecret] = useState('')
+  const [dbUrl, setDbUrl] = useState('')
+  const [directUrlSetting, setDirectUrlSetting] = useState('')
 
   const [uploadingLogo, setUploadingLogo] = useState(false)
 
@@ -105,6 +107,8 @@ export default function SettingsPage() {
         if (s['secret.openai_api_key']) setOpenaiApiKey(s['secret.openai_api_key'])
         if (s['secret.razorpay_key_id']) setRazorpayKeyId(s['secret.razorpay_key_id'])
         if (s['secret.razorpay_key_secret']) setRazorpayKeySecret(s['secret.razorpay_key_secret'])
+        if (s['secret.database_url']) setDbUrl(s['secret.database_url'])
+        if (s['secret.direct_url']) setDirectUrlSetting(s['secret.direct_url'])
       } else {
         toast.error('Failed to load settings: ' + data.error)
       }
@@ -154,6 +158,8 @@ export default function SettingsPage() {
         'secret.openai_api_key': openaiApiKey,
         'secret.razorpay_key_id': razorpayKeyId,
         'secret.razorpay_key_secret': razorpayKeySecret,
+        'secret.database_url': dbUrl,
+        'secret.direct_url': directUrlSetting,
       }
     }
 
@@ -454,6 +460,29 @@ export default function SettingsPage() {
                       onChange={(e) => setOpenaiApiKey(e.target.value)} 
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 border p-4 rounded-lg bg-slate-50/50">
+                <h3 className="font-semibold text-lg border-b pb-2 flex items-center justify-between">
+                  Database Connections (PostgreSQL)
+                  <Badge variant="outline">Prisma URL</Badge>
+                </h3>
+                <div className="space-y-2">
+                  <Label>Database connection URL (DATABASE_URL)</Label>
+                  <Input 
+                    placeholder="postgresql://username:password@host:port/database" 
+                    value={dbUrl} 
+                    onChange={(e) => setDbUrl(e.target.value)} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Direct connection URL (DIRECT_URL)</Label>
+                  <Input 
+                    placeholder="postgresql://username:password@host:port/database" 
+                    value={directUrlSetting} 
+                    onChange={(e) => setDirectUrlSetting(e.target.value)} 
+                  />
                 </div>
               </div>
 
