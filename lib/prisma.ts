@@ -10,4 +10,13 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
+export async function checkDatabaseConnection() {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    return { ok: true }
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Database connection error' }
+  }
+}
+
 export default prisma
