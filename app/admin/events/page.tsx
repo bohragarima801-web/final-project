@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2, Calendar, Video, MapPin, Upload } from 'lucide-react'
+import { Loader2, Plus, Trash2, Calendar, Video, MapPin, Upload, Edit2 } from 'lucide-react'
 
 export default function EventsPage() {
   const [events, setEvents] = useState<any[]>([])
@@ -19,6 +19,9 @@ export default function EventsPage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+
+  // Edit states
+  const [editId, setEditId] = useState<string | null>(null)
 
   // Form states
   const [title, setTitle] = useState('')
@@ -75,47 +78,86 @@ export default function EventsPage() {
     }
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  // Format date helper for input type="datetime-local"
+  const formatDateForInput = (dStr: string) => {
+    if (!dStr) return ''
+    const d = new Date(dStr)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hours = String(d.getHours()).padStart(2, '0')
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!title || !startsAt) return
 
     setSaving(true)
     try {
+      const method = editId ? 'PUT' : 'POST'
+      const payload: any = {
+        title,
+        description,
+        coverImage,
+        location,
+        startsAt: new Date(startsAt).toISOString(),
+        endsAt: endsAt ? new Date(endsAt).toISOString() : null,
+        isLive,
+        streamUrl,
+      }
+      if (editId) payload.id = editId
+
       const res = await fetch('/api/admin/events', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          description,
-          coverImage,
-          location,
-          startsAt: new Date(startsAt).toISOString(),
-          endsAt: endsAt ? new Date(endsAt).toISOString() : null,
-          isLive,
-          streamUrl,
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data.ok) {
-        toast.success('Event created and scheduled successfully!')
+        toast.success(editId ? 'Event updated successfully!' : 'Event created and scheduled successfully!')
         setShowAddForm(false)
-        setTitle('')
-        setDescription('')
-        setCoverImage('')
-        setLocation('')
-        setStartsAt('')
-        setEndsAt('')
-        setIsLive(false)
-        setStreamUrl('')
+        resetForm()
         loadEvents()
       } else {
-        toast.error(data.error || 'Failed to create event')
+        toast.error(data.error || 'Failed to save event')
       }
     } catch {
-      toast.error('Network error creating event')
+      toast.error('Network error saving event')
     } finally {
       setSaving(false)
     }
+  }
+
+  function startEdit(event: any) {
+    setEditId(event.id)
+    setTitle(event.title)
+    setDescription(event.description || '')
+    setCoverImage(event.coverImage || '')
+    setLocation(event.location || '')
+    setStartsAt(formatDateForInput(event.startsAt))
+    setEndsAt(formatDateForInput(event.endsAt))
+    setIsLive(!!event.isLive)
+    setStreamUrl(event.streamUrl || '')
+    setShowAddForm(true)
+  }
+
+  function startCreate() {
+    resetForm()
+    setShowAddForm(true)
+  }
+
+  function resetForm() {
+    setEditId(null)
+    setTitle('')
+    setDescription('')
+    setCoverImage('')
+    setLocation('')
+    setStartsAt('')
+    setEndsAt('')
+    setIsLive(false)
+    setStreamUrl('')
   }
 
   async function handleDelete(id: string) {
@@ -145,7 +187,7 @@ export default function EventsPage() {
         action={{
           label: showAddForm ? 'Cancel' : 'Add Event',
           icon: Plus,
-          onClick: () => setShowAddForm(!showAddForm),
+          onClick: showAddForm ? () => setShowAddForm(false) : startCreate,
         }}
       />
 
@@ -153,12 +195,12 @@ export default function EventsPage() {
         <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" /> Schedule New Event
+              <Calendar className="h-5 w-5 text-primary" /> {editId ? 'Edit Scheduled Event' : 'Schedule New Event'}
             </CardTitle>
             <CardDescription>Configure festival timings, livestream urls and location details.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+            <form onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Event Title</Label>
                 <Input
@@ -268,7 +310,7 @@ export default function EventsPage() {
               <div className="sm:col-span-2 pt-2">
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Schedule Event
+                  {editId ? 'Update Event' : 'Schedule Event'}
                 </Button>
               </div>
             </form>
@@ -278,7 +320,7 @@ export default function EventsPage() {
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
         </div>
       ) : (
         <DataTableShell
@@ -300,32 +342,15 @@ export default function EventsPage() {
             { key: 'location', label: 'Location' },
             {
               key: 'startsAt',
-              label: 'Starts',
-              render: (r) => new Date(r.startsAt).toLocaleString('en-IN', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              }),
+              label: 'Starts At',
+              render: (r) => <span>{new Date(r.startsAt).toLocaleString('en-IN')}</span>,
             },
             {
               key: 'isLive',
-              label: 'Stream Status',
+              label: 'Broadcast',
               render: (r) => (
-                <Badge
-                  variant={r.isLive ? 'destructive' : 'outline'}
-                  className={r.isLive ? 'animate-pulse' : ''}
-                >
-                  {r.isLive ? '🔴 Live Stream' : 'Upcoming'}
-                </Badge>
-              ),
-            },
-            {
-              key: 'registrations',
-              label: 'Booked Devotees',
-              render: (r) => (
-                <Badge variant="secondary">
-                  {r.registrations} registered
+                <Badge variant={r.isLive ? 'success' : 'secondary'}>
+                  {r.isLive ? '🔴 LIVE' : 'Offline'}
                 </Badge>
               ),
             },
@@ -333,15 +358,26 @@ export default function EventsPage() {
               key: 'actions',
               label: 'Actions',
               render: (r) => (
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="h-8 w-8"
-                  onClick={() => handleDelete(r.id)}
-                  title="Delete Event"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-blue-600"
+                    onClick={() => startEdit(r)}
+                    title="Edit Event"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="h-8 w-8"
+                    onClick={() => handleDelete(r.id)}
+                    title="Delete Event"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               ),
             },
           ]}
