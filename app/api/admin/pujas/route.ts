@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { ensureDefaultCategoriesAndTemples } from '@/lib/data-defaults'
 import { DEFAULT_PLACEHOLDER_IMAGE } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     await ensureDefaultCategoriesAndTemples()
