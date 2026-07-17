@@ -40,6 +40,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Refund Policy', href: '/refunds' },
       { label: 'Shipping Policy', href: '/shipping' },
+      { label: 'Sitemap', href: '/sitemap' },
     ],
   },
 ]
