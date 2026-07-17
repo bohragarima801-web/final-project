@@ -46,6 +46,7 @@ export default function NewPujaPage() {
   const [coverImage, setCoverImage] = useState('')
   const [saving, setSaving] = useState(false)
   const [loadingPuja, setLoadingPuja] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   // Fetch references
   useEffect(() => {
@@ -124,12 +125,27 @@ export default function NewPujaPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setCoverImage(reader.result as string)
-      toast.success('Image parsed successfully!')
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setCoverImage(data.url)
+        toast.success('Puja image uploaded successfully!')
+      } else {
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Network error uploading image')
+    } finally {
+      setUploading(false)
     }
-    reader.readAsDataURL(file)
   }
 
   // Submit handler
@@ -327,7 +343,8 @@ export default function NewPujaPage() {
                   <img src={coverImage} className="h-full w-full object-cover" alt="Preview" />
                 </div>
               )}
-              <Input type="file" accept="image/*" onChange={handleImageChange} />
+              <Input type="file" accept="image/*" onChange={handleImageChange} disabled={uploading} />
+              {uploading && <div className="text-xs text-orange-600 animate-pulse">Uploading image...</div>}
               <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Or paste image URL" className="text-xs" />
             </CardContent>
           </Card>
