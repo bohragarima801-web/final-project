@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
 import { DataTableShell } from '@/components/admin/data-table-shell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Flame, Star, CalendarClock, Video, Edit2, Trash2, Loader2 } from 'lucide-react'
+import { Flame, Star, CalendarClock, Video, Edit2, Trash2, Loader2, Plus, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
@@ -23,7 +24,11 @@ interface Puja {
   isFeatured: boolean
 }
 
-export default function PujasPage() {
+function PujasManager() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') || 'all'
+
   const [pujas, setPujas] = useState<Puja[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -48,7 +53,6 @@ export default function PujasPage() {
     loadPujas()
   }, [])
 
-  // Delete Puja handler
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this puja?')) return
 
@@ -68,13 +72,34 @@ export default function PujasPage() {
     }
   }
 
+  // Filter pujas based on active tab
+  const filteredPujas = pujas.filter((p) => {
+    if (activeTab === 'featured') return p.isFeatured
+    if (activeTab === 'vip') return p.isVip
+    if (activeTab === 'live') return p.isOnline
+    if (activeTab === 'upcoming') return p.status === 'PUBLISHED' && !p.isOnline
+    return true
+  })
+
+  const tabs = [
+    { label: 'All Pujas', value: 'all' },
+    { label: 'Featured', value: 'featured' },
+    { label: 'VIP Pujas', value: 'vip' },
+    { label: 'Live Pujas', value: 'live' },
+    { label: 'Upcoming', value: 'upcoming' }
+  ]
+
+  const changeTab = (val: string) => {
+    router.push(`/admin/pujas?tab=${val}`)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Puja Management"
         description="Manage all pujas, categories, slots, media & pricing."
         breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Pujas' }]}
-        action={{ label: 'Add Puja', href: '/admin/pujas/new' }}
+        action={{ label: 'Add Puja', href: '/admin/pujas/new', icon: Plus }}
         secondaryAction={{ label: 'Manage Categories', href: '/admin/pujas/categories' }}
       />
 
@@ -83,6 +108,19 @@ export default function PujasPage() {
         <KpiCard title="VIP Pujas" value={pujas.filter(p => p.isVip).length.toString()} icon={Star} iconClass="text-yellow-500" />
         <KpiCard title="Featured Pujas" value={pujas.filter(p => p.isFeatured).length.toString()} icon={CalendarClock} iconClass="text-blue-500" />
         <KpiCard title="Live Stream Pujas" value={pujas.filter(p => p.isOnline).length.toString()} icon={Video} iconClass="text-red-500" />
+      </div>
+
+      {/* Tabs Menu */}
+      <div className="flex gap-2 border-b pb-1 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => changeTab(t.value)}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all shrink-0 ${activeTab === t.value ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -140,9 +178,22 @@ export default function PujasPage() {
               className: "text-right"
             }
           ]}
-          rows={pujas}
+          rows={filteredPujas}
+          searchPlaceholder="Search pujas by name..."
         />
       )}
     </div>
+  )
+}
+
+export default function PujasPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
+      </div>
+    }>
+      <PujasManager />
+    </Suspense>
   )
 }
