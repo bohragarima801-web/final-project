@@ -14,7 +14,6 @@ const navItems = [
   { title: 'VIP Pujas', href: '/vip-pujas' },
   { title: 'Products', href: '/products' },
   { title: 'Chadhawa', href: '/chadhawa' },
-  { title: 'Donation', href: '/donation' },
   { title: 'Temples', href: '/temples' },
   { title: 'Blog', href: '/blog' },
 ]

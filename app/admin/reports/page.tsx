@@ -19,7 +19,7 @@ export default function ReportsPage() {
       <AdminTabs tabs={[
         { label: 'Overview' }, { label: 'Revenue', value: 'revenue' },
         { label: 'Bookings', value: 'bookings' }, { label: 'Products', value: 'products' },
-        { label: 'Donations', value: 'donations' }, { label: 'Customers', value: 'customers' },
+        { label: 'Customers', value: 'customers' },
         { label: 'Tax / GST', value: 'tax' },
       ]} />
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -27,7 +27,6 @@ export default function ReportsPage() {
           { title: 'Revenue Report', icon: TrendingUp },
           { title: 'Booking Report', icon: FileText },
           { title: 'Product Sales', icon: ShoppingBag },
-          { title: 'Donation Report', icon: HandCoins },
           { title: 'Customer Insights', icon: Users },
           { title: 'GST / Tax Report', icon: Receipt },
         ].map((r) => {

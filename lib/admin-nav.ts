@@ -47,12 +47,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     { title: 'Delivered', href: '/admin/orders?tab=delivered' }, { title: 'Cancelled', href: '/admin/orders?tab=cancelled' },
     { title: 'Returned', href: '/admin/orders?tab=returned' }, { title: 'Refunds', href: '/admin/orders?tab=refunds' },
   ]},
-  { title: 'Donations', slug: 'donations', icon: HandCoins, items: [
-    { title: 'All', href: '/admin/donations' }, { title: 'Campaigns', href: '/admin/donations/campaigns' },
-    { title: 'Temple', href: '/admin/donations?tab=temple' }, { title: 'Gaushala', href: '/admin/donations?tab=gaushala' },
-    { title: 'Annadan', href: '/admin/donations?tab=annadan' }, { title: 'Gurukul', href: '/admin/donations?tab=gurukul' },
-    { title: 'Donors', href: '/admin/donations?tab=donors' }, { title: 'Reports', href: '/admin/donations?tab=reports' },
-  ]},
+
   { title: 'Chadhawa', slug: 'chadhawa', icon: Sparkles, items: [
     { title: 'All', href: '/admin/chadhawa' }, { title: 'Flowers', href: '/admin/chadhawa?tab=flowers' },
     { title: 'Prasad', href: '/admin/chadhawa?tab=prasad' }, { title: 'Bhog', href: '/admin/chadhawa?tab=bhog' },

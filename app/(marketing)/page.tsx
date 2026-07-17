@@ -17,7 +17,6 @@ const upcomingPujas = [
 const services = [
   { icon: Flame, title: 'Online Pujas', desc: 'Book pujas across 500+ temples with live streaming.', href: '/pujas', color: 'from-orange-500/20 to-orange-500/5' },
   { icon: Sparkles, title: 'Chadhawa Seva', desc: 'Offer flowers, prasad, bhog & deep daan.', href: '/chadhawa', color: 'from-yellow-500/20 to-yellow-500/5' },
-  { icon: HandCoins, title: 'Donations', desc: 'Support temples, gaushala, gurukul & annadan.', href: '/donation', color: 'from-red-500/20 to-red-500/5' },
   { icon: ShoppingBag, title: 'Abhimantrit Products', desc: 'Prasad, rudraksha, idols & spiritual books.', href: '/products', color: 'from-pink-500/20 to-pink-500/5' },
 ]
 
@@ -51,7 +50,7 @@ export default function HomePage() {
                   <Link href="/pujas">Book a Puja <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link href="/donation"><HandCoins className="mr-2 h-4 w-4" /> Donate Now</Link>
+                  <Link href="/tools"><Sparkles className="mr-2 h-4 w-4" /> Spiritual Tools</Link>
                 </Button>
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">

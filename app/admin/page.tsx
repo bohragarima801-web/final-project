@@ -72,10 +72,10 @@ export default function AdminDashboard() {
 
       {/* Seva */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Total Donations" value="₹0" icon={HandCoins} iconClass="text-purple-500" />
         <KpiCard title="Total Chadhawa" value="0" icon={Sparkles} iconClass="text-yellow-500" />
         <KpiCard title="Website Visitors (24h)" value="0" icon={Eye} iconClass="text-pink-500" />
         <KpiCard title="Pending Support Tickets" value="0" icon={MessageSquare} iconClass="text-orange-500" />
+        <KpiCard title="Low Stock Items" value="0" icon={AlertTriangle} iconClass="text-red-500" />
       </div>
 
       {/* Quick actions */}
@@ -116,7 +116,6 @@ export default function AdminDashboard() {
             <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Bookings</span>
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-secondary" /> Products</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" /> Donations</span>
             </div>
           </CardContent>
         </Card>
@@ -156,9 +155,9 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-base">Top Donation Campaigns</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Top Chadhawa Offering Sevas</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Data will appear once donations start.</p>
+            <p className="text-sm text-muted-foreground">Data will appear once chadhawa offerings start.</p>
           </CardContent>
         </Card>
       </div>

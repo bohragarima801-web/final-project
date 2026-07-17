@@ -10,7 +10,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Online Puja', href: '/pujas' },
       { label: 'VIP Puja', href: '/vip-pujas' },
       { label: 'Chadhawa', href: '/chadhawa' },
-      { label: 'Donation', href: '/donation' },
       { label: 'Astrology', href: '/astro' },
     ],
   },
