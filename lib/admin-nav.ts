@@ -59,7 +59,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     { title: 'Deep Daan', href: '/admin/chadhawa?tab=deep-daan' }, { title: 'Gau Seva', href: '/admin/chadhawa?tab=gau-seva' },
   ]},
   { title: 'Astrology', slug: 'astrology', icon: Sparkle, items: [
-    { title: 'All Reports', href: '/admin/astrology' }, { title: 'Kundali', href: '/admin/astrology?tab=kundali' },
+    { title: 'All Reports', href: '/admin/astrology' }, { title: 'Manage Tools', href: '/admin/tools' }, { title: 'Kundali', href: '/admin/astrology?tab=kundali' },
     { title: 'Milan', href: '/admin/astrology?tab=milan' }, { title: 'Numerology', href: '/admin/astrology?tab=numerology' },
     { title: 'Ratna', href: '/admin/astrology?tab=ratna' }, { title: 'Astrologers', href: '/admin/astrology?tab=astrologers' },
   ]},

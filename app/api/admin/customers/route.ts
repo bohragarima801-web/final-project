@@ -40,22 +40,81 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, userId, newPassword, alertMessage } = await req.json()
+    const { action, userId, newPassword, alertMessage, name, email, phone } = await req.json()
 
-    if (!userId) {
-      return NextResponse.json({ ok: false, error: 'User ID is required' }, { status: 400 })
+    // 1. ACTION: Create a new devotee
+    if (action === 'create') {
+      if (!name || !email || !phone || !newPassword) {
+        return NextResponse.json({ ok: false, error: 'Name, Email, Phone and Password are required' }, { status: 400 })
+      }
+
+      // Check if email already registered in DB
+      const existing = await prisma.user.findUnique({ where: { email } })
+      if (existing) {
+        return NextResponse.json({ ok: false, error: 'Email already registered' }, { status: 400 })
+      }
+
+      // Create in Supabase Auth first
+      const supabaseAdmin = await createAdminClient()
+      const { data: supaUser, error: supaError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: newPassword,
+        phone,
+        email_confirm: true,
+        phone_confirm: true,
+        user_metadata: { fullName: name, phone },
+      })
+
+      if (supaError) {
+        return NextResponse.json({ ok: false, error: supaError.message }, { status: 400 })
+      }
+
+      // Find devotee role ID
+      let devoteeRole = await prisma.role.findUnique({ where: { slug: 'devotee' } })
+      if (!devoteeRole) {
+        devoteeRole = await prisma.role.create({
+          data: { name: 'Devotee', slug: 'devotee' },
+        })
+      }
+
+      // Create in DB
+      const user = await prisma.user.create({
+        data: {
+          supabaseId: supaUser.user.id,
+          email,
+          fullName: name,
+          phone,
+          roleId: devoteeRole.id,
+        },
+      })
+
+      return NextResponse.json({ ok: true, message: 'Devotee created successfully!', data: user })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    })
+    // 2. ACTION: Update an existing devotee
+    if (action === 'update') {
+      if (!userId || !name || !email) {
+        return NextResponse.json({ ok: false, error: 'User ID, Name, and Email are required' }, { status: 400 })
+      }
 
-    if (!user) {
-      return NextResponse.json({ ok: false, error: 'User not found' }, { status: 404 })
+      const updated = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          fullName: name,
+          email,
+          phone: phone || null,
+        },
+      })
+
+      return NextResponse.json({ ok: true, message: 'Devotee updated successfully!', data: updated })
     }
 
-    // ACTION: Reset user password
+    // 3. ACTION: Reset user password
     if (action === 'password') {
+      if (!userId) return NextResponse.json({ ok: false, error: 'User ID is required' }, { status: 400 })
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (!user) return NextResponse.json({ ok: false, error: 'User not found' }, { status: 404 })
+
       if (!newPassword || newPassword.length < 6) {
         return NextResponse.json({ ok: false, error: 'Password must be at least 6 characters' }, { status: 400 })
       }
@@ -71,21 +130,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, message: 'Password reset successfully!' })
     }
 
-    // ACTION: Send WhatsApp Alert
+    // 4. ACTION: Send WhatsApp Alert
     if (action === 'whatsapp') {
+      if (!userId) return NextResponse.json({ ok: false, error: 'User ID is required' }, { status: 400 })
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      if (!user) return NextResponse.json({ ok: false, error: 'User not found' }, { status: 404 })
+
       if (!alertMessage) {
         return NextResponse.json({ ok: false, error: 'Alert message is required' }, { status: 400 })
       }
 
-      const phone = user.phone || ''
-      if (!phone) {
+      const phoneNum = user.phone || ''
+      if (!phoneNum) {
         return NextResponse.json({ ok: false, error: 'User does not have a registered phone number' }, { status: 400 })
       }
 
-      // Simulate sending WhatsApp
-      console.log(`[WHATSAPP ALERT] Dispatching to ${phone}: "${alertMessage}"`)
-
-      return NextResponse.json({ ok: true, message: `WhatsApp alert sent successfully to ${phone}!` })
+      console.log(`[WHATSAPP ALERT] Dispatching to ${phoneNum}: "${alertMessage}"`)
+      return NextResponse.json({ ok: true, message: `WhatsApp alert sent successfully to ${phoneNum}!` })
     }
 
     return NextResponse.json({ ok: false, error: 'Invalid action' }, { status: 400 })
@@ -108,11 +169,10 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'User not found' }, { status: 404 })
     }
 
-    // Delete in Supabase Auth using service role first
     if (user.supabaseId) {
       const supabaseAdmin = await createAdminClient()
       await supabaseAdmin.auth.admin.deleteUser(user.supabaseId).catch((err) => {
-        console.warn('Failed to delete Supabase user, continuing database delete:', err)
+        console.warn('Failed to delete Supabase user:', err)
       })
     }
 

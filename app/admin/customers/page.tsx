@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { HeartHandshake, TrendingUp, Wallet, Star, ShieldAlert, Key, MessageSquare, Trash2, Loader2 } from 'lucide-react'
+import { HeartHandshake, TrendingUp, Wallet, Star, Key, MessageSquare, Trash2, Loader2, Edit2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function CustomersPage() {
@@ -16,11 +16,16 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(false)
   
-  // Selected customer for modal/actions
+  // Forms & Modal states
+  const [showAddForm, setShowAddForm] = useState(false)
   const [activeUser, setActiveUser] = useState<any>(null)
-  const [actionType, setActionType] = useState<'password' | 'whatsapp' | null>(null)
-  const [passwordInput, setPasswordInput] = useState('')
-  const [alertMsgInput, setAlertMsgInput] = useState('')
+  const [actionType, setActionType] = useState<'password' | 'whatsapp' | 'create' | 'edit' | null>(null)
+
+  // Fields state
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
 
   async function loadCustomers() {
     try {
@@ -40,7 +45,73 @@ export default function CustomersPage() {
     loadCustomers()
   }, [])
 
-  async function executeAction(e: React.FormEvent) {
+  function startEdit(user: any) {
+    setActiveUser(user)
+    setActionType('edit')
+    setName(user.name)
+    setEmail(user.email)
+    setPhone(user.phone === 'Not Configured' ? '' : user.phone)
+    setShowAddForm(true)
+  }
+
+  function startCreate() {
+    setActiveUser(null)
+    setActionType('create')
+    setName('')
+    setEmail('')
+    setPhone('')
+    setPassword('')
+    setShowAddForm(true)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setActing(true)
+
+    try {
+      const payload: Record<string, any> = {
+        action: actionType,
+        name,
+        email,
+        phone,
+      }
+
+      if (actionType === 'create') {
+        payload.newPassword = password
+      } else if (actionType === 'edit') {
+        payload.action = 'update'
+        payload.userId = activeUser.id
+      }
+
+      const res = await fetch('/api/admin/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success(data.message || 'Operation successful!')
+        setShowAddForm(false)
+        setActionType(null)
+        loadCustomers()
+      } else {
+        toast.error(data.error || 'Operation failed')
+      }
+    } catch {
+      toast.error('Network error during operation')
+    } finally {
+      setActing(false)
+    }
+  }
+
+  async function handleActionClick(user: any, type: 'password' | 'whatsapp') {
+    setActiveUser(user)
+    setActionType(type)
+    setPassword('')
+    setPhone('')
+  }
+
+  async function handlePasswordOrWhatsappSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!activeUser || !actionType) return
 
@@ -50,8 +121,8 @@ export default function CustomersPage() {
         action: actionType,
         userId: activeUser.id,
       }
-      if (actionType === 'password') payload.newPassword = passwordInput
-      if (actionType === 'whatsapp') payload.alertMessage = alertMsgInput
+      if (actionType === 'password') payload.newPassword = password
+      if (actionType === 'whatsapp') payload.alertMessage = phone // borrowing phone field for msg body
 
       const res = await fetch('/api/admin/customers', {
         method: 'POST',
@@ -60,16 +131,14 @@ export default function CustomersPage() {
       })
       const data = await res.json()
       if (data.ok) {
-        toast.success(data.message || 'Operation successful')
+        toast.success(data.message || 'Success!')
         setActionType(null)
         setActiveUser(null)
-        setPasswordInput('')
-        setAlertMsgInput('')
       } else {
-        toast.error(data.error || 'Operation failed')
+        toast.error(data.error || 'Failed')
       }
     } catch {
-      toast.error('Network error during operation')
+      toast.error('Network error')
     } finally {
       setActing(false)
     }
@@ -99,6 +168,11 @@ export default function CustomersPage() {
         title="Registered Devotees"
         description="View platform metrics and perform customer admin operations (Reset Password, Send WhatsApp Alerts, Remove Accounts)."
         breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Customers' }]}
+        action={{
+          label: showAddForm ? 'Cancel' : 'Add Devotee',
+          icon: Plus,
+          onClick: showAddForm ? () => setShowAddForm(false) : startCreate,
+        }}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -108,7 +182,46 @@ export default function CustomersPage() {
         <KpiCard title="Top Rewarded" value="0" icon={Star} />
       </div>
 
-      {activeUser && actionType && (
+      {showAddForm && (actionType === 'create' || actionType === 'edit') && (
+        <Card className="border-2 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              {actionType === 'create' ? <Plus className="h-5 w-5 text-primary" /> : <Edit2 className="h-5 w-5 text-primary" />}
+              {actionType === 'create' ? 'Create New Devotee Profile' : 'Edit Devotee Profile Details'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+              <div className="space-y-2">
+                <Label htmlFor="custName">Devotee Full Name *</Label>
+                <Input id="custName" value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="custEmail">Email Address *</Label>
+                <Input id="custEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="custPhone">WhatsApp Number *</Label>
+                <Input id="custPhone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="e.g. +919999999999" />
+              </div>
+              {actionType === 'create' && (
+                <div className="space-y-2">
+                  <Label htmlFor="custPass">Account Password *</Label>
+                  <Input id="custPass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Minimum 6 characters" />
+                </div>
+              )}
+              <div className="sm:col-span-2 pt-2">
+                <Button type="submit" disabled={acting}>
+                  {acting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {actionType === 'create' ? 'Register Devotee' : 'Save Profiles Changes'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeUser && (actionType === 'password' || actionType === 'whatsapp') && (
         <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -120,7 +233,7 @@ export default function CustomersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={executeAction} className="space-y-4 max-w-md">
+            <form onSubmit={handlePasswordOrWhatsappSubmit} className="space-y-4 max-w-md">
               {actionType === 'password' && (
                 <div className="space-y-2">
                   <Label htmlFor="passInput">Enter New Password</Label>
@@ -128,8 +241,8 @@ export default function CustomersPage() {
                     id="passInput"
                     type="password"
                     placeholder="Minimum 6 characters"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
                   />
@@ -142,8 +255,8 @@ export default function CustomersPage() {
                   <Input
                     id="msgInput"
                     placeholder="e.g. Jai Shri Krishna! Use coupon CODE108 for 10% off."
-                    value={alertMsgInput}
-                    onChange={(e) => setAlertMsgInput(e.target.value)}
+                    value={phone} // borrowing state variable
+                    onChange={(e) => setPhone(e.target.value)}
                     required
                   />
                 </div>
@@ -185,7 +298,15 @@ export default function CustomersPage() {
                     size="sm"
                     variant="outline"
                     className="h-8 px-2 text-xs flex gap-1"
-                    onClick={() => { setActiveUser(r); setActionType('password') }}
+                    onClick={() => startEdit(r)}
+                  >
+                    <Edit2 className="h-3 w-3" /> Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 px-2 text-xs flex gap-1"
+                    onClick={() => handleActionClick(r, 'password')}
                   >
                     <Key className="h-3 w-3" /> Password
                   </Button>
@@ -194,7 +315,7 @@ export default function CustomersPage() {
                     variant="outline"
                     className="h-8 px-2 text-xs flex gap-1 text-green-700 hover:text-green-800"
                     disabled={r.phone === 'Not Configured'}
-                    onClick={() => { setActiveUser(r); setActionType('whatsapp') }}
+                    onClick={() => handleActionClick(r, 'whatsapp')}
                   >
                     <MessageSquare className="h-3 w-3" /> WhatsApp
                   </Button>

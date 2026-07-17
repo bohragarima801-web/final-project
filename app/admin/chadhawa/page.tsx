@@ -1,33 +1,318 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
-import { AdminTabs } from '@/components/admin/admin-tabs'
 import { DataTableShell } from '@/components/admin/data-table-shell'
-import { Sparkles } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { toast } from 'sonner'
+import { Loader2, Plus, Trash2, Sparkles, Upload, Video, Image as ImageIcon } from 'lucide-react'
 
 export default function ChadhawaPage() {
+  const [offerings, setOfferings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  // Form states
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [price, setPrice] = useState('')
+  const [image, setImage] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [isActive, setIsActive] = useState(true)
+
+  async function loadOfferings() {
+    try {
+      const res = await fetch('/api/admin/chadhawa')
+      const data = await res.json()
+      if (data.ok) {
+        setOfferings(data.data || [])
+      }
+    } catch {
+      toast.error('Failed to load offerings')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadOfferings()
+  }, [])
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setImage(data.url)
+        toast.success('Chadhawa image uploaded!')
+      } else {
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Network error uploading image')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name || !price) return
+
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/chadhawa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          description,
+          price: Number(price),
+          image,
+          videoUrl,
+          isActive,
+        }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Offering added successfully!')
+        setShowAddForm(false)
+        setName('')
+        setDescription('')
+        setPrice('')
+        setImage('')
+        setVideoUrl('')
+        setIsActive(true)
+        loadOfferings()
+      } else {
+        toast.error(data.error || 'Failed to save offering')
+      }
+    } catch {
+      toast.error('Network error saving offering')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure you want to delete this offering?')) return
+    try {
+      const res = await fetch(`/api/admin/chadhawa?id=${id}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Offering deleted successfully')
+        loadOfferings()
+      } else {
+        toast.error(data.error || 'Failed to delete')
+      }
+    } catch {
+      toast.error('Network error deleting offering')
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Chadhawa Seva" description="Manage all chadhawa (offering) requests."
-        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Chadhawa' }]} />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Total Requests" value="0" icon={Sparkles} />
-        <KpiCard title="Flowers" value="0" />
-        <KpiCard title="Prasad" value="0" />
-        <KpiCard title="Deep Daan" value="0" />
-      </div>
-      <AdminTabs tabs={[
-        { label: 'All' }, { label: 'Flowers', value: 'flowers' }, { label: 'Prasad', value: 'prasad' },
-        { label: 'Bhog', value: 'bhog' }, { label: 'Deep Daan', value: 'deep-daan' },
-        { label: 'Gau Seva', value: 'gau-seva' }, { label: 'Temple Seva', value: 'temple-seva' },
-      ]} />
-      <DataTableShell
-        columns={[
-          { key: 'id', label: 'ID' }, { key: 'user', label: 'Devotee' },
-          { key: 'item', label: 'Item' }, { key: 'temple', label: 'Temple' },
-          { key: 'amount', label: 'Amount' }, { key: 'status', label: 'Status' },
-        ]}
-        rows={[]}
+      <PageHeader
+        title="Chadhawa Seva Management"
+        description="Offer flowers, bhog, deep daan, or feed cows. Create and manage sacred offerings."
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Chadhawa' }]}
+        action={{
+          label: showAddForm ? 'Cancel' : 'Add Offering',
+          icon: Plus,
+          onClick: () => setShowAddForm(!showAddForm),
+        }}
       />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <KpiCard title="Total Offerings" value={offerings.length.toString()} icon={Sparkles} />
+        <KpiCard title="Active Sevas" value={offerings.filter(o => o.isActive).length.toString()} iconClass="text-green-600" />
+        <KpiCard title="Inactive Sevas" value={offerings.filter(o => !o.isActive).length.toString()} iconClass="text-muted" />
+      </div>
+
+      {showAddForm && (
+        <Card className="border-2 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Create New Chadhawa Seva
+            </CardTitle>
+            <CardDescription>Setup offering details, custom prices, and supporting images or youtube streams.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="offName">Offering / Seva Name *</Label>
+                <Input
+                  id="offName"
+                  placeholder="e.g. Gau Seva (Feed 11 Cows)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="offPrice">Price (₹) *</Label>
+                <Input
+                  id="offPrice"
+                  type="number"
+                  placeholder="e.g. 501"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="offDesc">Description</Label>
+                <Textarea
+                  id="offDesc"
+                  placeholder="Provide an overview of the blessings, location and ritual..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="offVid">Supporting YouTube Video URL (Optional)</Label>
+                <Input
+                  id="offVid"
+                  placeholder="e.g. https://www.youtube.com/embed/VIDEO_ID"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Offering Cover Image</Label>
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-24 rounded border bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                    {image ? (
+                      <img src={image} alt="Cover Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-6 w-6 text-muted-foreground opacity-50" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium gap-2">
+                      {uploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {uploading ? 'Uploading…' : 'Upload Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between sm:col-span-2 p-3 bg-muted/20 rounded-md">
+                <Label className="text-sm font-semibold">Active Status</Label>
+                <Switch checked={isActive} onCheckedChange={setIsActive} />
+              </div>
+
+              <div className="sm:col-span-2 pt-2">
+                <Button type="submit" disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Add Offering
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {loading ? (
+        <div className="flex h-48 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <DataTableShell
+          columns={[
+            {
+              key: 'image',
+              label: 'Image',
+              render: (r) => (
+                <div className="h-10 w-16 bg-slate-100 rounded border overflow-hidden">
+                  {r.image ? (
+                    <img src={r.image} alt={r.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-slate-200" />
+                  )}
+                </div>
+              ),
+            },
+            { key: 'name', label: 'Offering Seva' },
+            {
+              key: 'price',
+              label: 'Price',
+              render: (r) => <span>₹{Number(r.price)}</span>,
+            },
+            {
+              key: 'videoUrl',
+              label: 'Video Linked',
+              render: (r) => (
+                <Badge variant={r.videoUrl ? 'default' : 'secondary'}>
+                  {r.videoUrl ? '📹 Yes' : 'No'}
+                </Badge>
+              ),
+            },
+            {
+              key: 'isActive',
+              label: 'Status',
+              render: (r) => (
+                <Badge variant={r.isActive ? 'success' : 'secondary'}>
+                  {r.isActive ? 'Active' : 'Disabled'}
+                </Badge>
+              ),
+            },
+            {
+              key: 'actions',
+              label: 'Actions',
+              render: (r) => (
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="h-8 w-8"
+                  onClick={() => handleDelete(r.id)}
+                  title="Delete Seva"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              ),
+            },
+          ]}
+          rows={offerings}
+        />
+      )}
     </div>
   )
 }
