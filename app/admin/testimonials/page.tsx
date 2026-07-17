@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2, Star, Upload, User, Sparkles } from 'lucide-react'
+import { Loader2, Plus, Trash2, Star, Upload, User, Sparkles, Edit2, Smile } from 'lucide-react'
 
 export default function TestimonialsPage() {
   const [testimonials, setTestimonials] = useState<any[]>([])
@@ -21,6 +21,9 @@ export default function TestimonialsPage() {
   const [uploading, setUploading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
 
+  // Edit states
+  const [editId, setEditId] = useState<string | null>(null)
+
   // Form states
   const [name, setName] = useState('')
   const [location, setLocation] = useState('')
@@ -28,6 +31,8 @@ export default function TestimonialsPage() {
   const [message, setMessage] = useState('')
   const [avatar, setAvatar] = useState('')
   const [selectedDevoteeId, setSelectedDevoteeId] = useState('')
+
+  const emojiList = ['❤️', '😊', '🙏', '🪷', '✨', '🪔', '🐚', '🕉️', '🌸', '🌞']
 
   async function loadData() {
     try {
@@ -96,41 +101,67 @@ export default function TestimonialsPage() {
     }
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!name || !message) return
 
     setSaving(true)
     try {
+      const method = editId ? 'PUT' : 'POST'
+      const payload: any = {
+        name,
+        location,
+        rating: Number(rating),
+        message,
+        avatar,
+      }
+      if (editId) payload.id = editId
+
       const res = await fetch('/api/admin/testimonials', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          location,
-          rating: Number(rating),
-          message,
-          avatar,
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data.ok) {
-        toast.success('Testimonial added successfully!')
+        toast.success(editId ? 'Testimonial updated successfully!' : 'Testimonial added successfully!')
         setShowAddForm(false)
-        setName('')
-        setLocation('')
-        setMessage('')
-        setAvatar('')
-        setSelectedDevoteeId('')
+        resetForm()
         loadData()
       } else {
         toast.error(data.error || 'Failed to save testimonial')
       }
     } catch {
-      toast.error('Network error adding testimonial')
+      toast.error('Network error saving testimonial')
     } finally {
       setSaving(false)
     }
+  }
+
+  function startEdit(t: any) {
+    setEditId(t.id)
+    setName(t.name)
+    setLocation(t.location || '')
+    setRating(t.rating.toString())
+    setMessage(t.message)
+    setAvatar(t.avatar || '')
+    setSelectedDevoteeId('custom')
+    setShowAddForm(true)
+  }
+
+  function startCreate() {
+    resetForm()
+    setShowAddForm(true)
+  }
+
+  function resetForm() {
+    setEditId(null)
+    setName('')
+    setLocation('')
+    setRating('5')
+    setMessage('')
+    setAvatar('')
+    setSelectedDevoteeId('')
   }
 
   async function handleDelete(id: string) {
@@ -151,6 +182,10 @@ export default function TestimonialsPage() {
     }
   }
 
+  const appendEmoji = (emoji: string) => {
+    setMessage((prev) => prev + emoji)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -160,7 +195,7 @@ export default function TestimonialsPage() {
         action={{
           label: showAddForm ? 'Cancel' : 'Add Testimonial',
           icon: Plus,
-          onClick: () => setShowAddForm(!showAddForm),
+          onClick: showAddForm ? () => setShowAddForm(false) : startCreate,
         }}
       />
 
@@ -168,30 +203,32 @@ export default function TestimonialsPage() {
         <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" /> Add New Testimonial
+              <Sparkles className="h-5 w-5 text-primary" /> {editId ? 'Edit Testimonial' : 'Add New Testimonial'}
             </CardTitle>
             <CardDescription>
-              Select an existing devotee to auto-fetch their name and photo, or type manually.
+              Select an existing devotee to auto-fetch their name and photo, or type manually. Add star ratings and emojis.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Sync Devotee Profile</Label>
-                <Select value={selectedDevoteeId} onValueChange={handleDevoteeSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select devotee (Optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="custom">Custom Devotee (Type manually)</SelectItem>
-                    {devotees.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.fullName || 'Unnamed'} ({d.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <form onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2">
+              {!editId && (
+                <div className="space-y-2">
+                  <Label>Sync Devotee Profile</Label>
+                  <Select value={selectedDevoteeId} onValueChange={handleDevoteeSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select devotee (Optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">Custom Devotee (Type manually)</SelectItem>
+                      {devotees.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.fullName || 'Unnamed'} ({d.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="name">Devotee Name</Label>
@@ -224,6 +261,7 @@ export default function TestimonialsPage() {
                     <SelectItem value="5">⭐⭐⭐⭐⭐ (5 Stars)</SelectItem>
                     <SelectItem value="4">⭐⭐⭐⭐ (4 Stars)</SelectItem>
                     <SelectItem value="3">⭐⭐⭐ (3 Stars)</SelectItem>
+                    <SelectItem value="2">⭐⭐ (2 Stars)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -238,6 +276,21 @@ export default function TestimonialsPage() {
                   required
                   rows={4}
                 />
+                
+                {/* Emoji List Insertion */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                  <span className="text-[10px] text-muted-foreground mr-1 flex items-center gap-1"><Smile className="h-3.5 w-3.5" /> Insert Emojis:</span>
+                  {emojiList.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => appendEmoji(emoji)}
+                      className="px-2 py-1 text-sm bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all rounded"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2 sm:col-span-2">
@@ -274,7 +327,7 @@ export default function TestimonialsPage() {
               <div className="sm:col-span-2 pt-2">
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Testimonial
+                  {editId ? 'Update Testimonial' : 'Save Testimonial'}
                 </Button>
               </div>
             </form>
@@ -284,7 +337,7 @@ export default function TestimonialsPage() {
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
         </div>
       ) : (
         <DataTableShell
@@ -326,15 +379,26 @@ export default function TestimonialsPage() {
               key: 'actions',
               label: 'Actions',
               render: (r) => (
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="h-8 w-8"
-                  onClick={() => handleDelete(r.id)}
-                  title="Delete Testimonial"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-blue-600"
+                    onClick={() => startEdit(r)}
+                    title="Edit Testimonial"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="h-8 w-8"
+                    onClick={() => handleDelete(r.id)}
+                    title="Delete Testimonial"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               ),
             },
           ]}

@@ -57,6 +57,33 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const { id, name, avatar, location, rating, message, isFeatured, isActive } = await req.json()
+
+    if (!id) {
+      return NextResponse.json({ ok: false, error: 'ID is required for editing' }, { status: 400 })
+    }
+
+    const testimonial = await prisma.testimonial.update({
+      where: { id },
+      data: {
+        name,
+        avatar,
+        location,
+        rating: rating ? Number(rating) : 5,
+        message,
+        isFeatured: isFeatured !== undefined ? !!isFeatured : undefined,
+        isActive: isActive !== undefined ? !!isActive : undefined,
+      },
+    })
+
+    return NextResponse.json({ ok: true, data: testimonial })
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
