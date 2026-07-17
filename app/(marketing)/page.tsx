@@ -26,7 +26,13 @@ const testimonials = [
   { name: 'Priya Nair', location: 'Bangalore', rating: 5, message: 'Excellent service and authentic pandits. Highly recommended.' },
 ]
 
-export default function HomePage() {
+import { prisma } from '@/lib/prisma'
+
+export default async function HomePage() {
+  const products = await prisma.product.findMany({
+    take: 4,
+    include: { category: true }
+  }).catch(() => [])
   return (
     <div>
       {/* HERO */}
@@ -137,6 +143,44 @@ export default function HomePage() {
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-lg font-bold text-primary">₹{p.price}</span>
                   <Button size="sm">Book</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* SACRED PRODUCTS */}
+      <section className="container py-16 bg-muted/20">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <Badge variant="outline" className="mb-3">🛍️ Store</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold">Abhimantrit Products</h2>
+            <p className="mt-2 text-muted-foreground">Authentic, energized accessories, rudraksha, and spiritual books.</p>
+          </div>
+          <Button variant="outline" asChild><Link href="/products">View all <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((p: any) => (
+            <Card key={p.id} className="overflow-hidden group hover:shadow-lg transition-all flex flex-col justify-between border border-primary/10">
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                {p.coverImage || (p.images && p.images[0]) ? (
+                  <img src={p.coverImage || p.images[0]} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                ) : (
+                  <div className="h-full w-full bg-slate-200" />
+                )}
+                {p.category?.name && <Badge className="absolute top-3 left-3 bg-primary text-white border-none">{p.category.name}</Badge>}
+              </div>
+              <CardContent className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                  <h3 className="font-semibold line-clamp-1 group-hover:text-amber-600 transition-colors">{p.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{p.shortDescription || 'Authentic divine accessory.'}</p>
+                </div>
+                <div className="mt-4 flex items-center justify-between pt-2 border-t">
+                  <span className="text-lg font-bold text-foreground">₹{Number(p.salePrice || p.price)}</span>
+                  <Button size="sm" asChild>
+                    <Link href={`/products`}>Buy Now</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
