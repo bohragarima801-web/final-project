@@ -25,6 +25,10 @@ const MODEL_MAPPING: Record<string, string> = {
   temples: 'temple',
   pujas: 'puja',
   products: 'product',
+  'puja-categories': 'pujaCategory',
+  'product-categories': 'productCategory',
+  'chadhawa-offerings': 'chadhawaOffering',
+  'spiritual-tools': 'spiritualTool',
 }
 
 const RELATION_MAPPING: Record<string, any> = {
