@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 
 export function Logo({ className, showText = true }: { className?: string; showText?: boolean }) {
   const [logoUrl, setLogoUrl] = useState('')
-  const [siteName, setSiteName] = useState('Devyajnam')
+  const [siteName, setSiteName] = useState('दिव्ययज्ञम्')
 
   useEffect(() => {
     fetch('/api/customizer')
