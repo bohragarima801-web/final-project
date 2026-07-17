@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
 import { DataTableShell } from '@/components/admin/data-table-shell'
@@ -9,19 +10,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingBag, Package, AlertTriangle, FileSpreadsheet, Download, Upload, Trash2, Edit2, Loader2 } from 'lucide-react'
+import { ShoppingBag, Package, AlertTriangle, FileSpreadsheet, Download, Upload, Trash2, Edit2, Loader2, Plus, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 
-export default function ProductsPage() {
+function ProductsManager() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') || 'all'
+
   const [products, setProducts] = useState<any[]>([])
+  const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingReviews, setLoadingReviews] = useState(false)
   const [importing, setImporting] = useState(false)
   const [showImportForm, setShowImportForm] = useState(false)
   const [csvFile, setCsvFile] = useState<File | null>(null)
 
   async function loadProducts() {
     try {
+      setLoading(true)
       const res = await fetch('/api/admin/products')
       const data = await res.json()
       if (data.ok) {
@@ -34,9 +42,27 @@ export default function ProductsPage() {
     }
   }
 
+  async function loadReviews() {
+    try {
+      setLoadingReviews(true)
+      const res = await fetch('/api/admin/reviews')
+      const data = await res.json()
+      if (data.ok) {
+        setReviews(data.data || [])
+      }
+    } catch {
+      toast.error('Failed to load reviews')
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
   useEffect(() => {
     loadProducts()
-  }, [])
+    if (activeTab === 'reviews') {
+      loadReviews()
+    }
+  }, [activeTab])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -93,6 +119,24 @@ export default function ProductsPage() {
     }
   }
 
+  async function handleDeleteReview(id: string) {
+    if (!confirm('Are you sure you want to remove this product review?')) return
+    try {
+      const res = await fetch(`/api/admin/reviews?id=${id}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Review removed successfully')
+        loadReviews()
+      } else {
+        toast.error(data.error || 'Failed to delete')
+      }
+    } catch {
+      toast.error('Network error deleting review')
+    }
+  }
+
   function downloadTemplateCSV() {
     const csvContent = 'data:text/csv;charset=utf-8,name,slug,category,sku,shortDescription,description,price,salePrice,weight,stock\n5 Mukhi Rudraksha,5-mukhi-rudraksha,Prasad,RUD-5M-001,Pure 5 Mukhi Nepal Rudraksha,Blessed Nepalese 5 Mukhi bead,500,450,2.5,150\nPuja Samagri Kit,puja-samagri-kit,Samagri,KIT-SAM-002,Complete Puja Samagri Pack,Essential pack containing agarbatti matchbox kumkum,1200,999,500,50'
     const encodedUri = encodeURI(csvContent)
@@ -109,17 +153,31 @@ export default function ProductsPage() {
   const activeCount = products.filter(p => p.status === 'ACTIVE' || p.status === 'PUBLISHED').length
   const lowStockCount = products.filter(p => p.stock < 10).length
 
+  const tabs = [
+    { label: 'All Products', value: 'all' },
+    { label: 'Inventory', value: 'inventory' },
+    { label: 'Reviews & Feedback', value: 'reviews' }
+  ]
+
+  const changeTab = (val: string) => {
+    if (val === 'inventory') {
+      router.push('/admin/products/inventory')
+    } else {
+      router.push(`/admin/products?tab=${val}`)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Products & Inventory"
+        title="Products & Samagri"
         description="Prasad, holy rudrakshas, divine samagri, and spiritual accessories."
         breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Products' }]}
-        action={{
+        action={activeTab === 'all' ? {
           label: showImportForm ? 'Cancel' : 'Bulk CSV Import',
           icon: FileSpreadsheet,
           onClick: () => setShowImportForm(!showImportForm),
-        }}
+        } : undefined}
         secondaryAction={{
           label: 'Add Product',
           href: '/admin/products/new',
@@ -132,7 +190,20 @@ export default function ProductsPage() {
         <KpiCard title="Low Stock Alerts" value={lowStockCount.toString()} icon={AlertTriangle} iconClass="text-red-500 animate-pulse" />
       </div>
 
-      {showImportForm && (
+      {/* Tabs Menu */}
+      <div className="flex gap-2 border-b pb-1 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => changeTab(t.value)}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all shrink-0 ${activeTab === t.value ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'all' && showImportForm && (
         <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -181,9 +252,9 @@ export default function ProductsPage() {
 
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
         </div>
-      ) : (
+      ) : activeTab === 'all' ? (
         <DataTableShell
           columns={[
             { key: 'name', label: 'Product Name' },
@@ -236,7 +307,46 @@ export default function ProductsPage() {
           ]}
           rows={products}
         />
-      )}
+      ) : activeTab === 'reviews' ? (
+        loadingReviews ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          </div>
+        ) : (
+          <DataTableShell
+            columns={[
+              { key: 'product', label: 'Product' },
+              { key: 'user', label: 'Devotee / Customer' },
+              { key: 'rating', label: 'Rating' },
+              { key: 'comment', label: 'Comment / Review' },
+              { key: 'date', label: 'Date' },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (r) => (
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" onClick={() => handleDeleteReview(r.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )
+              }
+            ]}
+            rows={reviews}
+            searchPlaceholder="Search reviews..."
+          />
+        )
+      ) : null}
     </div>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    }>
+      <ProductsManager />
+    </Suspense>
   )
 }
