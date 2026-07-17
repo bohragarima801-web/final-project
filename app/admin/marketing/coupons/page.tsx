@@ -2,30 +2,41 @@
 
 import { useEffect, useState } from 'react'
 import { PageHeader } from '@/components/admin/page-header'
-import { KpiCard } from '@/components/admin/kpi-card'
 import { DataTableShell } from '@/components/admin/data-table-shell'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Tag, Calendar, Users, Trash2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { Loader2, Plus, Trash2, Ticket } from 'lucide-react'
 
 export default function CouponsPage() {
-  const [rows, setRows] = useState<any[]>([])
+  const [coupons, setCoupons] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false)
 
-  const loadCoupons = async () => {
+  // Form state
+  const [code, setCode] = useState('')
+  const [description, setDescription] = useState('')
+  const [discountType, setDiscountType] = useState('PERCENTAGE')
+  const [discountValue, setDiscountValue] = useState('')
+  const [minAmount, setMinAmount] = useState('')
+  const [maxDiscount, setMaxDiscount] = useState('')
+  const [maxUses, setMaxUses] = useState('')
+  const [expiresAt, setExpiresAt] = useState('')
+
+  async function loadCoupons() {
     try {
-      setLoading(true)
       const res = await fetch('/api/admin/coupons')
-      const json = await res.json()
-      if (json.ok) {
-        setRows(json.data || [])
-      } else {
-        toast.error(json.error || 'Failed to load coupons')
+      const data = await res.json()
+      if (data.ok) {
+        setCoupons(data.data || [])
       }
-    } catch (err) {
-      console.error('Error fetching coupons:', err)
-      toast.error('Network error loading coupons')
+    } catch {
+      toast.error('Failed to load coupons')
     } finally {
       setLoading(false)
     }
@@ -35,152 +46,264 @@ export default function CouponsPage() {
     loadCoupons()
   }, [])
 
-  // Delete
-  const handleDelete = async (id: string, code: string) => {
-    if (!confirm(`Are you sure you want to delete coupon code "${code}"?`)) return
-    try {
-      const res = await fetch(`/api/admin/coupons?id=${id}`, { method: 'DELETE' })
-      const json = await res.json()
-      if (json.ok) {
-        toast.success(`Coupon "${code}" deleted`)
-        setRows(prev => prev.filter(r => r.id !== id))
-      } else {
-        toast.error(json.error || 'Failed to delete coupon')
-      }
-    } catch (err) {
-      toast.error('Network error during deletion')
-    }
-  }
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!code || !discountValue) return
 
-  // Bulk Actions
-  const handleBulkDelete = async (ids: string[]) => {
+    setSaving(true)
     try {
       const res = await fetch('/api/admin/coupons', {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', ids })
+        body: JSON.stringify({
+          code,
+          description,
+          discountType,
+          discountValue: Number(discountValue),
+          minAmount: minAmount ? Number(minAmount) : null,
+          maxDiscount: maxDiscount ? Number(maxDiscount) : null,
+          maxUses: maxUses ? Number(maxUses) : null,
+          expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+        }),
       })
-      const json = await res.json()
-      if (json.ok) {
-        toast.success(`Successfully deleted ${ids.length} coupons`)
-        setRows(prev => prev.filter(r => !ids.includes(r.id)))
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Coupon created successfully!')
+        setShowAddForm(false)
+        setCode('')
+        setDescription('')
+        setDiscountValue('')
+        setMinAmount('')
+        setMaxDiscount('')
+        setMaxUses('')
+        setExpiresAt('')
+        loadCoupons()
       } else {
-        toast.error(json.error || 'Failed to bulk delete')
+        toast.error(data.error || 'Failed to create coupon')
       }
-    } catch (err) {
-      toast.error('Network error bulk deleting coupons')
+    } catch {
+      toast.error('Network error creating coupon')
+    } finally {
+      setSaving(false)
     }
   }
 
-  const handleBulkStatusChange = async (ids: string[], status: string) => {
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure you want to delete this coupon?')) return
     try {
-      const res = await fetch('/api/admin/coupons', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'status', ids, status: status === 'ACTIVE' })
+      const res = await fetch(`/api/admin/coupons?id=${id}`, {
+        method: 'DELETE',
       })
-      const json = await res.json()
-      if (json.ok) {
-        toast.success(`Updated status for ${ids.length} coupons`)
-        setRows(prev => prev.map(r => ids.includes(r.id) ? { ...r, isActive: status === 'ACTIVE' } : r))
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Coupon deleted successfully')
+        loadCoupons()
       } else {
-        toast.error(json.error || 'Failed to update coupons')
+        toast.error(data.error || 'Failed to delete coupon')
       }
-    } catch (err) {
-      toast.error('Network error during bulk update')
+    } catch {
+      toast.error('Network error deleting coupon')
     }
   }
-
-  // Metrics
-  const totalCount = rows.length
-  const activeCount = rows.filter(r => r.isActive).length
-  const totalUsed = rows.reduce((acc, r) => acc + (r.usedCount || 0), 0)
-  const expiredCount = rows.filter(r => r.expiresAt && new Date(r.expiresAt) < new Date()).length
-
-  const columns = [
-    { 
-      key: 'code', 
-      label: 'Coupon Code', 
-      render: (r: any) => <Badge variant="outline" className="font-mono text-sm uppercase font-bold border-amber-500/30 text-amber-600 bg-amber-500/[0.04]">{r.code}</Badge> 
-    },
-    { 
-      key: 'discountValue', 
-      label: 'Discount Value', 
-      render: (r: any) => (
-        <span className="font-bold text-foreground">
-          {r.discountType === 'PERCENTAGE' ? `${r.discountValue}%` : `₹${parseFloat(r.discountValue || '0').toLocaleString('en-IN')}`}
-        </span>
-      )
-    },
-    { 
-      key: 'discountType', 
-      label: 'Discount Type', 
-      render: (r: any) => <Badge variant="secondary" className="text-[10px] border-none bg-muted font-bold text-muted-foreground">{r.discountType}</Badge> 
-    },
-    { 
-      key: 'usedCount', 
-      label: 'Redemptions', 
-      render: (r: any) => <span className="text-xs font-semibold">{r.usedCount || 0} / {r.maxUses || 'Unlimited'}</span> 
-    },
-    { 
-      key: 'expiresAt', 
-      label: 'Valid Until', 
-      render: (r: any) => (
-        <span className="text-muted-foreground text-xs font-medium">
-          {r.expiresAt ? new Date(r.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Lifetime'}
-        </span>
-      )
-    },
-    { 
-      key: 'isActive', 
-      label: 'Status', 
-      render: (r: any) => (
-        <Badge variant={r.isActive ? 'default' : 'secondary'} className={r.isActive ? 'bg-emerald-500 hover:bg-emerald-600 border-none' : ''}>
-          {r.isActive ? 'ACTIVE' : 'INACTIVE'}
-        </Badge>
-      )
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      sortable: false,
-      render: (r: any) => (
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-          onClick={() => handleDelete(r.id, r.code)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )
-    }
-  ]
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Promotional Coupon Codes"
-        description="Configure discount coupons, seasonal promo offers, percentage cuts, and max usage thresholds."
-        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Marketing' }, { label: 'Coupons' }]}
+        title="Coupon Codes & Discounts"
+        description="Configure promotional codes, percentages or flat rate discounts for pujas and products."
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Coupons' }]}
+        action={{
+          label: showAddForm ? 'Cancel' : 'New Coupon',
+          icon: Plus,
+          onClick: () => setShowAddForm(!showAddForm),
+        }}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard title="Total Coupons" value={String(totalCount)} icon={Tag} />
-        <KpiCard title="Active Codes" value={String(activeCount)} icon={Tag} iconClass="text-emerald-500" />
-        <KpiCard title="Redeemed Uses" value={String(totalUsed)} icon={Users} iconClass="text-blue-500" />
-        <KpiCard title="Expired Offers" value={String(expiredCount)} icon={Calendar} iconClass="text-rose-500" />
-      </div>
+      {showAddForm && (
+        <Card className="border-2 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-primary" /> Create New Coupon
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="code">Coupon Code (Uppercase)</Label>
+                <Input
+                  id="code"
+                  placeholder="e.g. DIWALI50"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  required
+                />
+              </div>
 
-      <DataTableShell
-        columns={columns}
-        rows={rows}
-        searchPlaceholder="Search coupon codes..."
-        emptyMessage={loading ? "Loading coupons..." : "No promotional coupons found in database."}
-        onBulkDelete={handleBulkDelete}
-        onBulkStatusChange={handleBulkStatusChange}
-        statusOptions={['ACTIVE', 'INACTIVE']}
-      />
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  placeholder="e.g. Get 50% off on all Pujas"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Discount Type</Label>
+                <Select value={discountType} onValueChange={setDiscountType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                    <SelectItem value="FLAT">Flat Amount (₹)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="discountValue">Discount Value</Label>
+                <Input
+                  id="discountValue"
+                  type="number"
+                  placeholder={discountType === 'PERCENTAGE' ? 'e.g. 50' : 'e.g. 500'}
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="minAmount">Minimum Order Amount (₹)</Label>
+                <Input
+                  id="minAmount"
+                  type="number"
+                  placeholder="e.g. 1000"
+                  value={minAmount}
+                  onChange={(e) => setMinAmount(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxDiscount">Maximum Discount Value (₹)</Label>
+                <Input
+                  id="maxDiscount"
+                  type="number"
+                  placeholder="e.g. 500"
+                  value={maxDiscount}
+                  onChange={(e) => setMaxDiscount(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxUses">Usage Limit (Max Uses)</Label>
+                <Input
+                  id="maxUses"
+                  type="number"
+                  placeholder="e.g. 100"
+                  value={maxUses}
+                  onChange={(e) => setMaxUses(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expiresAt">Expiry Date</Label>
+                <Input
+                  id="expiresAt"
+                  type="date"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                />
+              </div>
+
+              <div className="sm:col-span-2 pt-2">
+                <Button type="submit" disabled={saving}>
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Create Coupon
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {loading ? (
+        <div className="flex h-48 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <DataTableShell
+          columns={[
+            {
+              key: 'code',
+              label: 'Code',
+              render: (r) => (
+                <code className="font-mono text-xs bg-muted px-2 py-0.5 rounded border">
+                  {r.code}
+                </code>
+              ),
+            },
+            {
+              key: 'discountType',
+              label: 'Type',
+              render: (r) => (
+                <Badge variant="outline">
+                  {r.discountType === 'PERCENTAGE' ? 'Percentage' : 'Flat Discount'}
+                </Badge>
+              ),
+            },
+            {
+              key: 'discountValue',
+              label: 'Value',
+              render: (r) => (
+                <span>
+                  {r.discountType === 'PERCENTAGE'
+                    ? `${Number(r.discountValue)}%`
+                    : `₹${Number(r.discountValue)}`}
+                </span>
+              ),
+            },
+            {
+              key: 'usedCount',
+              label: 'Usage Stats',
+              render: (r) => (
+                <span className="text-xs">
+                  {r.usedCount} used {r.maxUses ? `/ ${r.maxUses} max` : '(Unlimited)'}
+                </span>
+              ),
+            },
+            {
+              key: 'isActive',
+              label: 'Status',
+              render: (r) => (
+                <Badge
+                  variant={r.isActive ? 'success' : 'secondary'}
+                  className={r.isActive ? 'bg-green-100 text-green-800' : ''}
+                >
+                  {r.isActive ? 'Active' : 'Disabled'}
+                </Badge>
+              ),
+            },
+            {
+              key: 'actions',
+              label: 'Actions',
+              render: (r) => (
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="h-8 w-8"
+                  onClick={() => handleDelete(r.id)}
+                  title="Delete Coupon"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              ),
+            },
+          ]}
+          rows={coupons}
+        />
+      )}
     </div>
   )
 }

@@ -12,42 +12,9 @@ export type AuthUser = {
 }
 
 export async function getSession() {
-  const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-  if (!isPlaceholder) {
-    try {
-      const supabase = await createClient()
-      const { data } = await supabase.auth.getUser()
-      if (data?.user) return data.user
-    } catch (e) {
-      console.warn('[getSession] Supabase client error:', e)
-    }
-  }
-
-  // Fallback: Check cookie for local/development session
-  try {
-    const { cookies } = await import('next/headers')
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get('customer_session')
-    if (sessionCookie?.value) {
-      const parsed = JSON.parse(decodeURIComponent(sessionCookie.value))
-      if (parsed && parsed.id) {
-        return {
-          id: parsed.id,
-          email: parsed.email,
-          email_confirmed_at: new Date().toISOString(),
-          user_metadata: {
-            full_name: parsed.fullName || 'Devotee',
-          },
-        } as any
-      }
-    }
-  } catch (e: any) {
-    if (e && (e.digest === 'DYNAMIC_SERVER_USAGE' || e.digest?.startsWith('NEXT_REDIRECT') || e.digest === 'NEXT_NOT_FOUND')) {
-      throw e
-    }
-    console.warn('[getSession] Fallback session parsing failed:', e)
-  }
-  return null
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getUser()
+  return data.user
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -69,6 +36,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           email: supaUser.email,
           emailVerified: !!supaUser.email_confirmed_at,
           fullName: (supaUser.user_metadata?.full_name as string) || null,
+          phone: (supaUser.user_metadata?.phone as string) || null,
           avatar: (supaUser.user_metadata?.avatar_url as string) || null,
           roleId: defaultRole?.id ?? null,
         },
@@ -86,10 +54,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       role: (dbUser.role?.slug as RoleSlug) ?? 'devotee',
       supabaseId: dbUser.supabaseId!,
     }
-  } catch (err: any) {
-    if (err && (err.digest === 'DYNAMIC_SERVER_USAGE' || err.digest?.startsWith('NEXT_REDIRECT') || err.digest === 'NEXT_NOT_FOUND')) {
-      throw err
-    }
+  } catch (err) {
     // If DB is unreachable (e.g. dev env), fall back to Supabase user only.
     const supaUser = await getSession()
     if (!supaUser) return null

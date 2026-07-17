@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import prisma from '@/lib/prisma'
-import { initSecrets } from '@/lib/secrets'
+
+import { getSetting } from '@/lib/settings'
 
 function cors(res: NextResponse) {
   res.headers.set('Access-Control-Allow-Origin', '*')
@@ -16,9 +17,6 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Ensure secrets from admin are loaded into process.env
-    await initSecrets()
-
     const body = await req.json()
     const {
       paymentId,
@@ -31,7 +29,7 @@ export async function POST(req: NextRequest) {
       return cors(NextResponse.json({ ok: false, error: 'Missing verification fields' }, { status: 400 }))
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET
+    const secret = await getSetting('secret.razorpay_key_secret', 'RAZORPAY_KEY_SECRET')
     if (!secret) {
       return cors(NextResponse.json({ ok: false, error: 'RAZORPAY_KEY_SECRET not configured' }, { status: 500 }))
     }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getRazorpay } from '@/lib/razorpay'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { initSecrets } from '@/lib/secrets'
+import { getSetting } from '@/lib/settings'
 
 function cors(res: NextResponse) {
   res.headers.set('Access-Control-Allow-Origin', '*')
@@ -17,9 +17,6 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Ensure secrets from admin are loaded into process.env
-    await initSecrets()
-
     const body = await req.json()
     const {
       amountInRupees,
@@ -43,7 +40,7 @@ export async function POST(req: NextRequest) {
     // Optional: attach user (works even if unauth for donations/testing)
     const user = await getCurrentUser().catch(() => null)
 
-    const razorpay = getRazorpay()
+    const razorpay = await getRazorpay()
     const order = await razorpay.orders.create({
       amount: amountInPaise,
       currency: 'INR',
@@ -78,13 +75,15 @@ export async function POST(req: NextRequest) {
       console.warn('[create-order] DB persistence skipped:', dbErr?.message)
     }
 
+    const rzpKeyId = (await getSetting('secret.razorpay_key_id')) || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID
+
     return cors(NextResponse.json({
       ok: true,
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
       receipt: order.receipt,
-      razorpayKeyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID,
+      razorpayKeyId: rzpKeyId,
       paymentId,
       customer: {
         name: customer?.name || user?.fullName || '',

@@ -7,41 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Bell, Search, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
-export const dynamic = 'force-dynamic'
-
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const h = await headers()
-  // Retrieve the pathname from various standard and custom headers to be fully compatible with Vercel and local environments
-  const pathname = (
-    h.get('x-pathname') || 
-    h.get('x-invoke-path') || 
-    h.get('x-matched-path') || 
-    h.get('x-forwarded-uri') ||
-    h.get('x-original-url') ||
-    ''
-  )
-  const referer = h.get('referer') || ''
-
-  console.log(`[DEBUG AdminLayout] Pathname check: x-pathname="${h.get('x-pathname')}", x-invoke-path="${h.get('x-invoke-path')}", x-matched-path="${h.get('x-matched-path')}", resolved pathname="${pathname}", referer="${referer}"`)
-
-  // Check if we are on the login page using multiple extremely reliable matches
-  const isLoginPage = 
-    pathname === '/admin/login' || 
-    pathname.startsWith('/admin/login/') ||
-    pathname.toLowerCase().includes('/admin/login') ||
-    pathname.includes('login') ||
-    referer.toLowerCase().includes('/admin/login')
+  const pathname = h.get('x-pathname') || ''
 
   // Login page: render bare (no sidebar, no auth check)
-  if (isLoginPage) {
-    console.log('[DEBUG AdminLayout] Rendering login page bare, skipping authentication and redirect.')
+  if (pathname === '/admin/login' || pathname.startsWith('/admin/login/')) {
     return <>{children}</>
   }
 
-  console.log('[DEBUG AdminLayout] Fetching session...')
   const session = await getAdminSession()
   if (!session) {
-    console.warn('[DEBUG AdminLayout] No active session found. Redirecting to /admin/login')
     redirect('/admin/login')
   }
 

@@ -1,20 +1,12 @@
 import { Navbar } from '@/components/layouts/navbar'
 import { Footer } from '@/components/layouts/footer'
 import { getCurrentUser } from '@/lib/auth'
-import { getWebsiteSettings } from '@/lib/settings'
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser().catch(() => null)
-  const settings = await getWebsiteSettings()
-
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar 
-        user={user ? { fullName: user.fullName, email: user.email } : null} 
-        logoUrl={settings.site_logo}
-        siteName={settings.site_name}
-        tagline={settings.site_tagline}
-      />
+      <Navbar user={user ? { fullName: user.fullName, email: user.email } : null} />
       <main className="flex-1">{children}</main>
       <Footer />
     </div>

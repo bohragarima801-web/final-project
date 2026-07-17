@@ -1,184 +1,137 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { PageHeader } from '@/components/admin/page-header'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Loader2, Send } from 'lucide-react'
+import { Loader2, Send, FileSpreadsheet, Download, CheckCircle2 } from 'lucide-react'
 
 export default function NotificationsPage() {
-  const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [users, setUsers] = useState<any[]>([])
-
-  // Form states
-  const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
-  const [userId, setUserId] = useState('')
-  const [type, setType] = useState('BOOKING')
+  const [sending, setSending] = useState(false)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [result, setResult] = useState<string | null>(null)
 
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const [resN, resU] = await Promise.all([
-        fetch('/api/admin/notifications'),
-        fetch('/api/admin/users')
-      ])
-      const jsonN = await resN.json()
-      const jsonU = await resU.json()
-
-      if (jsonN.ok) setNotifications(jsonN.data || [])
-      if (jsonU.ok) {
-        setUsers(jsonU.data || [])
-        if (jsonU.data && jsonU.data.length > 0) {
-          setUserId(jsonU.data[0].id)
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load notifications page data:', err)
-      toast.error('Network error loading data')
-    } finally {
-      setLoading(false)
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      setCsvFile(file)
+      toast.success(`CSV file selected: ${file.name}`)
     }
   }
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const handleSend = async (e: React.FormEvent) => {
+  async function handleBulkSend(e: React.FormEvent) {
     e.preventDefault()
-    if (!title || !message || !userId) {
-      toast.error('Title, Message, and Targeted User are required!')
+    if (!csvFile) {
+      toast.error('Please upload a CSV file first')
       return
     }
 
+    setSending(true)
+    setResult(null)
+
+    const formData = new FormData()
+    formData.append('file', csvFile)
+    formData.append('message', message)
+
     try {
-      setSending(true)
-      const res = await fetch('/api/admin/notifications', {
+      const res = await fetch('/api/admin/notifications/csv', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          message,
-          userId,
-          type,
-          isRead: false
-        })
+        body: formData,
       })
-      const json = await res.json()
-      if (json.ok) {
-        toast.success('Notification dispatched successfully!')
-        setTitle('')
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Bulk notifications sent successfully!')
+        setResult(data.message)
+        setCsvFile(null)
         setMessage('')
-        // Refresh list
-        setNotifications(prev => [json.data, ...prev])
       } else {
-        toast.error(json.error || 'Failed to dispatch notification')
+        toast.error(data.error || 'Failed to dispatch notifications')
       }
-    } catch (err) {
-      toast.error('Network error dispatching notification')
+    } catch {
+      toast.error('Network error uploading CSV')
     } finally {
       setSending(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[300px] gap-2">
-        <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
-        <p className="text-sm text-muted-foreground">Loading notifications manager…</p>
-      </div>
-    )
+  function downloadSampleCSV() {
+    const csvContent = 'data:text/csv;charset=utf-8,name,email,phone,message\nRahul Sharma,rahul@example.com,+919999999999,Jai Shri Ram {name}! Your Somwar Puja starts in 1 hour.\nAnjali Verma,anjali@example.com,+918888888888,Namaste {name}! Receive your prasad updates here.'
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', 'devyajnam_notification_sample.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Sample CSV downloaded!')
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="In-App Notifications Manager" 
-        description="Dispatch critical ritual schedules, transaction receipts, or direct notifications to devotee dashboards."
-        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Notifications' }]} 
+      <PageHeader
+        title="Spiritual Notification Center"
+        description="Broadcast notifications globally or run target marketing lists using bulk CSV imports."
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Notifications' }]}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Compose Notification */}
-        <Card className="border border-border/60 shadow-sm">
+        <Card className="border-2 border-primary/20">
           <CardHeader>
-            <CardTitle className="text-base font-bold">Compose Custom Alert</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-primary" /> Bulk Send via CSV Upload
+            </CardTitle>
+            <CardDescription>
+              Upload a contact sheet to send customized alerts via WhatsApp, SMS, and Email in one click.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSend} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="target-user">Targeted Customer / Devotee</Label>
-                <select
-                  id="target-user"
-                  className="w-full bg-background border border-border rounded px-3 py-2 text-sm outline-none"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>Select User...</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.fullName || u.email} ({u.email})
-                    </option>
-                  ))}
-                </select>
+            <form onSubmit={handleBulkSend} className="space-y-4">
+              <div className="space-y-2">
+                <Label>1. Download Sample Layout</Label>
+                <div>
+                  <Button type="button" variant="outline" size="sm" onClick={downloadSampleCSV} className="gap-1.5">
+                    <Download className="h-4 w-4" /> Download Sample CSV
+                  </Button>
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="notify-type">Notification Category</Label>
-                <select
-                  id="notify-type"
-                  className="w-full bg-background border border-border rounded px-3 py-2 text-sm outline-none"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                >
-                  <option value="BOOKING">BOOKING</option>
-                  <option value="ORDER">ORDER</option>
-                  <option value="PAYMENT">PAYMENT</option>
-                  <option value="DONATION">DONATION</option>
-                  <option value="SUPPORT">SUPPORT</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="notif-title">Notification Title</Label>
-                <Input 
-                  id="notif-title"
-                  placeholder="e.g., 🗓️ Sawan Somvar Puja Starting Soon" 
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+              <div className="space-y-2">
+                <Label htmlFor="csvFile">2. Upload Contact CSV File</Label>
+                <Input
+                  id="csvFile"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="cursor-pointer"
                   required
                 />
+                <p className="text-[10px] text-muted-foreground">Required columns: name, email, phone, message</p>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="notif-msg">Body Message</Label>
-                <Textarea 
-                  id="notif-msg"
-                  rows={4} 
-                  placeholder="Book your sankalp before the ritual begins..." 
+              <div className="space-y-2">
+                <Label htmlFor="message">3. Default Template Message (Fallback)</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Use variables like {name} in the message text. This message will be sent if the CSV row does not contain a custom message."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  required
+                  rows={4}
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-amber-500 hover:bg-amber-600 font-semibold"
-                disabled={sending}
-              >
-                {sending ? 'Dispatching…' : (
+              <Button type="submit" disabled={sending} className="w-full">
+                {sending ? (
                   <>
-                    <Send className="h-4 w-4 mr-2" /> Send In-App Notification
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending alerts…
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" /> Dispatch Bulk Notifications
                   </>
                 )}
               </Button>
@@ -186,32 +139,32 @@ export default function NotificationsPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Sends */}
-        <Card className="border border-border/60 shadow-sm overflow-hidden">
-          <CardHeader className="border-b border-border/50 bg-background/50">
-            <CardTitle className="text-base font-bold">Recent Dispatches</CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>Dispatch Logs & Console Reports</CardTitle>
+            <CardDescription>View live results and delivery confirmations below.</CardDescription>
           </CardHeader>
-          <CardContent className="p-0 divide-y max-h-[500px] overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                No notifications logged in the database yet.
+          <CardContent className="space-y-4">
+            {result ? (
+              <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold">Dispatch Complete</h4>
+                  <p className="mt-1">{result}</p>
+                </div>
               </div>
             ) : (
-              notifications.map((n) => (
-                <div key={n.id} className="p-4 hover:bg-muted/10 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge variant="outline" className="text-[10px] font-bold border-none bg-muted text-foreground">
-                      {n.type}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground font-mono">
-                      {new Date(n.createdAt).toLocaleDateString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-sm text-foreground mb-0.5">{n.title}</h4>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
-                </div>
-              ))
+              <p className="text-sm text-muted-foreground">No bulk uploads processed in this session.</p>
             )}
+
+            <div className="p-3 bg-muted rounded-md text-xs font-mono border">
+              <span className="text-muted-foreground font-semibold">// How template variables work:</span>
+              <ul className="mt-1 space-y-1 list-disc pl-4 text-slate-700">
+                <li>{"{name}"} - replaced with devotee name</li>
+                <li>{"{email}"} - replaced with contact email</li>
+                <li>{"{phone}"} - replaced with WhatsApp/mobile</li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
       </div>

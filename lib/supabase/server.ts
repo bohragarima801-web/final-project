@@ -1,24 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-
-const getSafeSupabaseUrl = (url?: string) => {
-  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-    try {
-      new URL(url)
-      return url
-    } catch (_) {}
-  }
-  return 'https://placeholder.supabase.co'
-}
+import { getSetting } from '@/lib/settings'
 
 export async function createClient() {
   const cookieStore = await cookies()
-  const url = getSafeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+  
+  let sbUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^"|"$/g, '')
+  let sbKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^"|"$/g, '')
+
+  if (!sbUrl || !sbKey) {
+    sbUrl = await getSetting('secret.supabase_url')
+    sbKey = await getSetting('secret.supabase_anon_key')
+  }
 
   return createServerClient(
-    url,
-    key,
+    sbUrl,
+    sbKey,
     {
       cookies: {
         getAll() {

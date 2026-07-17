@@ -1,19 +1,32 @@
-import { prisma } from '@/lib/prisma'
-import { initSecrets } from '@/lib/secrets'
+import prisma from '@/lib/prisma'
 
-export async function getWebsiteSettings() {
-  try {
-    // Automatically populate and synchronize process.env with latest DB-configured secrets
-    await initSecrets()
+const cache: Record<string, { value: string; expiry: number }> = {}
+const CACHE_TTL_MS = 60000 // 1 minute cache
 
-    const settings = await prisma.websiteSetting.findMany()
-    const config: Record<string, any> = {}
-    settings.forEach(s => {
-      config[s.key] = s.value
-    })
-    return config
-  } catch (err) {
-    console.error('[getWebsiteSettings] Failed to load settings:', err)
-    return {}
+export async function getSetting(key: string, envFallback?: string): Promise<string> {
+  const now = Date.now()
+  if (cache[key] && cache[key].expiry > now) {
+    return cache[key].value
   }
+
+  try {
+    const setting = await prisma.websiteSetting.findUnique({
+      where: { key }
+    })
+    if (setting && setting.value) {
+      const val = typeof setting.value === 'string' ? setting.value : JSON.stringify(setting.value)
+      const cleaned = val.replace(/^"|"$/g, '')
+      cache[key] = { value: cleaned, expiry: now + CACHE_TTL_MS }
+      return cleaned
+    }
+  } catch (e) {
+    // DB unreachable or table doesn't exist
+  }
+
+  if (envFallback) {
+    const val = (process.env[envFallback] || '').replace(/^"|"$/g, '')
+    cache[key] = { value: val, expiry: now + CACHE_TTL_MS }
+    return val
+  }
+  return ''
 }

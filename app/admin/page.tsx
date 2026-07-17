@@ -1,327 +1,167 @@
-// app/admin/page.tsx
-import { cookies } from 'next/headers'
-import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
-import { prisma } from '@/lib/prisma'
-import { DashboardView } from '@/components/admin/dashboard-view'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { KpiCard } from '@/components/admin/kpi-card'
+import { PageHeader } from '@/components/admin/page-header'
+import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import {
+  Wallet, Calendar, Package, Users, Star, Flame, HandCoins, Sparkles,
+  Activity, Eye, Clock, AlertTriangle, MessageSquare, TrendingUp,
+  BarChart3, ArrowUpRight, ShoppingBag, CalendarClock, CheckCircle2,
+  Plus, Zap,
+} from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+const quickActions = [
+  { label: 'Add Puja', href: '/admin/pujas/new', icon: Flame },
+  { label: 'Add Product', href: '/admin/products/new', icon: ShoppingBag },
+  { label: 'Add Blog', href: '/admin/blog/new', icon: Plus },
+  { label: 'Add Temple', href: '/admin/temples/new', icon: Plus },
+  { label: 'Send Notification', href: '/admin/notifications', icon: Zap },
+  { label: 'Create Coupon', href: '/admin/marketing/coupons', icon: Plus },
+]
 
-export default async function AdminPage() {
-  console.log('[DEBUG AdminPage] Rendering AdminPage - starting auth checks...')
-  try {
-    const cookieStore = await cookies()
-    const cookieObj = cookieStore.get(ADMIN_COOKIE_NAME)
-    const token = cookieObj?.value
-    
-    if (!token) {
-      console.warn('[DEBUG AdminPage] No admin token found in cookies. Showing Unauthorized.')
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-          <div className="h-12 w-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold mb-3">!</div>
-          <h2 className="text-xl font-bold text-foreground">Unauthorized Access</h2>
-          <p className="text-muted-foreground text-sm mt-1 max-w-sm">Please log in as an administrator to access the Control Center.</p>
-        </div>
-      )
-    }
+const recentActivities = [
+  { icon: Calendar, text: 'New booking for Maha Rudrabhishek', user: 'Anjali S.', time: '2 min ago', color: 'text-primary' },
+  { icon: HandCoins, text: '₹5,100 donated to Gaushala campaign', user: 'Rajesh K.', time: '18 min ago', color: 'text-green-600' },
+  { icon: ShoppingBag, text: 'Order #DVJ-2412 placed', user: 'Priya N.', time: '32 min ago', color: 'text-accent' },
+  { icon: MessageSquare, text: 'New support ticket #ST-108', user: 'Vikram M.', time: '1 hr ago', color: 'text-orange-500' },
+  { icon: Users, text: '3 new customers registered', user: 'System', time: '2 hrs ago', color: 'text-blue-500' },
+]
 
-    console.log('[DEBUG AdminPage] Verifying admin token...')
-    const isValid = await verifyAdminToken(token)
-
-    if (!isValid) {
-      console.warn('[DEBUG AdminPage] Token verification failed.')
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-          <div className="h-12 w-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl font-bold mb-3">?</div>
-          <h2 className="text-xl font-bold text-foreground">Session Expired</h2>
-          <p className="text-muted-foreground text-sm mt-1 max-w-sm">Your admin session is invalid or has expired. Please sign in again.</p>
-        </div>
-      )
-    }
-
-    console.log('[DEBUG AdminPage] Token verified. Fetching real-time system metrics from PostgreSQL...')
-    
-    // Query metrics
-    let stats = {
-      totalCollections: 0,
-      bookingsCount: 0,
-      ordersCount: 0,
-      usersCount: 0,
-      supportTicketsCount: 0,
-      activePujasCount: 0,
-      templesCount: 0,
-      productsCount: 0,
-      blogsCount: 0,
-      eventsCount: 0,
-      galleryCount: 0,
-      testimonialsCount: 0,
-      chadhawaCount: 0,
-      donationsCount: 0
-    }
-
-    let recentBookings: any[] = []
-    let recentOrders: any[] = []
-    let recentChadhawa: any[] = []
-    let recentDonations: any[] = []
-    let recentUsers: any[] = []
-    let recentPayments: any[] = []
-    let recentSupportTickets: any[] = []
-
-    let weeklyTrend: any[] = []
-    let monthlyMetrics: any[] = []
-
-    try {
-      // 1. Dashboard counts
-      const [
-        totalDevotees,
-        pujaBookings,
-        storeOrders,
-        supportTickets,
-        activePujas,
-        templeCount,
-        products,
-        blogs,
-        events,
-        galleryImages,
-        testimonials,
-        chadhawaCount,
-        donationsCount
-      ] = await Promise.all([
-        prisma.user.count(),
-        prisma.booking.count(),
-        prisma.order.count(),
-        prisma.supportTicket.count({ where: { status: 'OPEN' } }),
-        prisma.puja.count({ where: { status: 'PUBLISHED' } }),
-        prisma.temple.count(),
-        prisma.product.count(),
-        prisma.blog.count(),
-        prisma.event.count(),
-        prisma.galleryItem.count(),
-        prisma.testimonial.count(),
-        prisma.chadhawa.count(),
-        prisma.donation.count()
-      ])
-
-      const paymentSum = await prisma.payment.aggregate({
-        where: { status: 'SUCCESS' },
-        _sum: { amount: true }
-      })
-
-      stats = {
-        totalCollections: Number(paymentSum._sum.amount || 0),
-        bookingsCount: pujaBookings,
-        ordersCount: storeOrders,
-        usersCount: totalDevotees,
-        supportTicketsCount: supportTickets,
-        activePujasCount: activePujas,
-        templesCount: templeCount,
-        productsCount: products,
-        blogsCount: blogs,
-        eventsCount: events,
-        galleryCount: galleryImages,
-        testimonialsCount: testimonials,
-        chadhawaCount: chadhawaCount,
-        donationsCount: donationsCount
-      }
-
-      // 2. Recent activities
-      recentBookings = await prisma.booking.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { email: true, fullName: true } },
-          puja: { select: { name: true } }
-        }
-      })
-
-      recentOrders = await prisma.order.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { email: true, fullName: true } }
-        }
-      })
-
-      recentChadhawa = await prisma.chadhawa.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { fullName: true } }
-        }
-      })
-
-      recentDonations = await prisma.donation.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { email: true, fullName: true } }
-        }
-      })
-
-      recentUsers = await prisma.user.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' }
-      })
-
-      recentPayments = await prisma.payment.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { email: true, fullName: true } }
-        }
-      })
-
-      recentSupportTickets = await prisma.supportTicket.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { email: true, fullName: true } }
-        }
-      })
-
-      // 3. Weekly Seva Trend (Last 7 days bookings & orders)
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-      const [bookingsLast7Days, ordersLast7Days] = await Promise.all([
-        prisma.booking.findMany({
-          where: { createdAt: { gte: sevenDaysAgo } },
-          select: { createdAt: true }
-        }),
-        prisma.order.findMany({
-          where: { createdAt: { gte: sevenDaysAgo } },
-          select: { createdAt: true }
-        })
-      ])
-
-      const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-      const last7DaysMap = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date()
-        d.setDate(d.getDate() - (6 - i))
-        return {
-          day: daysOfWeek[d.getDay()],
-          dateStr: d.toDateString(),
-          bookings: 0,
-          orders: 0
-        }
-      })
-
-      bookingsLast7Days.forEach(b => {
-        const bDayStr = new Date(b.createdAt).toDateString()
-        const found = last7DaysMap.find(d => d.dateStr === bDayStr)
-        if (found) found.bookings++
-      })
-
-      ordersLast7Days.forEach(o => {
-        const oDayStr = new Date(o.createdAt).toDateString()
-        const found = last7DaysMap.find(d => d.dateStr === oDayStr)
-        if (found) found.orders++
-      })
-
-      weeklyTrend = last7DaysMap.map(({ day, bookings, orders }) => ({ day, bookings, orders }))
-
-      // 4. Monthly metrics (Last 6 months revenue, orders, users, payments, temples)
-      const sixMonthsAgo = new Date()
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-
-      const [
-        paymentsLast6Months,
-        ordersLast6Months,
-        usersLast6Months,
-        templesLast6Months
-      ] = await Promise.all([
-        prisma.payment.findMany({
-          where: { createdAt: { gte: sixMonthsAgo }, status: 'SUCCESS' },
-          select: { createdAt: true, amount: true }
-        }),
-        prisma.order.findMany({
-          where: { createdAt: { gte: sixMonthsAgo } },
-          select: { createdAt: true }
-        }),
-        prisma.user.findMany({
-          where: { createdAt: { gte: sixMonthsAgo } },
-          select: { createdAt: true }
-        }),
-        prisma.temple.findMany({
-          where: { createdAt: { gte: sixMonthsAgo } },
-          select: { createdAt: true }
-        })
-      ])
-
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      const last6MonthsMap = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date()
-        d.setMonth(d.getMonth() - (5 - i))
-        return {
-          month: months[d.getMonth()],
-          year: d.getFullYear(),
-          monthIndex: d.getMonth(),
-          revenue: 0,
-          orders: 0,
-          users: 0,
-          payments: 0,
-          temples: 0
-        }
-      })
-
-      paymentsLast6Months.forEach(p => {
-        const pDate = new Date(p.createdAt)
-        const found = last6MonthsMap.find(m => m.monthIndex === pDate.getMonth() && m.year === pDate.getFullYear())
-        if (found) {
-          found.revenue += Number(p.amount || 0)
-          found.payments++
-        }
-      })
-
-      ordersLast6Months.forEach(o => {
-        const oDate = new Date(o.createdAt)
-        const found = last6MonthsMap.find(m => m.monthIndex === oDate.getMonth() && m.year === oDate.getFullYear())
-        if (found) found.orders++
-      })
-
-      usersLast6Months.forEach(u => {
-        const uDate = new Date(u.createdAt)
-        const found = last6MonthsMap.find(m => m.monthIndex === uDate.getMonth() && m.year === uDate.getFullYear())
-        if (found) found.users++
-      })
-
-      templesLast6Months.forEach(t => {
-        const tDate = new Date(t.createdAt)
-        const found = last6MonthsMap.find(m => m.monthIndex === tDate.getMonth() && m.year === tDate.getFullYear())
-        if (found) found.temples++
-      })
-
-      monthlyMetrics = last6MonthsMap.map(({ month, revenue, orders, users, payments, temples }) => ({
-        month, revenue, orders, users, payments, temples
-      }))
-
-    } catch (dbError: any) {
-      console.warn('[DEBUG AdminPage] Database query error, fallback to blank arrays:', dbError?.message)
-    }
-
-    return (
-      <DashboardView 
-        stats={stats}
-        recentBookings={recentBookings}
-        recentOrders={recentOrders}
-        recentChadhawa={recentChadhawa}
-        recentDonations={recentDonations}
-        recentUsers={recentUsers}
-        recentPayments={recentPayments}
-        recentSupportTickets={recentSupportTickets}
-        weeklyTrend={weeklyTrend}
-        monthlyMetrics={monthlyMetrics}
+export default function AdminDashboard() {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="🗺 Sanatan Seva Control Center"
+        description="Real-time overview of your platform."
+        action={{ label: 'Export Report', icon: BarChart3, href: '/admin/reports' }}
+        secondaryAction={{ label: 'Analytics', href: '/admin/analytics' }}
       />
-    )
-  } catch (error: any) {
-    console.error('[DEBUG AdminPage] Unhandled error loading admin panel:', error?.message || error, error?.stack)
-    return (
-      <div className="p-6 bg-red-50 text-red-900 border border-red-200 rounded-lg max-w-xl mx-auto my-8">
-        <h3 className="font-bold text-lg">Control Center Load Error</h3>
-        <p className="text-sm mt-1">An unexpected error occurred while loading the dashboard. Please check server logs.</p>
-        <pre className="mt-3 p-3 bg-red-100 text-xs font-mono rounded overflow-x-auto">{error?.message || error}</pre>
+
+      {/* Revenue row */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard title="Total Revenue" value="₹0" icon={Wallet} iconClass="text-green-600" change={0} changeLabel="vs last month" />
+        <KpiCard title="Today's Revenue" value="₹0" icon={TrendingUp} iconClass="text-primary" change={0} changeLabel="vs yesterday" />
+        <KpiCard title="Monthly Revenue" value="₹0" icon={BarChart3} iconClass="text-accent" change={0} />
+        <KpiCard title="Pending Payments" value="₹0" icon={Clock} iconClass="text-orange-500" />
       </div>
-    )
-  }
+
+      {/* Bookings + Pujas */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard title="Total Bookings" value="0" icon={Calendar} iconClass="text-primary" />
+        <KpiCard title="Upcoming Pujas" value="0" icon={CalendarClock} iconClass="text-secondary" />
+        <KpiCard title="Completed Pujas" value="0" icon={CheckCircle2} iconClass="text-green-600" />
+        <KpiCard title="Live Pujas Now" value="0" icon={Flame} iconClass="text-red-500" />
+      </div>
+
+      {/* Products + Orders */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard title="Total Products" value="0" icon={ShoppingBag} iconClass="text-blue-500" />
+        <KpiCard title="Total Orders" value="0" icon={Package} iconClass="text-accent" />
+        <KpiCard title="Low Stock Items" value="0" icon={AlertTriangle} iconClass="text-red-500" />
+        <KpiCard title="Pending Orders" value="0" icon={Clock} iconClass="text-orange-500" />
+      </div>
+
+      {/* People + Community */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard title="Total Customers" value="0" icon={Users} iconClass="text-blue-500" />
+        <KpiCard title="Total Pandits" value="0" icon={Star} iconClass="text-yellow-500" />
+        <KpiCard title="Active Users" value="0" icon={Activity} iconClass="text-green-600" />
+        <KpiCard title="Live Visitors" value="0" icon={Eye} iconClass="text-primary" />
+      </div>
+
+      {/* Seva */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard title="Total Donations" value="₹0" icon={HandCoins} iconClass="text-purple-500" />
+        <KpiCard title="Total Chadhawa" value="0" icon={Sparkles} iconClass="text-yellow-500" />
+        <KpiCard title="Website Visitors (24h)" value="0" icon={Eye} iconClass="text-pink-500" />
+        <KpiCard title="Pending Support Tickets" value="0" icon={MessageSquare} iconClass="text-orange-500" />
+      </div>
+
+      {/* Quick actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {quickActions.map((a) => {
+              const Icon = a.icon
+              return (
+                <Button key={a.href} variant="outline" asChild className="h-auto py-4 flex flex-col gap-2">
+                  <Link href={a.href}>
+                    <Icon className="h-5 w-5 text-primary" />
+                    <span className="text-xs">{a.label}</span>
+                  </Link>
+                </Button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent activity + Chart placeholder */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="text-base">Revenue Trend (Last 30 days)</CardTitle>
+            <Badge variant="outline">Live</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56 rounded-md bg-gradient-to-b from-primary/10 to-transparent flex items-end justify-between p-4 gap-1">
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div key={i} className="flex-1 bg-primary/30 hover:bg-primary transition-colors rounded-t" style={{ height: `${20 + Math.random() * 80}%` }} />
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary" /> Bookings</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-secondary" /> Products</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" /> Donations</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="text-base">Recent Activity</CardTitle>
+            <Link href="/admin/security?tab=activity" className="text-xs text-primary hover:underline flex items-center gap-1">
+              View all <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recentActivities.map((a, i) => {
+              const Icon = a.icon
+              return (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center ${a.color}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{a.text}</p>
+                    <p className="text-[11px] text-muted-foreground">{a.user} • {a.time}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Traffic by module */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Top Performing Pujas</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Data will appear once bookings start.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Top Donation Campaigns</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Data will appear once donations start.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }
-
-

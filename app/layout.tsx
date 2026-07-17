@@ -27,42 +27,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var originalFetch = window.fetch;
-                  var currentFetch = originalFetch;
-                  
-                  function defineFetch(obj) {
-                    Object.defineProperty(obj, 'fetch', {
-                      configurable: true,
-                      enumerable: true,
-                      get: function() { return currentFetch; },
-                      set: function(v) { currentFetch = v; }
-                    });
-                  }
-
-                  try {
-                    defineFetch(window);
-                  } catch (e) {
-                    try {
-                      defineFetch(Window.prototype);
-                    } catch (err) {
-                      console.warn('[AI Studio Shim] Failed to define on Window.prototype:', err);
-                    }
-                  }
-                } catch (e) {
-                  console.warn('[AI Studio Shim] Failed to install fetch shim:', e);
-                }
-              })();
-            `
-          }}
-        />
-      </head>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={inter.className}>
         <Providers>
           {children}
           <div id="__dvj_slot" />

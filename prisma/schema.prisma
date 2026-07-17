@@ -1259,3 +1259,31 @@ model WebsiteSetting {
 
   @@map("website_settings")
 }
+
+model ChadhawaOffering {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10,2)
+  image       String?
+  videoUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("chadhawa_offerings")
+}
+
+model SpiritualTool {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  isFree      Boolean  @default(true)
+  price       Decimal  @default(0) @db.Decimal(10,2)
+  trialDays   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("spiritual_tools")
+}
+

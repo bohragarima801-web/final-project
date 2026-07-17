@@ -1,105 +1,68 @@
-// lib/admin-session.ts
-import jwt from 'jsonwebtoken'
+// Web Crypto-based HMAC session (works in Edge middleware and Node server components)
 import { cookies } from 'next/headers'
 
-export const ADMIN_COOKIE_NAME = 'admin_session'
+const COOKIE_NAME = 'dvj_admin_session'
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7 // 7 days
 
-function getSecret() {
-  const secret = process.env.ADMIN_JWT_SECRET || 'fallback-dev-secret-dont-use-in-prod'
-  return secret
+function b64urlEncode(buf: ArrayBuffer | Uint8Array): string {
+  const arr = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+  let str = ''
+  for (let i = 0; i < arr.byteLength; i++) str += String.fromCharCode(arr[i])
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-export async function verifyAdminToken(token: string) {
+function b64urlDecodeStr(s: string): string {
+  const norm = s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)
+  return atob(norm)
+}
+
+function utf8Encode(s: string): Uint8Array {
+  return new TextEncoder().encode(s)
+}
+
+async function importKey(secret: string): Promise<CryptoKey> {
+  return globalThis.crypto.subtle.importKey(
+    'raw',
+    utf8Encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify'],
+  )
+}
+
+async function hmacSign(secret: string, data: string): Promise<string> {
+  const key = await importKey(secret)
+  const sig = await globalThis.crypto.subtle.sign('HMAC', key, utf8Encode(data))
+  return b64urlEncode(sig)
+}
+
+export async function signAdminToken(email: string): Promise<string> {
+  const secret = process.env.ADMIN_SESSION_SECRET || 'change-me'
+  const payload = JSON.stringify({ email, exp: Date.now() + SESSION_TTL_MS })
+  const b64 = b64urlEncode(utf8Encode(payload))
+  const sig = await hmacSign(secret, b64)
+  return `${b64}.${sig}`
+}
+
+export async function verifyAdminToken(token: string | undefined | null): Promise<{ email: string } | null> {
+  if (!token) return null
+  const [b64, sig] = token.split('.')
+  if (!b64 || !sig) return null
+  const secret = process.env.ADMIN_SESSION_SECRET || 'change-me'
+  const expected = await hmacSign(secret, b64)
+  if (expected !== sig) return null
   try {
-    const currentSecret = getSecret()
-    const secretSource = process.env.ADMIN_JWT_SECRET ? 'process.env.ADMIN_JWT_SECRET' : 'Fallback Secret'
-    console.log(`[DEBUG verifyAdminToken] Initiating JWT verification. Token length: ${token ? token.length : 0} bytes.`)
-    console.log(`[DEBUG verifyAdminToken] ADMIN_JWT_SECRET length: ${process.env.ADMIN_JWT_SECRET ? process.env.ADMIN_JWT_SECRET.length : 0} chars. Source: ${secretSource}`)
-    
-    const decoded = jwt.verify(token, currentSecret)
-    
-    const isValid = !!(decoded && typeof decoded === 'object' && decoded.role === 'admin')
-    console.log(`[DEBUG verifyAdminToken] Decoded successfully. Is role admin? ${isValid}. Decoded payload:`, JSON.stringify(decoded))
-    return isValid
-  } catch (error: any) {
-    console.error('[DEBUG verifyAdminToken] Error during JWT verification:', error?.message || error, error?.stack)
-    return false
-  }
+    const payload = JSON.parse(b64urlDecodeStr(b64)) as { email: string; exp: number }
+    if (Date.now() > payload.exp) return null
+    return { email: payload.email }
+  } catch { return null }
 }
 
-export async function createAdminToken(userId: string) {
-  console.log(`[DEBUG createAdminToken] Creating new admin token for userId: ${userId}`)
-  const currentSecret = getSecret()
-  return jwt.sign({ userId, role: 'admin' }, currentSecret, { expiresIn: '1h' })
+export async function getAdminSession(): Promise<{ email: string } | null> {
+  const store = await cookies()
+  const token = store.get(COOKIE_NAME)?.value
+  return verifyAdminToken(token)
 }
 
-export function getAdminCookieOptions() {
-  const isProdOrVercel = process.env.NODE_ENV === 'production' || !!process.env.VERCEL || !!process.env.NEXT_PUBLIC_VERCEL_ENV
-  
-  // Under Vercel/Cloud Run production or preview URLs, we run over HTTPS.
-  // We must set sameSite: 'none' and secure: true so that cookies are successfully persisted
-  // inside the AI Studio iframe environment. Lax/Strict cookies are blocked by modern browsers in third-party iframe contexts.
-  const secure = isProdOrVercel
-  const sameSite = secure ? ('none' as const) : ('lax' as const)
-
-  const options = {
-    httpOnly: true,
-    secure,
-    sameSite,
-    path: '/',
-    maxAge: 60 * 60, // 1 hour
-  }
-  
-  const simulatedHeader = `${ADMIN_COOKIE_NAME}=[JWT_TOKEN_CONTENT]; Path=${options.path}; Max-Age=${options.maxAge}; HttpOnly; ${options.secure ? 'Secure; ' : ''}SameSite=${options.sameSite}`
-  console.log(`[DEBUG getAdminCookieOptions] Cookie configuration details:`, JSON.stringify(options))
-  console.log(`[DEBUG getAdminCookieOptions] Expected Set-Cookie header output: "${simulatedHeader}"`)
-  console.log(`[DEBUG getAdminCookieOptions] Current process.env.NODE_ENV: "${process.env.NODE_ENV}"`)
-  
-  return options
-}
-
-export async function getAdminSession() {
-  console.log('[DEBUG getAdminSession] Called.')
-  try {
-    const cookieStore = await cookies()
-    const allCookies = cookieStore.getAll()
-    console.log('[DEBUG getAdminSession] Available cookie names:', allCookies.map(c => c.name).join(', ') || '(none)')
-    
-    allCookies.forEach((c, idx) => {
-      console.log(`[DEBUG getAdminSession] Cookie [${idx}] details: name="${c.name}", valueLength=${c.value ? c.value.length : 0}, path=${(c as any).path || 'undefined'}, domain=${(c as any).domain || 'undefined'}`)
-    })
-    
-    const cookieObj = cookieStore.get(ADMIN_COOKIE_NAME)
-    const token = cookieObj?.value
-    if (!token) {
-      console.warn(`[DEBUG getAdminSession] Cookie "${ADMIN_COOKIE_NAME}" not found.`)
-      return null
-    }
-    
-    console.log(`[DEBUG getAdminSession] Token found in cookie "${ADMIN_COOKIE_NAME}". Length: ${token.length}. Properties:`, JSON.stringify({
-      path: (cookieObj as any).path,
-      domain: (cookieObj as any).domain,
-      secure: (cookieObj as any).secure,
-      httpOnly: (cookieObj as any).httpOnly,
-    }))
-    
-    const isValid = await verifyAdminToken(token)
-    if (!isValid) {
-      console.warn('[DEBUG getAdminSession] Token is invalid.')
-      return null
-    }
-    
-    const currentSecret = getSecret()
-    const decoded = jwt.verify(token, currentSecret) as any
-    console.log('[DEBUG getAdminSession] Successfully authenticated admin session.')
-    return {
-      email: 'admin@devyajnam.com',
-      ...decoded,
-    }
-  } catch (e: any) {
-    console.error('[DEBUG getAdminSession] Exception in getAdminSession:', e?.message || e, e?.stack)
-    return null
-  }
-}
-
-
+export const ADMIN_COOKIE_NAME = COOKIE_NAME
+export const ADMIN_SESSION_TTL_MS = SESSION_TTL_MS

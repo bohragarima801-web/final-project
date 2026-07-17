@@ -2,84 +2,71 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
-export const dynamic = 'force-dynamic'
-
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ ok: false, error: 'Authentication required. Please login first.' }, { status: 401 })
-    }
-
-    const body = await req.json()
-    const { pujaId, sankalpText, gotra, specialInstructions, familyMembers } = body
+    const { searchParams } = new URL(req.url)
+    const pujaId = searchParams.get('pujaId')
 
     if (!pujaId) {
       return NextResponse.json({ ok: false, error: 'Puja ID is required' }, { status: 400 })
     }
 
     const puja = await prisma.puja.findUnique({
-      where: { id: pujaId }
+      where: { id: pujaId },
+      include: { temple: true },
     })
 
     if (!puja) {
-      return NextResponse.json({ ok: false, error: 'Selected Puja not found' }, { status: 404 })
+      return NextResponse.json({ ok: false, error: 'Puja not found' }, { status: 404 })
     }
 
-    // Generate unique booking number
-    const randomSuffix = Math.floor(100000 + Math.random() * 900000)
-    const bookingNumber = `YJN-${Date.now().toString().slice(-4)}${randomSuffix}`
-
-    const subtotal = puja.price
-    const total = puja.price
-
-    // Create booking and nested members in a transaction
-    const booking = await prisma.$transaction(async (tx) => {
-      const createdBooking = await tx.booking.create({
-        data: {
-          bookingNumber,
-          userId: user.id,
-          pujaId,
-          subtotal,
-          total,
-          status: 'PENDING',
-          paymentStatus: 'PENDING',
-          sankalpText: sankalpText || user.fullName || 'Devotee',
-          gotra: gotra || null,
-          specialInstructions: specialInstructions || null,
-        }
-      })
-
-      if (familyMembers && Array.isArray(familyMembers) && familyMembers.length > 0) {
-        await tx.bookingMember.createMany({
-          data: familyMembers.map(m => ({
-            bookingId: createdBooking.id,
-            fullName: m.fullName,
-            gotra: m.gotra || gotra || null,
-            relation: m.relation || null,
-            age: m.age ? Number(m.age) : null
-          }))
-        })
-      }
-
-      return createdBooking
-    })
-
-    return NextResponse.json({
-      ok: true,
-      message: 'Booking initialized successfully!',
-      booking: {
-        id: booking.id,
-        bookingNumber: booking.bookingNumber,
-        total: booking.total,
-        status: booking.status,
-        sankalpText: booking.sankalpText,
-        gotra: booking.gotra,
-        pujaName: puja.name
-      }
-    })
+    return NextResponse.json({ ok: true, data: puja })
   } catch (err: any) {
-    console.error('Booking Creation Error:', err)
-    return NextResponse.json({ ok: false, error: err?.message || 'Failed to create booking' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const user = await getCurrentUser().catch(() => null)
+    if (!user) {
+      return NextResponse.json({ ok: false, error: 'You must be logged in to book a puja' }, { status: 401 })
+    }
+
+    const { pujaId, devoteeName, fatherHusbandName, gotra, description } = await req.json()
+
+    if (!pujaId || !devoteeName || !fatherHusbandName || !description) {
+      return NextResponse.json({ ok: false, error: 'All mandatory fields must be filled' }, { status: 400 })
+    }
+
+    const puja = await prisma.puja.findUnique({
+      where: { id: pujaId },
+    })
+
+    if (!puja) {
+      return NextResponse.json({ ok: false, error: 'Puja not found' }, { status: 404 })
+    }
+
+    // Create a random booking number
+    const bookingNumber = 'DY-' + Math.floor(100000 + Math.random() * 900000)
+
+    const booking = await prisma.booking.create({
+      data: {
+        userId: user.id,
+        pujaId: puja.id,
+        bookingNumber,
+        subtotal: puja.price,
+        total: puja.price,
+        gotra: gotra || 'Kashyap',
+        sankalpText: `Devotee: ${devoteeName}, Relation Name: ${fatherHusbandName}, Purpose: ${description}`,
+        specialInstructions: `Father/Husband: ${fatherHusbandName}`,
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+      },
+    })
+
+    return NextResponse.json({ ok: true, data: booking })
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
   }
 }

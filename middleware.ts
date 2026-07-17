@@ -1,72 +1,42 @@
-// middleware.ts - COMPLETE REPLACEMENT
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { updateSession } from '@/lib/supabase/middleware'
+import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname
-  
-  console.log(`[DEBUG Middleware] Processing request for path: ${path}`)
-  
-  // Set the x-pathname header so Server Components/Layouts can know the current path
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-pathname', path)
+  const { pathname } = request.nextUrl
 
-  // Public paths - allow all
-  if (path.startsWith('/_next') || path.startsWith('/api/auth')) {
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      }
-    })
+  // ---- Admin auth guard ----
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isAdminLogin = pathname === '/admin/login' || pathname.startsWith('/admin/login/')
+
+  if (isAdminRoute && !isAdminLogin) {
+    const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value
+    const session = await verifyAdminToken(token)
+    if (!session) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin/login'
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
   }
 
-  // Log active cookies and environment variables availability
-  const cookiesList = request.cookies.getAll()
-  const cookieNames = cookiesList.map(c => c.name).join(', ') || '(none)'
-  console.log(`[DEBUG Middleware] Available cookies: [${cookieNames}]`)
-  console.log(`[DEBUG Middleware] ADMIN_JWT_SECRET present: ${!!process.env.ADMIN_JWT_SECRET}`)
-
-  // For admin routes, check cookie directly
-  if (path === '/admin' || path.startsWith('/admin/')) {
-    if (path.startsWith('/admin/login')) {
-      console.log(`[DEBUG Middleware] Accessing admin login path: ${path}. Skipping token verification.`)
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        }
-      })
+  // If logged-in admin visits /admin/login, redirect to /admin
+  if (isAdminLogin) {
+    const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value
+    if (await verifyAdminToken(token)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
     }
-    
-    const adminCookie = request.cookies.get('admin_session')
-    if (!adminCookie) {
-      console.warn(`[DEBUG Middleware] "admin_session" cookie not found for path: ${path}. Redirecting to /admin/login`)
-      const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/admin/login'
-      redirectUrl.search = '' // clear search params to avoid loop carrying
-      return NextResponse.redirect(redirectUrl)
-    }
-    
-    console.log(`[DEBUG Middleware] "admin_session" cookie found. Length: ${adminCookie.value ? adminCookie.value.length : 0} characters. Path matching passes.`)
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      }
-    })
   }
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    }
-  })
+  const response = await updateSession(request)
+  response.headers.set('x-pathname', pathname)
+  return response
 }
 
 export const config = {
   matcher: [
-    '/admin',
-    '/admin/:path*',
-    '/dashboard',
-    '/dashboard/:path*'
-  ]
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
-

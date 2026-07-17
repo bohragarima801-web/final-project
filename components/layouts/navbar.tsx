@@ -14,6 +14,7 @@ const navItems = [
   { title: 'VIP Pujas', href: '/vip-pujas' },
   { title: 'Products', href: '/products' },
   { title: 'Chadhawa', href: '/chadhawa' },
+  { title: 'Donation', href: '/donation' },
   { title: 'Temples', href: '/temples' },
   { title: 'Blog', href: '/blog' },
 ]
@@ -29,24 +30,14 @@ const toolsMenu = [
   { title: 'Mala Counter', href: '/tools#mala', desc: 'Digital jaap tracker' },
 ]
 
-export function Navbar({ 
-  user,
-  logoUrl,
-  siteName,
-  tagline
-}: { 
-  user?: { fullName?: string | null; email: string } | null;
-  logoUrl?: string;
-  siteName?: string;
-  tagline?: string;
-}) {
+export function Navbar({ user }: { user?: { fullName?: string | null; email: string } | null }) {
   const [open, setOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between gap-4">
-        <Logo logoUrl={logoUrl} siteName={siteName} tagline={tagline} />
+        <Logo />
 
         <nav className="hidden lg:flex items-center gap-1">
           {navItems.map((item) => (
@@ -83,9 +74,16 @@ export function Navbar({
           <ThemeToggle />
 
           {user ? (
-            <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
-              <Link href="/dashboard"><User className="h-4 w-4 mr-1" /> {user.fullName?.split(' ')[0] || 'Account'}</Link>
-            </Button>
+            <div className="hidden sm:flex items-center gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link href="/dashboard"><User className="h-4 w-4 mr-1" /> {user.fullName?.split(' ')[0] || 'Account'}</Link>
+              </Button>
+              <form action="/auth/signout" method="post">
+                <Button type="submit" size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
+                  Logout
+                </Button>
+              </form>
+            </div>
           ) : (
             <Button asChild size="sm" className="hidden sm:inline-flex"><Link href="/login">Login</Link></Button>
           )}
@@ -106,7 +104,14 @@ export function Navbar({
           <Link href="/ask-a-pandit" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary/5">Ask a Pandit ✨</Link>
           <div className="border-t border-border/60 my-2" />
           {user ? (
-            <Link href="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-primary">My Dashboard</Link>
+            <>
+              <Link href="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-primary">My Dashboard</Link>
+              <form action="/auth/signout" method="post" className="w-full">
+                <button type="submit" onClick={() => setOpen(false)} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-destructive hover:bg-destructive/5">
+                  Sign Out
+                </button>
+              </form>
+            </>
           ) : (
             <>
               <Link href="/login" className="px-3 py-2 rounded-md text-sm font-medium text-primary">Login</Link>

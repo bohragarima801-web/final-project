@@ -24,7 +24,7 @@ async function handleRoute(request: NextRequest, ctx: { params: Promise<{ path?:
     if ((route === '/' || route === '/health') && method === 'GET') {
       return cors(NextResponse.json({
         ok: true,
-        service: 'दिव्ययज्ञम् API',
+        service: 'Devyajnam API',
         version: '1.0.0',
         timestamp: new Date().toISOString(),
       }))
@@ -58,6 +58,18 @@ async function handleRoute(request: NextRequest, ctx: { params: Promise<{ path?:
           update: { isActive: true },
         })
         return cors(NextResponse.json({ ok: true, data: row }))
+      } catch (e: any) {
+        return cors(NextResponse.json({ ok: false, error: e?.message }, { status: 500 }))
+      }
+    }
+
+    // GET /newsletter (List subscribers for admin panel)
+    if (route === '/newsletter' && method === 'GET') {
+      try {
+        const subs = await prisma.newsletter.findMany({
+          orderBy: { subscribedAt: 'desc' },
+        })
+        return cors(NextResponse.json({ ok: true, data: subs }))
       } catch (e: any) {
         return cors(NextResponse.json({ ok: false, error: e?.message }, { status: 500 }))
       }

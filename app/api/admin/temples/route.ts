@@ -1,74 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { ensureDefaultCategoriesAndTemples } from '@/lib/data-defaults'
-import { DEFAULT_PLACEHOLDER_IMAGE } from '@/lib/utils'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    await ensureDefaultCategoriesAndTemples()
     const temples = await prisma.temple.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json({ ok: true, temples })
+    return NextResponse.json({ ok: true, data: temples })
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || 'Failed to fetch temples' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    await ensureDefaultCategoriesAndTemples()
-    const data = await req.json()
-    const {
-      id,
-      name,
-      slug,
-      description,
-      deity,
-      address,
-      city,
-      state,
-      pincode,
-      isFeatured,
-      isActive,
-      coverImage
-    } = data
+    const { name, slug, deity, description, address, city, state, pincode, country, latitude, longitude, isFeatured, isActive, coverImage } = await req.json()
 
     if (!name) {
-      return NextResponse.json({ ok: false, error: 'Temple Name is required' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Name is required' }, { status: 400 })
     }
 
-    const calculatedSlug = slug || name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
+    const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
-    const payload: any = {
-      name,
-      slug: calculatedSlug,
-      description: description || '',
-      deity: deity || '',
-      address: address || '',
-      city: city || '',
-      state: state || '',
-      pincode: pincode || '',
-      isFeatured: !!isFeatured,
-      isActive: isActive !== false,
-      coverImage: coverImage || DEFAULT_PLACEHOLDER_IMAGE
-    }
+    const temple = await prisma.temple.create({
+      data: {
+        name,
+        slug: finalSlug,
+        deity: deity || 'Lord Shiva',
+        description,
+        address,
+        city,
+        state,
+        pincode,
+        country: country || 'India',
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        isFeatured: isFeatured !== undefined ? !!isFeatured : false,
+        isActive: isActive !== undefined ? !!isActive : true,
+        coverImage,
+      },
+    })
 
-    let temple
-    if (id) {
-      temple = await prisma.temple.update({
-        where: { id },
-        data: payload
-      })
-    } else {
-      temple = await prisma.temple.create({
-        data: payload
-      })
-    }
-
-    return NextResponse.json({ ok: true, temple })
+    return NextResponse.json({ ok: true, data: temple })
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || 'Failed to save temple' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
   }
 }
 
@@ -78,15 +53,15 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: 'Temple ID is required' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'ID is required' }, { status: 400 })
     }
 
     await prisma.temple.delete({
-      where: { id }
+      where: { id },
     })
 
-    return NextResponse.json({ ok: true, message: 'Temple deleted successfully' })
+    return NextResponse.json({ ok: true })
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || 'Failed to delete temple' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
   }
 }

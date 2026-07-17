@@ -87,3 +87,9 @@ node_modules/@next/swc-linux-arm64-musl/next-swc.linux-arm64-musl.node
 credentials.json
 *.key
 .credentials
+
+# Temporary artifacts
+tsc_output.txt
+tsc_output_utf8.txt
+scratch/
+

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner'
 import { Loader2, ShieldCheck, ArrowLeft } from 'lucide-react'
 
-function LoginForm() {
+export default function AdminLoginPage() {
   const router = useRouter()
   const params = useSearchParams()
   const [email, setEmail] = useState('admin@devyajnam.com')
@@ -46,10 +46,10 @@ function LoginForm() {
 
       <Card className="w-full max-w-md shadow-2xl border-2 border-primary/20">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-3 shadow-lg">
+          <div className="mx-auto h-16 w-16 rounded-2xl om-gradient flex items-center justify-center mb-3 shadow-lg">
             <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl">दिव्ययज्ञम् Admin</CardTitle>
+          <CardTitle className="text-2xl">Devyajnam Admin</CardTitle>
           <CardDescription>Sanatan Seva Control Center</CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,16 +96,3 @@ function LoginForm() {
     </div>
   )
 }
-
-export default function AdminLoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
-  )
-}
-
