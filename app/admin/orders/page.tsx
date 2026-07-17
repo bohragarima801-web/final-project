@@ -1,15 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/admin/page-header'
 import { KpiCard } from '@/components/admin/kpi-card'
 import { DataTableShell } from '@/components/admin/data-table-shell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Package, Clock, Truck, CheckCircle2, XCircle, Loader2, Trash2 } from 'lucide-react'
+import { Package, Clock, Truck, CheckCircle2, XCircle, Loader2, Trash2, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function OrdersPage() {
+function OrdersManager() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const activeTab = searchParams.get('tab') || 'all'
+
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -50,6 +55,34 @@ export default function OrdersPage() {
     }
   }
 
+  // Filter orders based on active tab query
+  const filteredOrders = orders.filter((o) => {
+    const status = (o.status || '').toUpperCase()
+    if (activeTab === 'pending') return status === 'PENDING'
+    if (activeTab === 'processing') return status === 'PROCESSING'
+    if (activeTab === 'shipped') return status === 'SHIPPED'
+    if (activeTab === 'delivered') return status === 'DELIVERED'
+    if (activeTab === 'cancelled') return status === 'CANCELLED'
+    if (activeTab === 'returned') return status === 'RETURNED'
+    if (activeTab === 'refunds') return o.paymentStatus === 'REFUNDED'
+    return true
+  })
+
+  const tabs = [
+    { label: 'All Orders', value: 'all' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Processing', value: 'processing' },
+    { label: 'Shipped', value: 'shipped' },
+    { label: 'Delivered', value: 'delivered' },
+    { label: 'Cancelled', value: 'cancelled' },
+    { label: 'Returned', value: 'returned' },
+    { label: 'Refunds', value: 'refunds' }
+  ]
+
+  const changeTab = (val: string) => {
+    router.push(`/admin/orders?tab=${val}`)
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -60,10 +93,23 @@ export default function OrdersPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard title="Total Orders" value={orders.length.toString()} icon={Package} />
-        <KpiCard title="Pending" value={orders.filter(o => o.status === 'PENDING').length.toString()} icon={Clock} iconClass="text-orange-500" />
-        <KpiCard title="Processing" value={orders.filter(o => o.status === 'PROCESSING').length.toString()} icon={Truck} iconClass="text-blue-500" />
-        <KpiCard title="Delivered" value={orders.filter(o => o.status === 'DELIVERED').length.toString()} icon={CheckCircle2} iconClass="text-green-600" />
-        <KpiCard title="Cancelled" value={orders.filter(o => o.status === 'CANCELLED').length.toString()} icon={XCircle} iconClass="text-red-500" />
+        <KpiCard title="Pending" value={orders.filter(o => o.status?.toUpperCase() === 'PENDING').length.toString()} icon={Clock} iconClass="text-orange-500" />
+        <KpiCard title="Processing" value={orders.filter(o => o.status?.toUpperCase() === 'PROCESSING').length.toString()} icon={Truck} iconClass="text-blue-500" />
+        <KpiCard title="Delivered" value={orders.filter(o => o.status?.toUpperCase() === 'DELIVERED').length.toString()} icon={CheckCircle2} iconClass="text-green-600" />
+        <KpiCard title="Cancelled" value={orders.filter(o => o.status?.toUpperCase() === 'CANCELLED').length.toString()} icon={XCircle} iconClass="text-red-500" />
+      </div>
+
+      {/* Tabs Menu */}
+      <div className="flex gap-2 border-b pb-1 overflow-x-auto">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => changeTab(t.value)}
+            className={`px-4 py-2 text-xs font-bold border-b-2 transition-all shrink-0 ${activeTab === t.value ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -79,7 +125,7 @@ export default function OrdersPage() {
               label: 'Devotee / Customer',
               render: (r) => (
                 <div className="flex flex-col text-xs">
-                  <span className="font-bold">{r.user?.fullName || 'Guest Devotee'}</span>
+                  <span className="font-bold">{r.user?.fullName || r.user?.name || 'Guest Devotee'}</span>
                   <span className="text-[10px] text-muted-foreground">{r.user?.email || 'No email'}</span>
                 </div>
               )
@@ -121,9 +167,22 @@ export default function OrdersPage() {
               )
             }
           ]}
-          rows={orders}
+          rows={filteredOrders}
+          searchPlaceholder="Search orders..."
         />
       )}
     </div>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
+      </div>
+    }>
+      <OrdersManager />
+    </Suspense>
   )
 }
