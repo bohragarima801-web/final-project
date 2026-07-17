@@ -30,6 +30,7 @@ function BookingForm() {
   const [devoteeName, setDevoteeName] = useState('')
   const [gotra, setGotra] = useState('Kashyap')
   const [fatherHusbandName, setFatherHusbandName] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
   
   // Dynamic family members list (based on packageKey count)
   const memberCount = Number(packageKey) || 1
@@ -126,6 +127,10 @@ function BookingForm() {
   // Proceed from Sankalp step to Payment step
   const handleProceedToPayment = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!acceptTerms) {
+      toast.error('Please agree to the Terms & Conditions to proceed.')
+      return
+    }
     if (!devoteeName.trim()) {
       toast.error('Devotee Name is required')
       return
@@ -138,7 +143,7 @@ function BookingForm() {
     toast.success('Sankalp details captured. Please confirm payment.')
   }
 
-  // Final booking execution (Simulated payment gateway & DB save)
+  // Final booking execution
   async function handleConfirmBooking() {
     if (!puja) return
 
@@ -250,7 +255,6 @@ function BookingForm() {
             <ArrowLeft className="h-4 w-4" /> {step === 'payment' ? 'Edit Sankalp' : 'Back to Details'}
           </Button>
 
-          {/* Simple step indicator */}
           <div className="flex items-center gap-2 text-xs font-bold">
             <span className={step === 'sankalp' ? 'text-orange-600' : 'text-slate-400'}>1. Sankalp Form</span>
             <ChevronRight className="h-3 w-3 text-slate-400" />
@@ -447,6 +451,14 @@ function BookingForm() {
                     className="h-10"
                   />
                   <p className="text-[10px] text-slate-500">यदि गोत्र ज्ञात न हो तो 'Kashyap' ही रहने दें।</p>
+                </div>
+
+                {/* Terms and Conditions Checkbox */}
+                <div className="flex items-start gap-2 border-t pt-3 pb-1 text-left">
+                  <Checkbox id="termsAccept" checked={acceptTerms} onCheckedChange={(val) => setAcceptTerms(!!val)} />
+                  <Label htmlFor="termsAccept" className="text-[11px] leading-tight text-slate-600 cursor-pointer">
+                    I agree to the <Link href="/terms" target="_blank" className="text-orange-600 hover:underline font-bold">Terms & Conditions</Link> of DivyaYagyam.com
+                  </Label>
                 </div>
 
                 <Button type="submit" className="w-full h-12 text-sm font-black bg-orange-600 hover:bg-orange-700 text-white rounded-xl shadow">
