@@ -93,3 +93,4 @@ tsc_output.txt
 tsc_output_utf8.txt
 scratch/
 
+.env*
