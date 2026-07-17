@@ -45,7 +45,11 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
   },
 ]
 
-export function Footer() {
+interface FooterProps {
+  mapUrl?: string
+}
+
+export function Footer({ mapUrl }: FooterProps) {
   return (
     <footer className="border-t border-border/60 bg-muted/30">
       <div className="container py-14">
@@ -83,9 +87,22 @@ export function Footer() {
           ))}
         </div>
 
+        {/* Dynamic Google Map Section */}
+        {mapUrl && (
+          <div className="mt-10 rounded-3xl overflow-hidden border shadow-sm h-64 md:h-80 w-full relative">
+            <iframe
+              src={mapUrl}
+              className="absolute inset-0 w-full h-full border-0"
+              allowFullScreen={false}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        )}
+
         <div className="mt-10 pt-6 border-t border-border/60 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved. • हरि ओम् 🙏
+            © {new Date().getFullYear()} DivyaYagyam. All rights reserved. • हरि ओम् 🙏
           </p>
           <p className="text-xs text-muted-foreground">Made with devotion in India 🇮🇳</p>
         </div>
