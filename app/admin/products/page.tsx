@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingBag, Package, AlertTriangle, FileSpreadsheet, Download, Upload, Trash2, Loader2 } from 'lucide-react'
+import { ShoppingBag, Package, AlertTriangle, FileSpreadsheet, Download, Upload, Trash2, Edit2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([])
@@ -105,7 +106,7 @@ export default function ProductsPage() {
   }
 
   // KPI aggregates
-  const activeCount = products.filter(p => p.status === 'ACTIVE').length
+  const activeCount = products.filter(p => p.status === 'ACTIVE' || p.status === 'PUBLISHED').length
   const lowStockCount = products.filter(p => p.stock < 10).length
 
   return (
@@ -118,6 +119,10 @@ export default function ProductsPage() {
           label: showImportForm ? 'Cancel' : 'Bulk CSV Import',
           icon: FileSpreadsheet,
           onClick: () => setShowImportForm(!showImportForm),
+        }}
+        secondaryAction={{
+          label: 'Add Product',
+          href: '/admin/products/new',
         }}
       />
 
@@ -199,8 +204,8 @@ export default function ProductsPage() {
               label: 'Status',
               render: (r) => (
                 <Badge
-                  variant={r.status === 'ACTIVE' ? 'success' : 'secondary'}
-                  className={r.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : ''}
+                  variant={r.status === 'ACTIVE' || r.status === 'PUBLISHED' ? 'success' : 'secondary'}
+                  className={r.status === 'ACTIVE' || r.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : ''}
                 >
                   {r.status}
                 </Badge>
@@ -210,15 +215,22 @@ export default function ProductsPage() {
               key: 'actions',
               label: 'Actions',
               render: (r) => (
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="h-8 w-8"
-                  onClick={() => handleDelete(r.id)}
-                  title="Delete Product"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600" asChild>
+                    <Link href={`/admin/products/new?id=${r.id}`}>
+                      <Edit2 className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="h-8 w-8"
+                    onClick={() => handleDelete(r.id)}
+                    title="Delete Product"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               ),
             },
           ]}
