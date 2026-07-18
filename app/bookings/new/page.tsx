@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { Loader2, Heart, CheckCircle2, ChevronRight, ArrowLeft, ShieldCheck, Wallet, CreditCard } from 'lucide-react'
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
 
 function BookingForm() {
   const searchParams = useSearchParams()
