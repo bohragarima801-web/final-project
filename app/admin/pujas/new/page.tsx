@@ -130,19 +130,19 @@ export default function NewPujaPage() {
     formData.append('file', file)
 
     try {
-      const res = await fetch('/api/upload', {
+      const res = await fetch('/api/storage/upload', {
         method: 'POST',
         body: formData
       })
       const data = await res.json()
-      if (data.ok) {
+      if (data.success && data.url) {
         setCoverImage(data.url)
-        toast.success('Puja image uploaded successfully!')
+        toast.success('Puja file uploaded successfully!')
       } else {
         toast.error(data.error || 'Upload failed')
       }
     } catch {
-      toast.error('Network error uploading image')
+      toast.error('Network error uploading file')
     } finally {
       setUploading(false)
     }
@@ -201,6 +201,16 @@ export default function NewPujaPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const isVideoFile = (url: string) => {
+    if (!url) return false
+    return (
+      url.endsWith('.mp4') ||
+      url.endsWith('.webm') ||
+      url.endsWith('.ogg') ||
+      url.startsWith('data:video/')
+    )
   }
 
   if (loadingPuja) {
@@ -336,16 +346,20 @@ export default function NewPujaPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Cover Image (कवर इमेज)</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Media Upload (इमेज/वीडियो)</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {coverImage && (
-                <div className="aspect-[4/3] rounded-lg overflow-hidden border">
-                  <img src={coverImage} className="h-full w-full object-cover" alt="Preview" />
+                <div className="aspect-[4/3] rounded-lg overflow-hidden border bg-black flex items-center justify-center">
+                  {isVideoFile(coverImage) ? (
+                    <video src={coverImage} controls className="h-full w-full object-contain" />
+                  ) : (
+                    <img src={coverImage} className="h-full w-full object-cover" alt="Preview" />
+                  )}
                 </div>
               )}
-              <Input type="file" accept="image/*" onChange={handleImageChange} disabled={uploading} />
-              {uploading && <div className="text-xs text-orange-600 animate-pulse">Uploading image...</div>}
-              <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Or paste image URL" className="text-xs" />
+              <Input type="file" accept="image/*,video/*" onChange={handleImageChange} disabled={uploading} />
+              {uploading && <div className="text-xs text-orange-600 animate-pulse">Uploading file...</div>}
+              <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Or paste image/video URL" className="text-xs" />
             </CardContent>
           </Card>
         </div>
