@@ -6,12 +6,13 @@ import {
   Flame, HandCoins, Sparkles, ShoppingBag, Star, ArrowRight,
   MapPin, Calendar, ShieldCheck, Video, Play,
 } from 'lucide-react'
+import prisma from '@/lib/prisma'
 
-const upcomingPujas = [
-  { name: 'Maha Rudrabhishek', temple: 'Kashi Vishwanath', date: '15 Jul', img: 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600', price: 1100, vip: false },
-  { name: 'Guru Purnima Puja', temple: 'Somnath', date: '21 Jul', img: 'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?w=600', price: 2100, vip: false },
-  { name: 'Sawan Somvar Puja', temple: 'Baidyanath Dham', date: 'Every Mon', img: 'https://images.unsplash.com/photo-1580889240912-6f5cc9e07d84?w=600', price: 851, vip: false },
-  { name: 'Nag Panchami Puja', temple: 'Ujjain Mahakal', date: '29 Jul', img: 'https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600', price: 1251, vip: true },
+const upcomingPujasFallback = [
+  { name: 'Maha Rudrabhishek', slug: 'maha-rudrabhishek', temple: 'Kashi Vishwanath', date: '15 Jul', img: 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600', price: 1100, vip: true },
+  { name: 'Guru Purnima Puja', slug: 'guru-purnima-puja', temple: 'Somnath', date: '21 Jul', img: 'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?w=600', price: 2100, vip: false },
+  { name: 'Sawan Somvar Puja', slug: 'sawan-somvar-puja', temple: 'Baidyanath Dham', date: 'Every Mon', img: 'https://images.unsplash.com/photo-1580889240912-6f5cc9e07d84?w=600', price: 851, vip: false },
+  { name: 'Nag Panchami Puja', slug: 'nag-panchami-puja', temple: 'Ujjain Mahakal', date: '29 Jul', img: 'https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600', price: 1251, vip: true },
 ]
 
 const services = [
@@ -27,7 +28,23 @@ const testimonials = [
   { name: 'Priya Nair', location: 'Bangalore', rating: 5, message: 'Excellent service and authentic pandits. Highly recommended.' },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const dbPujas = await prisma.puja.findMany({
+    where: { status: 'PUBLISHED' },
+    include: { temple: true, category: true },
+    orderBy: { createdAt: 'desc' },
+    take: 8
+  }).catch(() => [])
+
+  const displayPujas = dbPujas.length > 0 ? dbPujas.map(p => ({
+    name: p.name,
+    slug: p.slug,
+    temple: p.temple?.name || 'Sacred Temple',
+    date: 'Auspicious Day',
+    img: p.coverImage || 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600',
+    price: Number(p.price) || 951,
+    vip: p.isVip
+  })) : upcomingPujasFallback;
   return (
     <div>
       {/* HERO */}
@@ -121,26 +138,30 @@ export default function HomePage() {
           <Button variant="outline" asChild><Link href="/pujas">View all <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {upcomingPujas.map((p, i) => (
-            <Card key={i} className="overflow-hidden group hover:shadow-lg transition-all">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                {p.vip && <Badge className="absolute top-3 left-3 bg-accent">⭐ VIP</Badge>}
-                <div className="absolute top-3 right-3 bg-background/90 backdrop-blur px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> {p.date}
+          {displayPujas.map((p, i) => (
+            <Link key={p.slug} href={`/pujas/${p.slug}`} className="block">
+              <Card className="overflow-hidden group hover:shadow-lg transition-all h-full flex flex-col cursor-pointer">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                  {p.vip && <Badge className="absolute top-3 left-3 bg-accent">⭐ VIP</Badge>}
+                  <div className="absolute top-3 right-3 bg-background/90 backdrop-blur px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> {p.date}
+                  </div>
                 </div>
-              </div>
-              <CardContent className="p-4">
-                <h3 className="font-semibold line-clamp-1">{p.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> {p.temple}
-                </p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-lg font-bold text-primary">₹{p.price}</span>
-                  <Button size="sm">Book</Button>
-                </div>
-              </CardContent>
-            </Card>
+                <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">{p.name}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {p.temple}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between pt-2 border-t border-dashed">
+                    <span className="text-lg font-bold text-primary">₹{p.price}</span>
+                    <Button size="sm" asChild><Link href={`/pujas/${p.slug}`}>Book</Link></Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </section>

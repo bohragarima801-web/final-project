@@ -37,3 +37,5 @@ export function truncate(str: string, len = 100) {
   if (!str) return ''
   return str.length > len ? str.slice(0, len).trimEnd() + '…' : str
 }
+
+export const DEFAULT_PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600'

@@ -17,9 +17,15 @@ export default function GalleryPage() {
   async function loadItems() {
     try {
       const res = await fetch('/api/admin/gallery')
-      const data = await res.json()
-      if (data.ok) {
-        setItems(data.data || [])
+      const contentType = res.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const data = await res.json()
+        if (data.ok) {
+          setItems(data.data || [])
+        }
+      } else {
+        const text = await res.text()
+        console.error('Invalid response from gallery API:', text)
       }
     } catch {
       toast.error('Failed to load gallery items')
@@ -46,7 +52,19 @@ export default function GalleryPage() {
         method: 'POST',
         body: formData,
       })
-      const uploadData = await uploadRes.json()
+
+      let uploadData: any
+      const uploadType = uploadRes.headers.get('content-type') || ''
+      if (uploadType.includes('application/json')) {
+        uploadData = await uploadRes.json()
+      } else {
+        const text = await uploadRes.text()
+        if (uploadRes.status === 413 || text.toLowerCase().includes('entity too large') || text.toLowerCase().includes('too large')) {
+          throw new Error('File size is too large! Please upload images or videos under 4.5MB.')
+        }
+        throw new Error('Server upload failed with an invalid response.')
+      }
+
       if (!uploadData.ok) throw new Error(uploadData.error || 'Upload failed')
 
       // 2. Save in gallery database
@@ -60,7 +78,15 @@ export default function GalleryPage() {
           galleryTitle: 'General',
         }),
       })
-      const saveData = await saveRes.json()
+
+      let saveData: any
+      const saveType = saveRes.headers.get('content-type') || ''
+      if (saveType.includes('application/json')) {
+        saveData = await saveRes.json()
+      } else {
+        throw new Error('Failed to save to database: invalid server response')
+      }
+
       if (!saveData.ok) throw new Error(saveData.error || 'Failed to save to database')
 
       toast.success('Media uploaded and saved to gallery!')

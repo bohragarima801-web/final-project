@@ -55,6 +55,35 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const { id, title, description, coverImage, location, startsAt, endsAt, isLive, isFeatured, streamUrl } = await req.json()
+
+    if (!id) {
+      return NextResponse.json({ ok: false, error: 'ID is required for editing' }, { status: 400 })
+    }
+
+    const event = await prisma.event.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        coverImage,
+        location,
+        startsAt: startsAt ? new Date(startsAt) : undefined,
+        endsAt: endsAt ? new Date(endsAt) : null,
+        isLive: isLive !== undefined ? !!isLive : undefined,
+        isFeatured: isFeatured !== undefined ? !!isFeatured : undefined,
+        streamUrl,
+      },
+    })
+
+    return NextResponse.json({ ok: true, data: event })
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
