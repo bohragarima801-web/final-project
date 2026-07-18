@@ -1,103 +1,97 @@
 import Link from 'next/link'
-import prisma from '@/lib/prisma'
-import { PublicPageShell } from '@/components/public-page-shell'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Flame, Video, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Calendar, MapPin, Sparkles } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
 export default async function PujasPage() {
-  const dbPujas = await prisma.puja.findMany({
+  const pujas = await prisma.puja.findMany({
     where: { status: 'PUBLISHED' },
-    include: { temple: true, category: true },
+    include: { category: true, temple: true },
     orderBy: { createdAt: 'desc' }
   }).catch(() => [])
 
   return (
-    <PublicPageShell 
-      badge="🔥 Sacred Pujas" 
-      title="Sacred Pujas" 
-      subtitle="Book online pujas performed by certified pandits at India's most powerful temples."
-    >
-      <div className="mt-8">
-        {dbPujas.length === 0 ? (
-          <div className="text-center py-16 bg-muted/40 rounded-3xl border border-dashed p-8">
-            <Flame className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
-            <h3 className="text-xl font-bold">No Pujas Active Right Now</h3>
-            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-              We are currently setting up the sacred altars. Please check back soon or consult our AI Pandit for spiritual advice.
-            </p>
-            <Button asChild className="mt-6">
+    <div className="container py-14 space-y-10">
+      <div className="text-center max-w-2xl mx-auto space-y-3">
+        <Badge variant="secondary" className="mb-3">🔥 Pujas</Badge>
+        <h1 className="text-4xl md:text-5xl font-black text-om-gradient">Sacred Pujas (पूजा अनुष्ठान)</h1>
+        <p className="text-lg text-muted-foreground leading-relaxed">
+          भारत के सुप्रसिद्ध शक्तिपीठों एवं ज्योतिर्लिंगों से सीधे लाइव-स्ट्रीम पूजा। अपने नाम व गोत्र से संकल्प करवाएं।
+        </p>
+      </div>
+
+      {pujas.length === 0 ? (
+        <Card className="border-dashed max-w-md mx-auto">
+          <CardContent className="p-8 text-center space-y-4">
+            <Sparkles className="h-12 w-12 text-muted-foreground/60 mx-auto" />
+            <h3 className="text-lg font-semibold">No Pujas Scheduled</h3>
+            <p className="text-sm text-muted-foreground">Check back soon for available online Puja services or ask our AI Pandit.</p>
+            <Button asChild size="sm">
               <Link href="/ask-a-pandit">Ask AI Pandit ✨</Link>
             </Button>
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {dbPujas.map((p) => {
-              const coverImg = p.coverImage || 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600'
-              const price = Number(p.price) || 851
-
-              return (
-                <Link key={p.slug} href={`/pujas/${p.slug}`} className="block group">
-                  <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border-border/60">
-                    <div className="relative aspect-[16/10] overflow-hidden">
-                      <img 
-                        src={coverImg} 
-                        alt={p.name} 
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                      />
-                      <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                        {p.isVip && <Badge className="bg-amber-600 text-white font-semibold">⭐ VIP</Badge>}
-                        {p.isOnline && (
-                          <Badge className="bg-red-500 text-white font-semibold flex items-center gap-1">
-                            <Video className="h-3 w-3 animate-pulse" /> Live Stream
-                          </Badge>
-                        )}
-                      </div>
-                      {p.category && (
-                        <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm text-white text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md">
-                          {p.category.name}
-                        </span>
-                      )}
-                    </div>
-
-                    <CardContent className="p-5 flex-1 flex flex-col justify-between">
-                      <div className="space-y-2">
-                        <h3 className="font-bold text-xl group-hover:text-primary transition-colors line-clamp-1">
-                          {p.name}
-                        </h3>
-                        {p.temple && (
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-4 w-4 text-primary shrink-0" /> 
-                            <span>{p.temple.name} • {p.temple.city}, {p.temple.state}</span>
-                          </p>
-                        )}
-                        {p.shortDescription && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 pt-1">
-                            {p.shortDescription}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="mt-6 pt-4 border-t border-dashed border-border/80 flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Sankalp Price</p>
-                          <p className="text-2xl font-black text-primary">₹{price}</p>
-                        </div>
-                        <Button size="sm" className="group-hover:bg-primary/90" asChild>
-                          <Link href={`/pujas/${p.slug}`}>Book Puja</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </PublicPageShell>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {pujas.map((p) => (
+            <Card key={p.id} className="overflow-hidden group hover:shadow-xl transition-all border border-primary/10 flex flex-col justify-between">
+              <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden">
+                {p.coverImage ? (
+                  <img
+                    src={p.coverImage}
+                    alt={p.name}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-primary bg-orange-50/50">
+                    <Sparkles className="h-12 w-12 opacity-40" />
+                  </div>
+                )}
+                {p.isVip && (
+                  <Badge className="absolute top-3 left-3 bg-red-600 text-white font-bold border-none">
+                    ⭐ VIP
+                  </Badge>
+                )}
+                {p.isOnline && (
+                  <Badge className="absolute top-3 right-3 bg-green-600 text-white font-bold border-none text-[10px]">
+                    📹 LIVE STREAM
+                  </Badge>
+                )}
+              </div>
+              <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div className="space-y-2">
+                  <Badge variant="outline" className="text-xs">
+                    {p.category?.name || 'Sanatan Seva'}
+                  </Badge>
+                  <h3 className="font-bold text-lg text-slate-800 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                    {p.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <MapPin className="h-4 w-4 text-orange-600 shrink-0" />
+                    {p.temple?.name || 'Any Holy Temple'}
+                  </p>
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mt-2">
+                    {p.shortDescription || 'Participate in this sacred puja for peace, health, and spiritual growth.'}
+                  </p>
+                </div>
+                <div className="pt-3 border-t flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground">संकल्प मूल्य</span>
+                    <span className="text-lg font-black text-orange-600">₹{p.price}</span>
+                  </div>
+                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white font-bold" asChild>
+                    <Link href={`/bookings/new?pujaId=${p.id}`}>बुक करें (Book)</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

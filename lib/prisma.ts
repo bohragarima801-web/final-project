@@ -75,6 +75,7 @@ export async function checkDatabaseConnection() {
     return { ok: false, error: err?.message || 'Database connection error' }
   }
 }
+
 export async function executeWithRetry<T>(
   queryFn: () => Promise<T>,
   retries = 3,

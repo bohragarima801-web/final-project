@@ -6,13 +6,13 @@ import {
   Flame, HandCoins, Sparkles, ShoppingBag, Star, ArrowRight,
   MapPin, Calendar, ShieldCheck, Video, Play, BookOpen
 } from 'lucide-react'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 
-const upcomingPujasFallback = [
-  { name: 'महा रुद्राभिषेक (Maha Rudrabhishek)', slug: 'maha-rudrabhishek', temple: 'काशी विश्वनाथ मंदिर, वाराणसी', date: 'श्रावण सोमवार Special', img: 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600', price: 1100, vip: false },
-  { name: 'गुरु पूर्णिमा महाआरती (Guru Purnima)', slug: 'guru-purnima-puja', temple: 'सोमनाथ ज्योतिर्लिंग मंदिर', date: '21 July', img: 'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?w=600', price: 2100, vip: false },
-  { name: 'कालसर्प दोष निवारण पूजा (Kalsarp Dosh)', slug: 'kalsarp-dosh-puja', temple: 'महाकालेश्वर मंदिर, उज्जैन', date: 'Every Sunday', img: 'https://images.unsplash.com/photo-1580889240912-6f5cc9e07d84?w=600', price: 1251, vip: true },
-  { name: 'महामृत्युंजय जाप (Maha Mrityunjay Jap)', slug: 'maha-mrityunjay-jap', temple: 'त्र्यंबकेश्वर ज्योतिर्लिंग', date: 'Instant Booking', img: 'https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600', price: 1500, vip: true },
+const upcomingPujas = [
+  { name: 'महा रुद्राभिषेक (Maha Rudrabhishek)', temple: 'काशी विश्वनाथ मंदिर, वाराणसी', date: 'श्रावण सोमवार Special', img: 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600', price: 1100, vip: false },
+  { name: 'गुरु पूर्णिमा महाआरती (Guru Purnima)', temple: 'सोमनाथ ज्योतिर्लिंग मंदिर', date: '21 July', img: 'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?w=600', price: 2100, vip: false },
+  { name: 'कालसर्प दोष निवारण पूजा (Kalsarp Dosh)', temple: 'महाकालेश्वर मंदिर, उज्जैन', date: 'Every Sunday', img: 'https://images.unsplash.com/photo-1580889240912-6f5cc9e07d84?w=600', price: 1251, vip: true },
+  { name: 'महामृत्युंजय जाप (Maha Mrityunjay Jap)', temple: 'त्र्यंबकेश्वर ज्योतिर्लिंग', date: 'Instant Booking', img: 'https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600', price: 1500, vip: true },
 ]
 
 const services = [
@@ -28,27 +28,10 @@ const testimonials = [
 ]
 
 export default async function HomePage() {
-  const dbPujas = await prisma.puja.findMany({
-    where: { status: 'PUBLISHED' },
-    include: { temple: true, category: true },
-    orderBy: { createdAt: 'desc' },
-    take: 8
-  }).catch(() => [])
-
   const products = await prisma.product.findMany({
     take: 4,
     include: { category: true }
   }).catch(() => [])
-
-  const displayPujas = dbPujas.length > 0 ? dbPujas.map(p => ({
-    name: p.name,
-    slug: p.slug,
-    temple: p.temple?.name || 'Sacred Temple',
-    date: 'Auspicious Day',
-    img: p.coverImage || 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600',
-    price: Number(p.price) || 951,
-    vip: p.isVip
-  })) : upcomingPujasFallback;
 
   return (
     <div className="space-y-16 pb-16">
@@ -86,30 +69,25 @@ export default async function HomePage() {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-orange-500 font-bold"><Star className="h-5 w-5 shrink-0 fill-orange-500" /> 4.9 रेटिंग</div>
-                <div className="text-xs text-slate-400 font-medium">12,000+ संतुष्ट परिवार</div>
+                <div className="text-xs text-slate-400 font-medium">12k+ सुखी भक्त परिवार</div>
               </div>
             </div>
           </div>
-
-          <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-slate-800 shadow-2xl diya-glow group">
-            <img
-              src="https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=900"
-              alt="Temple Aarti Ceremony"
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-103"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-ping" />
-                  <span className="text-xs font-bold text-red-500 uppercase tracking-widest">LIVE BROADCAST</span>
-                </div>
-                <h3 className="font-bold text-lg text-white">संध्या आरती (Evening Aarti)</h3>
-                <p className="text-xs text-slate-300">काशी विश्वनाथ मंदिर • 4,520+ श्रद्धालु लाइव</p>
+          <div className="relative">
+            <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden border-4 border-orange-500/20 shadow-2xl shadow-orange-600/10">
+              <img
+                src="https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=900"
+                alt="Sacred Puja Rituals"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-6 -left-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-5 max-w-[240px]">
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
+                <span className="text-xs font-bold text-red-500 tracking-wider">LIVE BROADCAST</span>
               </div>
-              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold gap-1.5" asChild>
-                <Link href="/events"><Play className="h-3 w-3 fill-white" /> अभी देखें (Watch)</Link>
-              </Button>
+              <p className="mt-2 text-sm font-black text-white leading-tight">सावन रुद्राभिषेक महापूजा</p>
+              <p className="text-xs text-slate-400 mt-1">काशी विश्वनाथ धाम • 2,450+ जुड़े हैं</p>
             </div>
           </div>
         </div>
@@ -157,31 +135,31 @@ export default async function HomePage() {
             <Link href="/pujas">सभी देखें (View All) <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
           </Button>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {displayPujas.map((p, i) => (
-            <Link key={p.slug} href={`/pujas/${p.slug}`} className="block">
-              <Card className="overflow-hidden group hover:shadow-lg transition-all h-full flex flex-col cursor-pointer justify-between border border-slate-100">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                  {p.vip && <Badge className="absolute top-3 left-3 bg-red-600 text-white border-none font-bold">⭐ VIP</Badge>}
-                  <div className="absolute top-3 right-3 bg-black/70 backdrop-blur px-2 py-1 rounded text-[10px] text-white font-bold flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-orange-500" /> {p.date}
-                  </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {upcomingPujas.map((p, i) => (
+            <Card key={i} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
+              <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                {p.vip && <Badge className="absolute top-3 left-3 bg-red-600 text-white font-bold border-none">⭐ VIP</Badge>}
+                <div className="absolute top-3 right-3 bg-black/70 backdrop-blur px-2.5 py-1 rounded text-[10px] text-white font-bold flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-orange-500" /> {p.date}
                 </div>
-                <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">{p.name}</h3>
-                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" /> {p.temple}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-dashed">
-                    <span className="text-lg font-black text-orange-600">₹{p.price}</span>
-                    <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white font-bold">बुक करें</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+              </div>
+              <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div className="space-y-1">
+                  <h3 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">{p.name}</h3>
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" /> {p.temple}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <span className="text-lg font-black text-orange-600">₹{p.price}</span>
+                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" asChild>
+                    <Link href={`/bookings/new?pujaId=4b0fe3b1-0015-4106-918f-62a966f359cc`}>बुक करें</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </section>
@@ -203,18 +181,26 @@ export default async function HomePage() {
             {products.map((p: any) => (
               <Card key={p.id} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                  <img src={p.coverImage || 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600'} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                  {p.isFeatured && <Badge className="absolute top-3 left-3 bg-yellow-500 text-slate-950 font-bold border-none">FEATURED</Badge>}
+                  {p.coverImage || (p.images && p.images[0]) ? (
+                    <img src={p.coverImage || p.images[0]} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  ) : (
+                    <div className="h-full w-full bg-slate-200" />
+                  )}
+                  {p.category?.name && (
+                    <Badge className="absolute top-3 left-3 bg-orange-600 text-white border-none text-[10px] font-bold">
+                      {p.category.name}
+                    </Badge>
+                  )}
                 </div>
                 <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-orange-600 tracking-wider">{p.category?.name || 'Store'}</span>
                     <h3 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">{p.name}</h3>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{p.shortDescription || 'प्रामाणिक एवं सिद्ध सनातन सामग्री।'}</p>
                   </div>
                   <div className="flex items-center justify-between pt-3 border-t">
-                    <span className="text-lg font-black text-orange-600">₹{Number(p.price) || 251}</span>
-                    <Button size="sm" variant="outline" className="text-xs border-orange-500/20 text-orange-600 hover:bg-orange-50 hover:text-orange-700" asChild>
-                      <Link href="/products">मंगाएं</Link>
+                    <span className="text-lg font-black text-slate-900">₹{Number(p.salePrice || p.price)}</span>
+                    <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white text-xs" asChild>
+                      <Link href={`/products`}>अभी खरीदें</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -224,28 +210,53 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* DEVOTEES TESTIMONIALS */}
+      {/* LIVE EVENTS BANNER */}
+      <section className="container">
+        <div className="rounded-3xl bg-slate-900 p-1">
+          <div className="rounded-[calc(1.5rem-4px)] bg-slate-950 p-8 md:p-12 grid md:grid-cols-2 items-center gap-6 text-white">
+            <div className="space-y-4">
+              <Badge className="bg-red-600 text-white border-none text-xs flex items-center w-fit gap-1"><Play className="h-3 w-3 fill-white" /> LIVE</Badge>
+              <h2 className="text-3xl font-black">लाइव आरती व दिव्य दर्शन (Live Stream)</h2>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                भारत के प्रमुख मंदिरों से साक्षात दैनिक आरती का हिस्सा बनें। हर दिन, हर पर्व पर सीधे गर्भगृह से लाइव दर्शन।
+              </p>
+              <Button className="bg-orange-600 hover:bg-orange-700 text-white font-bold" asChild><Link href="/events">लाइव जुड़ें (Watch Live)</Link></Button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[1,2,3,4,5,6].map((i) => (
+                <div key={i} className="aspect-square rounded-xl bg-slate-900 overflow-hidden border border-slate-800">
+                  <img src={`https://images.unsplash.com/photo-15${80+i}88580000645-4562a6d2c839?w=200`} className="h-full w-full object-cover" alt="" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
       <section className="container">
         <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-          <Badge className="bg-orange-500/10 border-orange-500/20 text-orange-600 hover:bg-orange-500/10 text-xs">अनुभव • Devotee Testimonials</Badge>
-          <h2 className="text-3xl font-black text-slate-950">श्रद्धालुओं के पावन अनुभव</h2>
-          <p className="text-sm text-muted-foreground">देवयज्ञम् से जुड़कर अपनी आध्यात्मिक यात्रा को पूर्ण करने वाले परिवारों के विचार।</p>
+          <Badge className="bg-orange-500/10 border-orange-500/20 text-orange-600 hover:bg-orange-500/10 text-xs">अनुभव • Devotee Feedback</Badge>
+          <h2 className="text-3xl font-black text-slate-950">भक्तों के पावन अनुभव (Devotees Speak)</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">सैकड़ों परिवारों ने हमारी सेवाओं के माध्यम से प्रभु का आशीर्वाद पाया है।</p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((t, idx) => (
-            <Card key={idx} className="border border-slate-100">
-              <CardContent className="p-8 space-y-4">
-                <div className="flex gap-0.5 text-yellow-500">
-                  {[...Array(t.rating)].map((_, i) => <Star key={i} className="h-4 w-4 fill-yellow-500 text-yellow-500" />)}
+          {testimonials.map((t, i) => (
+            <Card key={i} className="border border-slate-100 hover:shadow-lg transition-all">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.rating }).map((_, j) => (
+                    <Star key={j} className="h-4 w-4 fill-orange-500 text-orange-500" />
+                  ))}
                 </div>
-                <p className="text-sm text-slate-700 leading-relaxed italic">“{t.message}”</p>
-                <div className="flex items-center gap-3 pt-2">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                <p className="text-xs text-slate-600 leading-relaxed italic">“{t.message}”</p>
+                <div className="flex items-center gap-3 pt-2 border-t">
+                  <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
                     {t.name[0]}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900">{t.name}</h4>
-                    <span className="text-xs text-muted-foreground">{t.location}</span>
+                    <p className="text-sm font-bold text-slate-800 leading-tight">{t.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{t.location}</p>
                   </div>
                 </div>
               </CardContent>
@@ -254,23 +265,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA SECTION */}
+      {/* CTA */}
       <section className="container">
-        <div className="rounded-3xl bg-slate-950 text-white p-8 md:p-14 text-center relative overflow-hidden shadow-2xl border border-slate-800">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-600/10 via-transparent to-transparent opacity-60 pointer-events-none" />
-          <div className="max-w-2xl mx-auto space-y-6 relative">
-            <h2 className="text-3xl md:text-4xl font-black">आज ही अपनी प्रथम पूजा का संकल्प कराएं</h2>
-            <p className="text-sm md:text-base text-slate-300 leading-relaxed">
-              देवयज्ञम् से जुड़कर अपने जीवन में दैवीय कृपा, स्वास्थ्य और समृद्धि का आवाहन करें। आसान 3 चरणों में अपना स्लॉट आरक्षित करें।
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 pt-2">
-              <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl" asChild>
-                <Link href="/pujas">अभी संकल्प करें (Book Sankalp)</Link>
-              </Button>
-              <Button size="lg" variant="outline" className="border-slate-800 bg-slate-900/50 hover:bg-slate-900 text-slate-300 hover:text-white rounded-xl" asChild>
-                <Link href="/contact">पंडित जी से बात करें (Contact Us)</Link>
-              </Button>
-            </div>
+        <div className="rounded-[2rem] om-gradient p-10 md:p-14 text-center text-white space-y-6">
+          <h2 className="text-3xl md:text-4xl font-black">अपनी पूजा यात्रा आज ही आरंभ करें</h2>
+          <p className="opacity-90 max-w-xl mx-auto text-sm leading-relaxed">
+            100,000+ से अधिक सनातनी परिवार दिव्ययज्ञम् के माध्यम से अपनी आस्था और विश्वास को सुदृढ़ कर रहे हैं।
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <Button size="lg" className="bg-white hover:bg-slate-100 text-slate-900 font-bold" asChild>
+              <Link href="/register">खाता बनाएं (Sign Up)</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10" asChild>
+              <Link href="/login">लॉगिन (Sign In)</Link>
+            </Button>
           </div>
         </div>
       </section>

@@ -1,89 +1,66 @@
-import prisma from '@/lib/prisma'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { MapPin, Calendar, Flame, Video, CheckCircle2, User, Users, Landmark, Clock, ArrowRight, Sparkles, Star } from 'lucide-react'
+import { MapPin, Calendar, CheckCircle2, Video, Gift, Sparkles, User, Users, Info, ChevronRight, HelpCircle, Star } from 'lucide-react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
-interface PageProps {
-  params: Promise<{ slug: string }>
-}
+export default function PujaDetailsPage() {
+  const { slug } = useParams()
+  const [puja, setPuja] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedPackage, setSelectedPackage] = useState<'1' | '2' | '4' | '6'>('1')
 
-export default async function PujaDetailPage({ params }: PageProps) {
-  const { slug } = await params;
-  const puja = await prisma.puja.findUnique({
-    where: { slug },
-    include: { temple: true, category: true }
-  })
+  useEffect(() => {
+    if (!slug) return
+    fetch(`/api/admin/pujas`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) {
+          const matched = (data.pujas || []).find((p: any) => p.slug === slug)
+          setPuja(matched || null)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [slug])
 
-  if (!puja) {
-    notFound()
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-40">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-600"></div>
+      </div>
+    )
   }
 
-  const basePrice = Number(puja.price) || 851
-  const coverImg = puja.coverImage || 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=900'
+  if (!puja) {
+    return (
+      <div className="container py-20 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-slate-800">Puja Not Found</h2>
+        <p className="text-muted-foreground">The requested sacred puja could not be found.</p>
+        <Button asChild>
+          <Link href="/pujas">Back to Pujas</Link>
+        </Button>
+      </div>
+    )
+  }
 
-  const packages = [
-    {
-      key: '1',
-      name: 'Individual Sankalp',
-      price: basePrice,
-      description: 'On puja day, Pandit ji will perform the rituals & chant your Name and Gotra in Sankalp. You\'ll receive a recorded puja video and sacred prasad at home.',
-      features: ['1 Person Sankalp', 'Name & Gotra Recitation', 'Live Stream Access', 'Prasad Delivery (1 Box)'],
-      icon: User
-    },
-    {
-      key: '2',
-      name: 'Couple/Family Sankalp',
-      price: basePrice + 550,
-      description: 'Pandit ji will perform the rituals & chant the Names and Gotras (up to 2 family members) in Sankalp. Recorded puja video & prasad included.',
-      features: ['2 Family Members', 'Name & Gotra Recitation', 'Live Stream / Video Clip', 'Prasad Delivery (1 Box + Raksha Sutra)'],
-      icon: Users
-    },
-    {
-      key: '4',
-      name: 'Joint Family Sankalp',
-      price: basePrice + 1550,
-      description: 'Pandit ji will include up to 4 members of your family in the Sankalp. Detailed recorded puja video and pure prasad sent to your address.',
-      features: ['4 Family Members', 'Name & Gotra Recitation', 'Priority Video Update', 'Special Prasad Box + Chadhawa Prasad'],
-      icon: Users
-    },
-    {
-      key: '6',
-      name: 'Grand Devotee Puja',
-      price: basePrice + 2550,
-      description: 'Full family package. Up to 6 family members included in the sacred Sankalp. Personalized video recording, blessing certificate, and premium prasad.',
-      features: ['6 Family Members', 'Personalised Sankalp Video', 'Exclusive Prasad (Idol/Rudraksha + Prasad)', 'Pandit Ji Dakshina Included'],
-      icon: Flame
-    }
-  ]
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Event",
-    "name": puja.name,
-    "description": puja.shortDescription || puja.description || `Sacred ${puja.name} performed by learned pandits.`,
-    "startDate": new Date().toISOString().split('T')[0],
-    "location": {
-      "@type": "Place",
-      "name": puja.temple ? `${puja.temple.name}, ${puja.temple.city}, ${puja.temple.state}` : "Sacred Temple, India"
-    },
-    "organizer": {
-      "@type": "Organization",
-      "name": "Sanatan Seva"
-    }
+  const basePrice = Number(puja.price) || 951
+  const packages = {
+    '1': { label: 'One Member', price: basePrice, desc: `On puja day, Pandit ji will perform the rituals & chant your Name and Gotra in Sankalp. You'll receive a recorded puja video and sacred prasad at home.` },
+    '2': { label: 'Two Members', price: basePrice + 550, desc: `Pandit ji will perform the rituals & chant the Names and Gotras (up to 2 family members) in Sankalp. Recorded puja video & prasad included.` },
+    '4': { label: '4 Members', price: basePrice + 1550, desc: `Pandit ji will include up to 4 members of your family in the Sankalp. Detailed recorded puja video and pure prasad sent to your address.` },
+    '6': { label: '6 Members', price: basePrice + 2550, desc: `Full family package. Up to 6 family members included in the sacred Sankalp. Personalized video recording, blessing certificate, and premium prasad.` }
   }
 
   return (
-    <div className="bg-slate-50/50 min-h-screen py-10">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <div className="container py-6 max-w-6xl mx-auto space-y-8 px-4">
+    <div className="bg-slate-50/50 min-h-screen">
+      <div className="container py-10 max-w-6xl mx-auto space-y-8">
         
         {/* Breadcrumb Navigation */}
         <div className="text-xs text-muted-foreground space-x-2">
@@ -100,9 +77,15 @@ export default async function PujaDetailPage({ params }: PageProps) {
           {/* Left Column: Cover Image & Media */}
           <div className="lg:col-span-5 space-y-4">
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow border">
-              <img src={coverImg} alt={puja.name} className="h-full w-full object-cover" />
+              {puja.coverImage ? (
+                <img src={puja.coverImage} alt={puja.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-orange-50 text-orange-500">
+                  <Sparkles className="h-16 w-16 opacity-30 animate-pulse" />
+                </div>
+              )}
               {puja.isVip && (
-                <Badge className="absolute top-4 left-4 bg-yellow-500 text-slate-950 font-bold border-none px-3 py-1">
+                <Badge className="absolute top-4 left-4 bg-yellow-500 text-white font-bold border-none px-3 py-1">
                   ⭐ VIP Puja
                 </Badge>
               )}
@@ -126,7 +109,7 @@ export default async function PujaDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Right Column: Title, Quick Specs */}
+          {/* Right Column: Title, Quick Specs & Packages Selector */}
           <div className="lg:col-span-7 space-y-6">
             <div className="space-y-2">
               <Badge className="bg-orange-100 text-orange-800 border-none px-3 py-0.5 text-xs font-bold">
@@ -136,7 +119,7 @@ export default async function PujaDetailPage({ params }: PageProps) {
                 {puja.name}
               </h1>
               <p className="text-sm text-slate-500 flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-orange-600" /> {puja.temple?.name || 'Holy Temple'}
+                <MapPin className="h-4 w-4 text-orange-600" /> {puja.temple?.name || 'Uttarakhand / Kashi / Ujjain'}
               </p>
             </div>
 
@@ -155,11 +138,35 @@ export default async function PujaDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="pt-4">
-              <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-black" asChild>
-                <a href="#packages-section">Choose Sankalp Package & Book</a>
+            {/* Dynamic Package Box */}
+            <div className="p-5 rounded-2xl bg-orange-50/40 border border-orange-100 space-y-4">
+              <div className="flex justify-between items-center border-b pb-3">
+                <span className="text-xs font-bold text-slate-700">Select Puja Package</span>
+                <span className="text-2xl font-black text-orange-600">₹{packages[selectedPackage].price}</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {(Object.keys(packages) as Array<'1' | '2' | '4' | '6'>).map((key) => (
+                  <Button
+                    key={key}
+                    variant={selectedPackage === key ? 'default' : 'outline'}
+                    className={`h-11 flex flex-col items-center justify-center p-1 ${selectedPackage === key ? 'bg-orange-600 text-white hover:bg-orange-700' : ''}`}
+                    onClick={() => setSelectedPackage(key)}
+                  >
+                    <span className="text-[10px] font-bold">{packages[key].label}</span>
+                    <span className="text-[10px] opacity-90">₹{packages[key].price}</span>
+                  </Button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed italic bg-white p-3 rounded-lg border">
+                {packages[selectedPackage].desc}
+              </p>
+              <Button size="lg" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-black h-12 shadow" asChild>
+                <Link href={`/bookings/new?pujaId=${puja.id}&package=${selectedPackage}&price=${packages[selectedPackage].price}`}>
+                  Book Puja For {packages[selectedPackage].label} <ChevronRight className="h-4 w-4 ml-1" />
+                </Link>
               </Button>
             </div>
+
           </div>
         </div>
 
@@ -263,55 +270,6 @@ export default async function PujaDetailPage({ params }: PageProps) {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-
-        {/* PACKAGES GRID */}
-        <div id="packages-section" className="space-y-8 pt-6 scroll-mt-6">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-black text-om-gradient">Choose Sankalp Package</h2>
-            <p className="text-muted-foreground mt-2">Select the option that matches your family needs.</p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {packages.map((pkg) => {
-              const PkgIcon = pkg.icon
-              return (
-                <Card key={pkg.key} className="overflow-hidden flex flex-col justify-between border-border hover:border-primary/50 hover:shadow-lg transition-all">
-                  <CardContent className="p-6 space-y-6 flex-1 flex flex-col justify-between">
-                    <div className="space-y-4">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <PkgIcon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg leading-tight">{pkg.name}</h3>
-                        <p className="text-xs text-slate-600 mt-1 line-clamp-3 leading-relaxed">{pkg.description}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-dashed">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-primary">₹{pkg.price}</span>
-                      </div>
-                      <ul className="text-xs space-y-2 text-muted-foreground">
-                        {pkg.features.map((f, i) => (
-                          <li key={i} className="flex items-center gap-1.5">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <Button asChild className="w-full mt-6 bg-orange-600 hover:bg-orange-700 text-white font-bold shadow">
-                      <Link href={`/bookings/new?pujaId=${puja.id}&package=${pkg.key}&price=${pkg.price}`}>
-                        Book Now <ArrowRight className="ml-1.5 h-3 w-3" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
         </div>
 
       </div>

@@ -23,6 +23,15 @@ export function PublicPageShell({
         {cta && <Button asChild className="mt-6"><Link href={cta.href}>{cta.label}</Link></Button>}
       </div>
       {children && <div className="mt-10">{children}</div>}
+      <Card className="mt-10 border-dashed">
+        <CardContent className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">🛠️ This page is being built with devotion. Full functionality coming in the next phase.</p>
+          <div className="mt-4 flex justify-center gap-2">
+            <Button asChild variant="outline" size="sm"><Link href="/">Back home</Link></Button>
+            <Button asChild size="sm"><Link href="/ask-a-pandit">Ask AI Pandit ✨</Link></Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
