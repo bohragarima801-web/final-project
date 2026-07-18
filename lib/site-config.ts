@@ -1,9 +1,9 @@
 export const siteConfig = {
-  name: 'Devyajnam',
-  tagline: 'दिव्ययज्ञम् — Sanatan Seva Online',
+  name: 'Divyayagyam',
+  tagline: 'दिव्ययज्ञम् — सनातन सेवा',
   description:
     'Book online pujas, offer chadhawa, donate to temples, order abhimantrit prasad, and access astrology services — all in one sacred platform.',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'https://devyajnam.com',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'https://divyayagyam.com',
   ogImage: '/og.jpg',
   keywords: [
     'Devyajnam', 'Online Puja', 'VIP Puja', 'Temple Booking', 'Sanatan',

@@ -59,7 +59,7 @@ export function RazorpayCheckoutButton({
         key: data.razorpayKeyId,
         amount: data.amount,
         currency: data.currency,
-        name: 'Devyajnam',
+        name: 'Divyayagyam',
         description: description || `Payment for ${paymentType}`,
         order_id: data.orderId,
         prefill: {

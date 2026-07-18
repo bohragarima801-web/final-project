@@ -16,7 +16,7 @@ export function AdminSidebar() {
         <Link href="/admin" className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-lg om-gradient flex items-center justify-center text-white font-bold text-lg">ॐ</div>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold">Devyajnam</span>
+            <span className="text-sm font-bold">Divyayagyam</span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Control Center</span>
           </div>
         </Link>
