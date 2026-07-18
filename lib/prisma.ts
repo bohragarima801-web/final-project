@@ -18,10 +18,8 @@ try {
         } else if (value.startsWith("'") && value.endsWith("'")) {
           value = value.substring(1, value.length - 1)
         }
-        // Force set key if not already defined, or overwrite if it was empty
-        if (!process.env[key] || process.env[key] === '') {
-          process.env[key] = value
-        }
+        // Force set key and overwrite existing values to refresh dynamic configuration
+        process.env[key] = value
       }
     }
   }
