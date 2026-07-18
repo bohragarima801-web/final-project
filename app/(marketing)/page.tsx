@@ -27,10 +27,19 @@ const testimonials = [
   { name: 'अंजली मेनन (Anjali Menon)', location: 'बैंगलोर', rating: 5, message: 'पंडित जी ने मंत्रोच्चारण के साथ मेरा नाम और गोत्र स्पष्ट रूप से बोला। बहुत संतुष्ट हूँ।' },
 ]
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const products = await prisma.product.findMany({
     take: 4,
     include: { category: true }
+  }).catch(() => [])
+
+  const dbPujas = await prisma.puja.findMany({
+    where: { status: 'PUBLISHED' },
+    take: 4,
+    include: { category: true, temple: true },
+    orderBy: { createdAt: 'desc' }
   }).catch(() => [])
 
   return (
@@ -136,31 +145,71 @@ export default async function HomePage() {
           </Button>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {upcomingPujas.map((p, i) => (
-            <Card key={i} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
-              <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                {p.vip && <Badge className="absolute top-3 left-3 bg-red-600 text-white font-bold border-none">⭐ VIP</Badge>}
-                <div className="absolute top-3 right-3 bg-black/70 backdrop-blur px-2.5 py-1 rounded text-[10px] text-white font-bold flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5 text-orange-500" /> {p.date}
+          {dbPujas.length > 0 ? (
+            dbPujas.map((p) => (
+              <Card key={p.id} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                  {p.coverImage ? (
+                    p.coverImage.endsWith('.mp4') || p.coverImage.endsWith('.webm') || p.coverImage.startsWith('data:video/') ? (
+                      <video src={p.coverImage} className="h-full w-full object-cover" muted loop autoPlay playsInline />
+                    ) : (
+                      <img src={p.coverImage} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    )
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-primary bg-orange-50/50">
+                      <Sparkles className="h-10 w-10 opacity-40" />
+                    </div>
+                  )}
+                  {p.isVip && <Badge className="absolute top-3 left-3 bg-red-600 text-white font-bold border-none">⭐ VIP</Badge>}
+                  {p.isOnline && (
+                    <Badge className="absolute top-3 right-3 bg-green-600 text-white font-bold border-none text-[10px]">
+                      📹 LIVE
+                    </Badge>
+                  )}
                 </div>
-              </div>
-              <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                <div className="space-y-1">
-                  <h3 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">{p.name}</h3>
-                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" /> {p.temple}
-                  </p>
+                <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">{p.name}</h3>
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" /> {p.temple?.name || 'Any Holy Temple'}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t">
+                    <span className="text-lg font-black text-orange-600">₹{p.price}</span>
+                    <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" asChild>
+                      <Link href={`/pujas/${p.slug}`}>बुक करें</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            upcomingPujas.map((p, i) => (
+              <Card key={i} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                  <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  {p.vip && <Badge className="absolute top-3 left-3 bg-red-600 text-white font-bold border-none">⭐ VIP</Badge>}
+                  <div className="absolute top-3 right-3 bg-black/70 backdrop-blur px-2.5 py-1 rounded text-[10px] text-white font-bold flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5 text-orange-500" /> {p.date}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <span className="text-lg font-black text-orange-600">₹{p.price}</span>
-                  <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" asChild>
-                    <Link href={`/bookings/new?pujaId=4b0fe3b1-0015-4106-918f-62a966f359cc`}>बुक करें</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-sm text-slate-900 group-hover:text-orange-600 transition-colors line-clamp-1">{p.name}</h3>
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-orange-600 shrink-0" /> {p.temple}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t">
+                    <span className="text-lg font-black text-orange-600">₹{p.price}</span>
+                    <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white" asChild>
+                      <Link href={`/pujas`}>बुक करें</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </section>
 
