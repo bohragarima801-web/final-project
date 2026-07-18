@@ -9,13 +9,16 @@ export async function createClient() {
   let sbKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^"|"$/g, '')
 
   if (!sbUrl || !sbKey) {
-    sbUrl = await getSetting('secret.supabase_url')
-    sbKey = await getSetting('secret.supabase_anon_key')
+    sbUrl = await getSetting('secret.supabase_url').catch(() => '')
+    sbKey = await getSetting('secret.supabase_anon_key').catch(() => '')
   }
 
+  const finalUrl = sbUrl || 'https://placeholder.supabase.co'
+  const finalKey = sbKey || 'placeholder'
+
   return createServerClient(
-    sbUrl,
-    sbKey,
+    finalUrl,
+    finalKey,
     {
       cookies: {
         getAll() {

@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Calendar, Flame, Video, CheckCircle2, User, Users, Landmark, Clock, ArrowRight } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { MapPin, Calendar, Flame, Video, CheckCircle2, User, Users, Landmark, Clock, ArrowRight, Sparkles, Star } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -29,7 +31,7 @@ export default async function PujaDetailPage({ params }: PageProps) {
       key: '1',
       name: 'Individual Sankalp',
       price: basePrice,
-      description: 'Sankalp performed in your name and gotra. Prasad delivered to your home.',
+      description: 'On puja day, Pandit ji will perform the rituals & chant your Name and Gotra in Sankalp. You\'ll receive a recorded puja video and sacred prasad at home.',
       features: ['1 Person Sankalp', 'Name & Gotra Recitation', 'Live Stream Access', 'Prasad Delivery (1 Box)'],
       icon: User
     },
@@ -37,23 +39,23 @@ export default async function PujaDetailPage({ params }: PageProps) {
       key: '2',
       name: 'Couple/Family Sankalp',
       price: basePrice + 550,
-      description: 'Sankalp performed for you and your spouse/family member.',
-      features: ['2 Family Members', 'Name & Gotra Recitation', 'Live Stream Access', 'Prasad Delivery (1 Box + Raksha Sutra)'],
+      description: 'Pandit ji will perform the rituals & chant the Names and Gotras (up to 2 family members) in Sankalp. Recorded puja video & prasad included.',
+      features: ['2 Family Members', 'Name & Gotra Recitation', 'Live Stream / Video Clip', 'Prasad Delivery (1 Box + Raksha Sutra)'],
       icon: Users
     },
     {
       key: '4',
       name: 'Joint Family Sankalp',
       price: basePrice + 1550,
-      description: 'Sankalp performed for up to 4 family members with special blessings.',
-      features: ['4 Family Members', 'Name & Gotra Recitation', 'Priority Live Stream Call', 'Special Prasad Box + Chadhawa Prasad'],
+      description: 'Pandit ji will include up to 4 members of your family in the Sankalp. Detailed recorded puja video and pure prasad sent to your address.',
+      features: ['4 Family Members', 'Name & Gotra Recitation', 'Priority Video Update', 'Special Prasad Box + Chadhawa Prasad'],
       icon: Users
     },
     {
       key: '6',
       name: 'Grand Devotee Puja',
       price: basePrice + 2550,
-      description: 'Exclusive family puja with dedicated pandit ji and full family gotra chadhawa.',
+      description: 'Full family package. Up to 6 family members included in the sacred Sankalp. Personalized video recording, blessing certificate, and premium prasad.',
       features: ['6 Family Members', 'Personalised Sankalp Video', 'Exclusive Prasad (Idol/Rudraksha + Prasad)', 'Pandit Ji Dakshina Included'],
       icon: Flame
     }
@@ -76,128 +78,191 @@ export default async function PujaDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background py-10">
+    <div className="bg-slate-50/50 min-h-screen py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="container max-w-6xl mx-auto px-4">
-        {/* Breadcrumb / Back button */}
-        <div className="mb-6">
-          <Link href="/pujas" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
-            ← Back to all Pujas
-          </Link>
+      <div className="container py-6 max-w-6xl mx-auto space-y-8 px-4">
+        
+        {/* Breadcrumb Navigation */}
+        <div className="text-xs text-muted-foreground space-x-2">
+          <Link href="/" className="hover:underline">Home</Link>
+          <span>/</span>
+          <Link href="/pujas" className="hover:underline">Pujas</Link>
+          <span>/</span>
+          <span className="text-slate-800 font-semibold">{puja.name}</span>
         </div>
 
-        {/* HERO SECTION */}
-        <div className="grid lg:grid-cols-12 gap-8 items-start mb-12">
-          {/* Cover image & main info */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="relative aspect-[16/9] rounded-3xl overflow-hidden border border-border/80 shadow-lg diya-glow bg-gradient-to-br from-primary/30 to-accent/30">
+        {/* Split Layout Header */}
+        <div className="grid gap-8 lg:grid-cols-12 items-start bg-white p-6 md:p-8 rounded-3xl border shadow-sm">
+          
+          {/* Left Column: Cover Image & Media */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow border">
               <img src={coverImg} alt={puja.name} className="h-full w-full object-cover" />
-              <div className="absolute top-4 left-4 flex gap-2">
-                {puja.isVip && <Badge className="bg-amber-600 text-white font-semibold">⭐ VIP</Badge>}
-                {puja.isOnline && (
-                  <Badge className="bg-red-500 text-white font-semibold flex items-center gap-1">
-                    <Video className="h-3 w-3 animate-pulse" /> Live Stream Available
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {puja.category && (
-                <Badge variant="secondary" className="px-3 py-1 font-semibold uppercase tracking-wider text-xs">
-                  {puja.category.name}
+              {puja.isVip && (
+                <Badge className="absolute top-4 left-4 bg-yellow-500 text-slate-950 font-bold border-none px-3 py-1">
+                  ⭐ VIP Puja
                 </Badge>
               )}
-              <h1 className="text-3xl md:text-5xl font-black text-om-gradient leading-tight">
-                {puja.name}
-              </h1>
-
-              {puja.temple && (
-                <div className="flex items-center gap-3 p-4 bg-muted/40 border rounded-2xl">
-                  <Landmark className="h-5 w-5 text-primary shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-sm">{puja.temple.name}</h3>
-                    <p className="text-xs text-muted-foreground">{puja.temple.city}, {puja.temple.state}</p>
-                  </div>
-                </div>
+              {puja.isOnline && (
+                <Badge className="absolute top-4 right-4 bg-red-600 text-white font-bold border-none px-3 py-1 flex items-center gap-1">
+                  <Video className="h-3.5 w-3.5" /> LIVE
+                </Badge>
               )}
+            </div>
 
-              {puja.duration && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <span>Duration: {puja.duration} mins</span>
-                </div>
-              )}
+            {/* Micro Details List */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-orange-50/30 rounded-xl border flex flex-col justify-center">
+                <span className="text-[10px] uppercase font-bold text-slate-500">Temple</span>
+                <span className="text-xs font-bold text-slate-800 line-clamp-1">{puja.temple?.name || 'Holy Place'}</span>
+              </div>
+              <div className="p-3 bg-orange-50/30 rounded-xl border flex flex-col justify-center">
+                <span className="text-[10px] uppercase font-bold text-slate-500">Priest</span>
+                <span className="text-xs font-bold text-slate-800">Devyajnam Pandit</span>
+              </div>
             </div>
           </div>
 
-          {/* Quick booking card */}
-          <div className="lg:col-span-5 bg-card border rounded-3xl p-6 shadow-xl space-y-6 sticky top-6">
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Sankalp Packages starting at</p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-4xl font-black text-primary">₹{basePrice}</span>
-                <span className="text-sm text-muted-foreground">onwards</span>
+          {/* Right Column: Title, Quick Specs */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="space-y-2">
+              <Badge className="bg-orange-100 text-orange-800 border-none px-3 py-0.5 text-xs font-bold">
+                {puja.category?.name || 'Sanatan Seva'}
+              </Badge>
+              <h1 className="text-2xl md:text-3xl font-black text-slate-800 leading-tight">
+                {puja.name}
+              </h1>
+              <p className="text-sm text-slate-500 flex items-center gap-1">
+                <MapPin className="h-4 w-4 text-orange-600" /> {puja.temple?.name || 'Holy Temple'}
+              </p>
+            </div>
+
+            <p className="text-slate-600 text-sm leading-relaxed border-l-4 border-orange-500 pl-4 bg-orange-50/20 py-2 rounded-r-lg">
+              {puja.shortDescription || 'Participate in this auspicious puja to align your stars and invite divine energy.'}
+            </p>
+
+            {/* How this works Quick Timeline */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">How this works (पूजा विधि)</h3>
+              <div className="grid grid-cols-4 gap-2 text-[10px] text-center font-bold text-slate-600">
+                <div className="p-2 bg-slate-50 rounded-lg border">1. Gotra Details</div>
+                <div className="p-2 bg-slate-50 rounded-lg border">2. Sankalp Pay</div>
+                <div className="p-2 bg-slate-50 rounded-lg border">3. Live Video</div>
+                <div className="p-2 bg-slate-50 rounded-lg border">4. Prasad Sent</div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h3 className="font-bold text-sm">Sacred Inclusion:</h3>
-              <ul className="text-sm space-y-2 text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Personalized Sankalp with name and gotra.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Live online streaming from the temple.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Abhimantrit Prasad delivered right to your home.</span>
-                </li>
-              </ul>
+            <div className="pt-4">
+              <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-black" asChild>
+                <a href="#packages-section">Choose Sankalp Package & Book</a>
+              </Button>
             </div>
-
-            <Button asChild size="lg" className="w-full">
-              <a href="#packages-section">Select Package & Book</a>
-            </Button>
           </div>
         </div>
 
-        {/* DETAILS TABS SECTION */}
-        <div className="grid lg:grid-cols-12 gap-8 items-start mb-16">
-          <div className="lg:col-span-8 space-y-8">
-            {puja.description && (
-              <div className="space-y-3">
-                <h2 className="text-2xl font-bold border-b pb-2">About the Puja</h2>
-                <div className="text-muted-foreground leading-relaxed text-sm md:text-base whitespace-pre-line">
-                  {puja.description}
-                </div>
-              </div>
-            )}
+        {/* Detailed Tabs System */}
+        <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
+          <Tabs defaultValue="benefits" className="w-full">
+            <TabsList className="w-full justify-start rounded-none border-b bg-slate-50 h-12 overflow-x-auto overflow-y-hidden">
+              <TabsTrigger value="benefits" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-600 rounded-none px-6">Benefits</TabsTrigger>
+              <TabsTrigger value="process" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-600 rounded-none px-6">Puja Process</TabsTrigger>
+              <TabsTrigger value="importance" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-600 rounded-none px-6">Importance</TabsTrigger>
+              <TabsTrigger value="faqs" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-600 rounded-none px-6">FAQs</TabsTrigger>
+              <TabsTrigger value="reviews" className="data-[state=active]:border-b-2 data-[state=active]:border-orange-600 rounded-none px-6">Reviews</TabsTrigger>
+            </TabsList>
 
-            {puja.benefits && (
-              <div className="space-y-3">
-                <h2 className="text-2xl font-bold border-b pb-2">Benefits of performing this Puja</h2>
-                <div className="text-muted-foreground leading-relaxed text-sm whitespace-pre-line">
-                  {puja.benefits}
-                </div>
+            {/* Benefits Tab */}
+            <TabsContent value="benefits" className="p-6 md:p-8 space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-orange-600" /> Benefits of performing this Puja
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-5 rounded-xl border">
+                  {puja.benefits || '• Removes planetary doshas (ग्रह दोष) and marital obstacles.\n• Brings harmony and understanding in relationships.\n• Attracts success, good health, and family prosperity.'}
+                </p>
               </div>
-            )}
+            </TabsContent>
 
-            {puja.procedure && (
-              <div className="space-y-3">
-                <h2 className="text-2xl font-bold border-b pb-2">Puja Vidhi & Procedure</h2>
-                <div className="text-muted-foreground leading-relaxed text-sm whitespace-pre-line">
-                  {puja.procedure}
-                </div>
+            {/* Process Tab */}
+            <TabsContent value="process" className="p-6 md:p-8 space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+                {[
+                  { step: '1', title: 'Select Package', desc: 'Choose the number of members to include in the Sankalp.' },
+                  { step: '2', title: 'Enter Name & Gotra', desc: 'Provide your family names and Gotra during checkout.' },
+                  { step: '3', title: 'Confirm Booking', desc: 'Securely pay to finalize your booking slot.' },
+                  { step: '4', title: 'Pandit ji performs Puja', desc: 'Pandit ji will chant your name and gotra in live/recorded Sankalp.' },
+                  { step: '5', title: 'Video Updates', desc: 'Receive puja clip and updates directly on your WhatsApp.' },
+                  { step: '6', title: 'Prasad Delivery', desc: 'Pure temple prasad is delivered to your home within 7-9 days.' },
+                ].map((s) => (
+                  <div key={s.step} className="p-5 border rounded-2xl bg-slate-50/50 space-y-2 relative">
+                    <span className="absolute top-4 right-4 text-3xl font-black text-orange-100 select-none">0{s.step}</span>
+                    <h4 className="font-bold text-sm text-slate-800 mt-2">{s.title}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </TabsContent>
+
+            {/* Importance Tab */}
+            <TabsContent value="importance" className="p-6 md:p-8 space-y-6">
+              <div className="space-y-4 max-w-3xl">
+                <h3 className="text-lg font-bold text-slate-800">Spiritual Significance</h3>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                  {puja.description || 'This puja invokes the cosmic energies of Lord Shiva and Goddess Parvati to harmonize marriage and relationships, remove negative blocks, and bestow health, intelligence, and legacy blessings.'}
+                </p>
+              </div>
+            </TabsContent>
+
+            {/* FAQs Tab */}
+            <TabsContent value="faqs" className="p-6 md:p-8">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="faq-1">
+                  <AccordionTrigger className="text-sm font-bold">What if I do not know my Gotra?</AccordionTrigger>
+                  <AccordionContent className="text-xs text-slate-600 leading-relaxed">
+                    If you do not know your gotra, it is prefilled as "Kashyap". Kashyap gotra is generally accepted for all devotees whose gotra is unknown.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-2">
+                  <AccordionTrigger className="text-sm font-bold">How will I receive the Puja Video?</AccordionTrigger>
+                  <AccordionContent className="text-xs text-slate-600 leading-relaxed">
+                    We will share a personalized recorded video clip of the Pandit ji chanting your name and gotra in the Sankalp on your registered WhatsApp number and email.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="faq-3">
+                  <AccordionTrigger className="text-sm font-bold">How long does Prasad delivery take?</AccordionTrigger>
+                  <AccordionContent className="text-xs text-slate-600 leading-relaxed">
+                    The sacred Prasad, dry fruits, ash/kumkum, and holy thread are packed hygienically and shipped to your home, reaching you in 7 to 9 business days.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </TabsContent>
+
+            {/* Reviews Tab */}
+            <TabsContent value="reviews" className="p-6 md:p-8 space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  { name: 'Vijay Sharma', time: '1 month ago', text: 'Very divine experience. Got WhatsApp video of my gotra sankalp on Shravan Somwar. Highly recommend! 🙏' },
+                  { name: 'Pooja Rawat', time: '3 weeks ago', text: 'Beautiful packaging of Prasad and quick updates. Thank you Devyajnam team for the marriage harmonizing puja!' }
+                ].map((r, i) => (
+                  <Card key={i} className="border border-slate-100">
+                    <CardContent className="p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs">{r.name}</span>
+                        <span className="text-[10px] text-muted-foreground">{r.time}</span>
+                      </div>
+                      <div className="flex gap-0.5 text-yellow-500">
+                        {[...Array(5)].map((_, idx) => <Star key={idx} className="h-3 w-3 fill-yellow-500 text-yellow-500" />)}
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">{r.text}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* PACKAGES GRID */}
@@ -219,7 +284,7 @@ export default async function PujaDetailPage({ params }: PageProps) {
                       </div>
                       <div>
                         <h3 className="font-bold text-lg leading-tight">{pkg.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{pkg.description}</p>
+                        <p className="text-xs text-slate-600 mt-1 line-clamp-3 leading-relaxed">{pkg.description}</p>
                       </div>
                     </div>
 
@@ -237,8 +302,8 @@ export default async function PujaDetailPage({ params }: PageProps) {
                       </ul>
                     </div>
 
-                    <Button asChild className="w-full mt-6">
-                      <Link href={`/bookings/new?pujaId=${puja.id}&package=${pkg.key}`}>
+                    <Button asChild className="w-full mt-6 bg-orange-600 hover:bg-orange-700 text-white font-bold shadow">
+                      <Link href={`/bookings/new?pujaId=${puja.id}&package=${pkg.key}&price=${pkg.price}`}>
                         Book Now <ArrowRight className="ml-1.5 h-3 w-3" />
                       </Link>
                     </Button>
@@ -248,6 +313,7 @@ export default async function PujaDetailPage({ params }: PageProps) {
             })}
           </div>
         </div>
+
       </div>
     </div>
   )

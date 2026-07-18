@@ -41,7 +41,7 @@ export async function initSecrets(force = false) {
       switch (setting.key) {
         case 'secret_razorpay_key_id':
           process.env.RAZORPAY_KEY_ID = cleanVal
-          process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID = cleanVal
+          process.env['NEXT_PUBLIC_' + 'RAZORPAY_KEY_ID'] = cleanVal
           break
         case 'secret_razorpay_key_secret':
           process.env.RAZORPAY_KEY_SECRET = cleanVal
@@ -56,10 +56,10 @@ export async function initSecrets(force = false) {
           process.env.GEMINI_API_KEY = cleanVal
           break
         case 'secret_supabase_url':
-          process.env.NEXT_PUBLIC_SUPABASE_URL = cleanVal
+          process.env['NEXT_PUBLIC_' + 'SUPABASE_URL'] = cleanVal
           break
         case 'secret_supabase_anon_key':
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = cleanVal
+          process.env['NEXT_PUBLIC_' + 'SUPABASE_ANON_KEY'] = cleanVal
           break
         case 'secret_supabase_service_role_key':
           process.env.SUPABASE_SERVICE_ROLE_KEY = cleanVal

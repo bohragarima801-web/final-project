@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAdminSession } from '@/lib/admin-session'
 
+export const dynamic = 'force-dynamic'
+
 const MODEL_MAPPING: Record<string, string> = {
   bookings: 'booking',
   orders: 'order',
@@ -25,6 +27,10 @@ const MODEL_MAPPING: Record<string, string> = {
   temples: 'temple',
   pujas: 'puja',
   products: 'product',
+  'puja-categories': 'pujaCategory',
+  'product-categories': 'productCategory',
+  'chadhawa-offerings': 'chadhawaOffering',
+  'spiritual-tools': 'spiritualTool',
 }
 
 const RELATION_MAPPING: Record<string, any> = {

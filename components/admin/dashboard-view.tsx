@@ -203,8 +203,6 @@ export function DashboardView({
                     ? '/admin/orders'
                     : activeTab === 'chadhawa'
                     ? '/admin/chadhawa'
-                    : activeTab === 'donations'
-                    ? '/admin/payments'
                     : activeTab === 'users'
                     ? '/admin/users'
                     : activeTab === 'payments'
@@ -247,16 +245,6 @@ export function DashboardView({
                 }`}
               >
                 Chadhawa ({recentChadhawa.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('donations')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                  activeTab === 'donations'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Donations ({recentDonations.length})
               </button>
               <button
                 onClick={() => setActiveTab('users')}
@@ -465,54 +453,7 @@ export function DashboardView({
             </Card>
           )}
 
-          {/* Donations Table */}
-          {activeTab === 'donations' && (
-            <Card className="border shadow-none overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-muted/40 border-b text-muted-foreground font-medium text-xs">
-                      <th className="p-3 pl-4">Donor Name</th>
-                      <th className="p-3">Donor Email</th>
-                      <th className="p-3">Amount</th>
-                      <th className="p-3">Status</th>
-                      <th className="p-3 text-right pr-4">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {recentDonations.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="text-center p-8 text-muted-foreground">
-                          No recent donations found.
-                        </td>
-                      </tr>
-                    ) : (
-                      recentDonations.map((d) => (
-                        <tr key={d.id} className="hover:bg-muted/10 transition-colors">
-                          <td className="p-3 pl-4 font-semibold text-foreground">{d.donorName || d.user?.fullName || 'Anonymous'}</td>
-                          <td className="p-3 text-muted-foreground">{d.donorEmail || d.user?.email || '-'}</td>
-                          <td className="p-3 font-bold text-emerald-600">₹{parseFloat(d.amount || '0').toLocaleString('en-IN')}</td>
-                          <td className="p-3">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                              d.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {d.status}
-                            </span>
-                          </td>
-                          <td className="p-3 text-right pr-4 text-xs text-muted-foreground">
-                            {new Date(d.createdAt).toLocaleDateString('en-IN', {
-                              day: '2-digit',
-                              month: 'short'
-                            })}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )}
+
 
           {/* Users Table */}
           {activeTab === 'users' && (

@@ -4,7 +4,7 @@ import { PublicPageShell } from '@/components/public-page-shell'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Flame, Star, Video, ArrowRight } from 'lucide-react'
+import { MapPin, Flame, Video, ArrowRight } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,8 +86,8 @@ export default async function PujasPage() {
                           <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Sankalp Price</p>
                           <p className="text-2xl font-black text-primary">₹{price}</p>
                         </div>
-                        <Button size="sm" className="group-hover:bg-primary/90">
-                          Book Puja <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                        <Button size="sm" className="group-hover:bg-primary/90" asChild>
+                          <Link href={`/pujas/${p.slug}`}>Book Puja</Link>
                         </Button>
                       </div>
                     </CardContent>

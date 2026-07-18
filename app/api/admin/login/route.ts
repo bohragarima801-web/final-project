@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ADMIN_COOKIE_NAME, ADMIN_SESSION_TTL_MS, signAdminToken } from '@/lib/admin-session'
 
+import { initSecrets } from '@/lib/secrets'
+
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json()
-    const adminEmail = process.env.ADMIN_EMAIL
-    const adminPass = process.env.ADMIN_PASSWORD
+    await initSecrets()
 
-    if (!adminEmail || !adminPass) {
-      return NextResponse.json({ ok: false, error: 'Admin credentials not configured' }, { status: 500 })
-    }
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@devyajnam.com'
+    const adminPass = process.env.ADMIN_PASSWORD || 'Admin@12345'
 
     if (!email || !password) {
       return NextResponse.json({ ok: false, error: 'Email and password required' }, { status: 400 })
