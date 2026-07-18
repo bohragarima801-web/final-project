@@ -2,10 +2,24 @@ import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 
-// Fallback manual .env loader to prevent Prisma environment validation crashes
+// Robust manual .env loader checking multiple possible paths
 try {
-  const envPath = path.join(process.cwd(), '.env')
-  if (fs.existsSync(envPath)) {
+  const searchPaths = [
+    path.join(process.cwd(), '.env'),
+    path.join(__dirname, '.env'),
+    path.join(__dirname, '..', '.env'),
+    path.join(__dirname, '../..', '.env'),
+    path.join(__dirname, '../../..', '.env'),
+  ]
+  let envPath = ''
+  for (const p of searchPaths) {
+    if (fs.existsSync(p)) {
+      envPath = p
+      break
+    }
+  }
+
+  if (envPath) {
     const envContent = fs.readFileSync(envPath, 'utf-8')
     const lines = envContent.split(/\r?\n/)
     for (const line of lines) {
