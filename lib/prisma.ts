@@ -41,10 +41,15 @@ try {
   console.error('Failed to load .env manually:', e)
 }
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined }
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined; lastUsedUrl?: string }
 
 // Explicitly pass the connection string URL to avoid Next.js bundling edge cases
 const dbUrl = process.env.DATABASE_URL || 'postgresql://localhost:5432'
+
+// If the database URL has changed since the last client initialization, clear the cached instance
+if (globalForPrisma.prisma && globalForPrisma.lastUsedUrl !== dbUrl) {
+  globalForPrisma.prisma = undefined
+}
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -57,7 +62,10 @@ export const prisma =
     },
   })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+  globalForPrisma.lastUsedUrl = dbUrl
+}
 
 export async function checkDatabaseConnection() {
   try {
