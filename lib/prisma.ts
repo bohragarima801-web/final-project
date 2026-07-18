@@ -76,4 +76,24 @@ export async function checkDatabaseConnection() {
   }
 }
 
+export async function executeWithRetry<T>(
+  queryFn: () => Promise<T>,
+  retries = 3,
+  delayMs = 1000
+): Promise<T> {
+  let lastError: any
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await queryFn()
+    } catch (err: any) {
+      lastError = err
+      console.warn(`[Prisma Database Retry] Attempt ${attempt} failed. Error: ${err.message || err}`)
+      if (attempt < retries) {
+        await new Promise((res) => setTimeout(res, delayMs * attempt))
+      }
+    }
+  }
+  throw new Error(`Database connection failed after ${retries} attempts. Original error: ${lastError?.message || lastError}`)
+}
+
 export default prisma
