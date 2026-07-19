@@ -180,26 +180,34 @@ export default function PujaDetailsPage() {
                       key={key}
                       onClick={() => setSelectedPackage(key)}
                       className={cn(
-                        "text-left p-4 rounded-2xl border-2 transition-all flex flex-col justify-between bg-white min-h-[140px] relative hover:scale-[1.01]",
+                        "text-left p-0 rounded-2xl border-2 transition-all flex flex-col justify-between bg-white overflow-hidden min-h-[200px] relative hover:scale-[1.01]",
                         isSelected 
                           ? "border-orange-500 bg-orange-50/10 shadow-sm" 
                           : "border-slate-100 hover:border-amber-200/60"
                       )}
                     >
+                      {/* Package Illustration Image */}
+                      <div className="w-full h-24 overflow-hidden border-b bg-amber-50">
+                        <img src={`/package-${key}.jpg`} className="w-full h-full object-cover" alt="" />
+                      </div>
+
                       {/* Checkmark icon for active package */}
                       {isSelected && (
-                        <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-orange-600 flex items-center justify-center text-white">
+                        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-orange-600 flex items-center justify-center text-white z-10">
                           <CheckCircle2 className="h-3 w-3 fill-white text-orange-600" />
                         </div>
                       )}
                       
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">{packages[key].label}</span>
-                        <h4 className="text-sm font-black text-slate-800 line-clamp-1">{key === '1' ? 'व्यक्तिगत पूजा' : key === '2' ? 'दम्पत्ति पूजा' : key === '4' ? 'परिवार पूजा' : 'महासंकल्प पूजा'}</h4>
-                      </div>
-
-                      <div className="pt-4">
-                        <span className="text-lg font-black text-slate-900">₹{packages[key].price}</span>
+                      <div className="p-3 space-y-1 flex-1 flex flex-col justify-between">
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">{packages[key].label}</span>
+                          <h4 className="text-xs font-black text-slate-800 line-clamp-1">
+                            {key === '1' ? 'व्यक्तिगत पूजा' : key === '2' ? 'दम्पत्ति पूजा' : key === '4' ? 'परिवार पूजा' : 'महासंकल्प पूजा'}
+                          </h4>
+                        </div>
+                        <div className="pt-2">
+                          <span className="text-sm font-black text-slate-900">₹{packages[key].price}</span>
+                        </div>
                       </div>
                     </button>
                   )
