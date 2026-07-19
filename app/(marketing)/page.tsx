@@ -54,12 +54,12 @@ export default async function HomePage() {
             <Badge className="bg-amber-500/10 border border-amber-500/30 text-amber-700 hover:bg-amber-500/20 px-3 py-1 text-sm font-semibold rounded-full w-fit">
               🕉️ सनातन सेवा • घर बैठे पावन दर्शन
             </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-slate-900">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-normal text-slate-900">
               घर बैठे कराएं <br />
               <span className="text-om-gradient">पवित्र पूजा</span> व <span className="text-om-gradient">अनुष्ठान</span>
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
-              भारत के प्रसिद्ध सिद्ध पीठों व ज्योतिर्लिंगों से सीधे लाइव-स्ट्रीम पूजा। वैदिक ब्राह्मणों द्वारा आपके नाम व गोत्र के साथ विशिष्ट संकल्प। सिद्ध महाप्रसाद आपके द्वार।
+              भारत के प्रसिद्ध सिद्ध पीठों व ज्योतिर्लिंगों से सीधे लाइव-स्ट्रीम पूजा। <span className="inline-block">वैदिक ब्राह्मणों द्वारा</span> आपके नाम व गोत्र के साथ विशिष्ट संकल्प। सिद्ध महाप्रसाद आपके द्वार।
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold text-base px-8 py-6 rounded-xl shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.02]" asChild>

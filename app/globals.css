@@ -80,8 +80,9 @@
     font-family: 'Outfit', 'Noto Sans Devanagari', -apple-system, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cinzel', 'Noto Sans Devanagari', serif;
-    letter-spacing: -0.01em;
+    font-family: 'Outfit', 'Noto Sans Devanagari', sans-serif;
+    letter-spacing: 0.02em !important;
+    line-height: 1.35 !important;
   }
 }
 
