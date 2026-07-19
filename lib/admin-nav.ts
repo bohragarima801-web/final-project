@@ -69,7 +69,9 @@ export const ADMIN_NAV: AdminNavSection[] = [
   { title: 'Support', slug: 'support', icon: MessageSquare, href: '/admin/support' },
   { title: 'Notifications', slug: 'notifications', icon: Bell, href: '/admin/notifications' },
   { title: 'Marketing', slug: 'marketing', icon: Megaphone, items: [
-    { title: 'Overview', href: '/admin/marketing' }, { title: 'Coupons', href: '/admin/marketing/coupons' },
+    { title: 'Overview', href: '/admin/marketing' }, 
+    { title: 'Social Media', href: '/admin/social' },
+    { title: 'Coupons', href: '/admin/marketing/coupons' },
     { title: 'Newsletter', href: '/admin/marketing/newsletter' },
   ]},
   { title: 'Reports', slug: 'reports', icon: FileText, href: '/admin/reports' },
