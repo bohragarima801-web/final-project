@@ -298,11 +298,53 @@ export default function PujaDetailsPage() {
 
             {/* Importance Tab */}
             <TabsContent value="importance" className="p-6 md:p-8 space-y-6">
-              <div className="space-y-4 max-w-3xl">
-                <h3 className="text-lg font-bold text-slate-800">Spiritual Significance</h3>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-                  {puja.description || 'This puja invokes the cosmic energies of Lord Shiva and Goddess Parvati to harmonize marriage and relationships, remove negative blocks, and bestow health, intelligence, and legacy blessings.'}
-                </p>
+              <div className="space-y-6 max-w-4xl">
+                <div className="space-y-3 bg-amber-50/30 p-5 rounded-2xl border border-amber-100/60">
+                  <h3 className="text-base font-black text-amber-800 flex items-center gap-2">
+                    🕉️ वैदिक एवं आध्यात्मिक महत्व (Spiritual Significance)
+                  </h3>
+                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                    {puja.description || 'यह अत्यंत पावन पूजा वैदिक अनुष्ठानों और शास्त्रों में वर्णित विधियों के अनुसार संपन्न की जाती है। इसके प्रभाव से जीवन के सभी कष्टों का शमन होता है और शुभता का उदय होता है।'}
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="p-5 border rounded-2xl bg-white space-y-2 shadow-sm">
+                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                      ✨ दैवीय कृपा व आशीर्वाद
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      इस अनुष्ठान के द्वारा देवताओं का साक्षात् आह्वान किया जाता है। भक्तिपूर्वक किए गए नाम व गोत्र संकल्प से जातक के परिवार पर ईश्वरीय सुरक्षा कवच का निर्माण होता है।
+                    </p>
+                  </div>
+
+                  <div className="p-5 border rounded-2xl bg-white space-y-2 shadow-sm">
+                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                      🪐 ग्रह दोषों का शमन
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      कुंडली में उपस्थित पितृदोष, मांगलिक दोष, राहु-केतु जनित बाधाएं या अन्य ग्रह जनित अरिष्टों के प्रभाव को कम करने में यह वैदिक पूजा अत्यंत प्रभावशाली मानी गई है।
+                    </p>
+                  </div>
+
+                  <div className="p-5 border rounded-2xl bg-white space-y-2 shadow-sm">
+                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                      🏡 पारिवारिक सुख व समृद्धि
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      घर के वातावरण में मौजूद नकारात्मक ऊर्जा नष्ट होती है, आपसी कलह दूर होता है और सुख, शांति एवं नव-ऊर्जा का संचार होता है।
+                    </p>
+                  </div>
+
+                  <div className="p-5 border rounded-2xl bg-white space-y-2 shadow-sm">
+                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                      🎯 अभीष्ट फल की प्राप्ति
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      धर्म, अर्थ, काम और मोक्ष की प्राप्ति के लिए शास्त्रों में यज्ञ व पूजा का विधान सर्वश्रेष्ठ बताया गया है, जो जातक के जीवन के संकल्पों को सिद्ध करता है।
+                    </p>
+                  </div>
+                </div>
               </div>
             </TabsContent>
 
