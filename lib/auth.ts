@@ -22,7 +22,10 @@ import { getAdminSession } from '@/lib/admin-session'
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     // 1. Check for local Admin JWT session (used by admin dashboard)
-    const adminSession = await getAdminSession().catch(() => null)
+    const adminSession = await getAdminSession().catch((err) => {
+      console.error('[getCurrentUser] getAdminSession error:', err)
+      return null
+    })
     if (adminSession) {
       // Find real admin in DB or return dummy if DB fails
       let dbAdmin = await prisma.user.findFirst({
@@ -36,7 +39,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           }
         },
         include: { role: true }
-      }).catch(() => null)
+      }).catch((err) => {
+        console.error('[getCurrentUser] prisma findFirst admin error:', err)
+        return null
+      })
       
       if (dbAdmin) {
         if (dbAdmin.status === 'SUSPENDED') {
@@ -99,8 +105,12 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       supabaseId: dbUser.supabaseId!,
     }
   } catch (err) {
+    console.error('[getCurrentUser] outer catch error:', err)
     // If DB is unreachable (e.g. dev env), fall back to Supabase user only.
-    const supaUser = await getSession()
+    const supaUser = await getSession().catch((e) => {
+      console.error('[getCurrentUser] getSession error in outer catch:', e)
+      return null
+    })
     if (!supaUser) return null
     return {
       id: supaUser.id,

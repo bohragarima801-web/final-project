@@ -50,7 +50,7 @@ async function writeSocialQueue(data: any) {
 export async function GET() {
   try {
     const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -64,7 +64,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    if (!adminUser || adminUser.role !== 'admin') {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 

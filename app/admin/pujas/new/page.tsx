@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Plus, Trash2, Cloud } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import imageCompression from 'browser-image-compression'
+import { convertGoogleDriveUrl } from '@/lib/utils'
 
 interface ItemRef {
   id: string
@@ -49,6 +50,7 @@ export default function NewPujaPage() {
   const [saving, setSaving] = useState(false)
   const [loadingPuja, setLoadingPuja] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [driveUrl, setDriveUrl] = useState('')
 
   // Fetch references
   useEffect(() => {
@@ -164,6 +166,14 @@ export default function NewPujaPage() {
     } finally {
       setUploading(false)
     }
+  }
+
+  function handleDriveAdd() {
+    if (!driveUrl) return
+    const convertedUrl = convertGoogleDriveUrl(driveUrl)
+    setCoverImage(convertedUrl)
+    setDriveUrl('')
+    toast.success('Drive link applied as cover!')
   }
 
   const handleAddPackage = () => {
@@ -434,7 +444,17 @@ export default function NewPujaPage() {
               )}
               <Input type="file" accept="image/*,video/*" onChange={handleImageChange} disabled={uploading} />
               {uploading && <div className="text-xs text-orange-600 animate-pulse">Uploading file...</div>}
-              <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Or paste image/video URL" className="text-xs" />
+              
+              <div className="flex gap-2">
+                <Input type="text" value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)} placeholder="Or paste Google Drive link" className="text-xs" />
+                <Button type="button" size="sm" onClick={handleDriveAdd} disabled={!driveUrl} className="bg-blue-600 hover:bg-blue-700">
+                  <Cloud className="h-4 w-4 mr-1" /> Use
+                </Button>
+              </div>
+              <div className="pt-2 border-t mt-2">
+                <Label className="text-xs mb-1 block">Manual Image/Video URL</Label>
+                <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Direct URL..." className="text-xs" />
+              </div>
             </CardContent>
           </Card>
         </div>

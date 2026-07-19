@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
-    const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    const token = req.cookies.get(ADMIN_COOKIE_NAME)?.value
+    const session = await verifyAdminToken(token)
+    if (!session) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 

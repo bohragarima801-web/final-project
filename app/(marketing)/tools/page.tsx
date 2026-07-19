@@ -27,9 +27,25 @@ export default function ToolsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  function startTrial(slug: string, trialDays: number) {
-    setTrialStatuses((prev) => ({ ...prev, [slug]: true }))
-    toast.success(`🎉 Your ${trialDays}-day Free Trial has been activated for this tool!`)
+  async function startTrial(slug: string, trialDays: number, toolId: string) {
+    try {
+      const res = await fetch('/api/tools/trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toolId })
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setTrialStatuses((prev) => ({ ...prev, [slug]: true }))
+        toast.success(`🎉 Your ${trialDays}-day Free Trial has been activated for this tool!`)
+        // Redirect to tool
+        window.location.href = `/tools/${slug}`
+      } else {
+        toast.error(data.error || 'Failed to start trial')
+      }
+    } catch {
+      toast.error('Network error starting trial')
+    }
   }
 
   function buyActivation(slug: string, price: number) {
@@ -122,13 +138,13 @@ export default function ToolsPage() {
                     <div className="pt-4 border-t space-y-2">
                       {t.isFree || premiumActive || trialActive ? (
                         <Button className="w-full" asChild>
-                          <Link href={`/tools#${t.slug}`}>
+                          <Link href={`/tools/${t.slug}`}>
                             Open {t.name} <ArrowRight className="h-4 w-4 ml-1" />
                           </Link>
                         </Button>
                       ) : (
                         <div className="grid grid-cols-2 gap-2">
-                          <Button variant="outline" size="sm" onClick={() => startTrial(t.slug, t.trialDays)}>
+                          <Button variant="outline" size="sm" onClick={() => startTrial(t.slug, t.trialDays, t.id)}>
                             {t.trialDays} Days Trial
                           </Button>
                           <Button size="sm" onClick={() => buyActivation(t.slug, Number(t.price))}>

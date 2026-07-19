@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/auth'
 export async function GET() {
   try {
     const user = await getCurrentUser().catch(() => null)
-    if (!user || user.role?.slug !== 'admin') {
+    if (!user || user.role !== 'admin') {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -117,7 +117,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser().catch(() => null)
-    if (!user || user.role?.slug !== 'admin') {
+    if (!user || user.role !== 'admin') {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -11,6 +11,18 @@ export async function GET() {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
+    const url = new URL(req.url)
+    const id = url.searchParams.get('id')
+
+    if (id) {
+      const post = await prisma.blog.findUnique({
+        where: { id },
+        include: { category: true, author: true }
+      })
+      if (!post) return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ ok: true, data: post })
+    }
+
     let posts = await prisma.blog.findMany({
       include: {
         category: { select: { name: true } },
@@ -80,7 +92,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { id, title, slug, content, categoryId, excerpt, status, seoTitle, seoDescription, coverImage } = body
+    const { id, title, slug, content, categoryId, excerpt, status, seoTitle, seoDescription, coverImage, videoUrl } = body
 
     if (!title || !slug || !content) {
       return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 })
@@ -111,6 +123,7 @@ export async function POST(req: Request) {
           categoryId: finalCategoryId,
           excerpt,
           coverImage,
+          videoUrl,
           status: status || 'DRAFT',
           seoTitle,
           seoDescription,
@@ -129,6 +142,7 @@ export async function POST(req: Request) {
           authorId: adminUser.id,
           excerpt,
           coverImage,
+          videoUrl,
           status: status || 'DRAFT',
           seoTitle,
           seoDescription,

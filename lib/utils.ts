@@ -39,3 +39,18 @@ export function truncate(str: string, len = 100) {
 }
 
 export const DEFAULT_PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=400'
+
+export function convertGoogleDriveUrl(url: string) {
+  if (!url) return url
+  // Match standard share links e.g. https://drive.google.com/file/d/1A2B3C/view
+  const match = url.match(/\/file\/d\/([^\/]+)/)
+  if (match && match[1]) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`
+  }
+  // Match alternative share links e.g. https://drive.google.com/open?id=1A2B3C
+  const openMatch = url.match(/open\?id=([^&]+)/)
+  if (openMatch && openMatch[1]) {
+    return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`
+  }
+  return url
+}

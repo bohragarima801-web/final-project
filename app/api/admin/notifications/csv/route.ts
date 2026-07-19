@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyAdminToken, ADMIN_COOKIE_NAME } from '@/lib/admin-session'
 
 export async function POST(req: NextRequest) {
   try {
+    const token = req.cookies.get(ADMIN_COOKIE_NAME)?.value
+    const session = await verifyAdminToken(token)
+    if (!session) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const formData = await req.formData()
     const file = formData.get('file') as File | null
     const templateMessage = formData.get('message') as string || ''
@@ -60,8 +67,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      processed: records.length,
       message: `Successfully processed and dispatched alerts to ${records.length} contacts via email, SMS, and WhatsApp!`,
+      details: {
+        recipients: records.map(r => ({
+          name: r.name || 'Devotee',
+          email: r.email || r.mail || 'No Email',
+          phone: r.phone || r.mobile || r.whatsapp || 'No Phone'
+        }))
+      }
     })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || 'Processing failed' }, { status: 500 })

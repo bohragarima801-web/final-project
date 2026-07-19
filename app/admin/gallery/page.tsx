@@ -6,13 +6,16 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Loader2, Copy, Trash2, Upload, Link as LinkIcon, Edit2, PlayCircle } from 'lucide-react'
+import { Loader2, Copy, Trash2, Upload, Link as LinkIcon, Edit2, PlayCircle, Cloud } from 'lucide-react'
+import imageCompression from 'browser-image-compression'
+import { convertGoogleDriveUrl } from '@/lib/utils'
 
 export default function GalleryPage() {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [caption, setCaption] = useState('')
+  const [driveUrl, setDriveUrl] = useState('')
 
   async function loadItems() {
     try {
@@ -42,9 +45,23 @@ export default function GalleryPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    let uploadFile = file
+
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadFile = await imageCompression(file, {
+          maxSizeMB: 0.8,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        })
+      } catch (err) {
+        console.error('Compression error', err)
+      }
+    }
+
     setUploading(true)
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', uploadFile)
 
     try {
       // 1. Upload to /api/upload
@@ -99,6 +116,37 @@ export default function GalleryPage() {
     }
   }
 
+  async function handleDriveAdd() {
+    if (!driveUrl) return
+    setUploading(true)
+    const convertedUrl = convertGoogleDriveUrl(driveUrl)
+    
+    try {
+      const saveRes = await fetch('/api/admin/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: convertedUrl,
+          caption: caption || 'Google Drive Asset',
+          type: 'IMAGE', // Defaulting to image, could be inferred if possible
+          galleryTitle: 'General',
+        }),
+      })
+
+      const saveData = await saveRes.json()
+      if (!saveData.ok) throw new Error(saveData.error || 'Failed to save to database')
+
+      toast.success('Drive link saved to gallery!')
+      setCaption('')
+      setDriveUrl('')
+      loadItems()
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to add drive link')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm('Are you sure you want to delete this media?')) return
     try {
@@ -133,23 +181,47 @@ export default function GalleryPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
-            <div className="flex-1 space-y-2">
-              <label className="text-xs font-semibold text-muted-foreground">Media Caption / Title (Optional)</label>
-              <Input
-                placeholder="Enter caption for the uploaded file..."
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground">Media Caption / Title (Optional)</label>
+                <Input
+                  placeholder="Enter caption for the uploaded file..."
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground">Google Drive Link (Alternative to Upload)</label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://drive.google.com/file/d/.../view"
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                  />
+                  <Button type="button" onClick={handleDriveAdd} disabled={uploading || !driveUrl} className="bg-blue-600 hover:bg-blue-700">
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4 mr-2" />}
+                    Add Drive Link
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="cursor-pointer inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors gap-2 w-full sm:w-auto h-10">
+
+            <div className="flex items-center gap-4">
+              <div className="h-px bg-border flex-1" />
+              <span className="text-xs text-muted-foreground font-semibold uppercase">OR</span>
+              <div className="h-px bg-border flex-1" />
+            </div>
+
+            <div className="flex justify-center">
+              <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-dashed border-primary bg-primary/5 px-6 py-4 text-sm font-medium text-primary hover:bg-primary/10 transition-colors gap-2 w-full max-w-md h-auto">
                 {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <Upload className="h-4 w-4" />
+                  <Upload className="h-5 w-5" />
                 )}
-                {uploading ? 'Uploading…' : 'Upload File'}
+                {uploading ? 'Uploading and Compressing…' : 'Click to Upload Local File (Image/Video)'}
                 <input
                   type="file"
                   accept="image/*,video/*"
@@ -181,14 +253,17 @@ export default function GalleryPage() {
             <Card key={item.id} className="overflow-hidden group relative border shadow-sm hover:shadow-md transition-shadow">
               <div className="aspect-video relative bg-slate-100 flex items-center justify-center overflow-hidden">
                 {item.type === 'VIDEO' ? (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
-                    <PlayCircle className="h-10 w-10 opacity-80" />
-                  </div>
+                  <video
+                    src={item.url}
+                    className="w-full h-full object-contain bg-black"
+                    controls
+                    preload="metadata"
+                  />
                 ) : (
                   <img
                     src={item.url}
                     alt={item.caption}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-contain bg-slate-900 transition-transform duration-300 group-hover:scale-105"
                   />
                 )}
               </div>

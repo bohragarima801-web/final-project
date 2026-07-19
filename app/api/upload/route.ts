@@ -34,20 +34,11 @@ export async function POST(req: NextRequest) {
         size: file.size,
       })
     } catch (fsError: any) {
-      console.warn('Local FS write failed (likely read-only on Vercel), falling back to base64 encoding:', fsError?.message)
-      
-      // Fallback: Convert to Base64 Data URL
-      const base64Data = buffer.toString('base64')
-      const mimeType = file.type || 'image/jpeg'
-      const dataUrl = `data:${mimeType};base64,${base64Data}`
-
-      return NextResponse.json({
-        ok: true,
-        url: dataUrl,
-        name: file.name,
-        size: file.size,
-        note: 'Base64 fallback active',
-      })
+      console.warn('Local FS write failed (likely read-only on Vercel).')
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'Local storage is read-only on this server (Vercel). Please use the "Google Drive Link" option to add media.' 
+      }, { status: 400 })
     }
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || 'Upload failed' }, { status: 500 })

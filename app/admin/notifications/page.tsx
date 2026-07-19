@@ -19,7 +19,7 @@ export default function NotificationsPage() {
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [result, setResult] = useState<string | null>(null)
+  const [result, setResult] = useState<any>(null)
 
   // Direct Broadcast states
   const [broadcastType, setBroadcastType] = useState('PUJA')
@@ -59,7 +59,7 @@ export default function NotificationsPage() {
       const data = await res.json()
       if (data.ok) {
         toast.success('Bulk notifications sent successfully!')
-        setResult(data.message)
+        setResult(data)
         setCsvFile(null)
         setMessage('')
       } else {
@@ -322,12 +322,29 @@ export default function NotificationsPage() {
             )}
 
             {result && (
-              <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-xs flex gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold block">CSV Dispatch Success!</span>
-                  <span className="block mt-1">{result}</span>
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-xs flex gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">CSV Dispatch Success!</span>
+                    <span className="block mt-1">{result.message}</span>
+                  </div>
                 </div>
+
+                {result.details?.recipients && (
+                  <div className="border rounded-xl p-3 bg-slate-50 space-y-2 max-h-80 overflow-y-auto">
+                    <span className="font-bold text-[10px] text-slate-600 block uppercase">Recipients Dispatch Queue:</span>
+                    {result.details.recipients.map((rec: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center text-[10px] border-b pb-1">
+                        <div>
+                          <span className="font-bold text-slate-700">{rec.name}</span>
+                          <span className="text-slate-500 block">{rec.email}</span>
+                        </div>
+                        <Badge className="bg-green-600 text-white font-mono">{rec.phone}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

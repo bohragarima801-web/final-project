@@ -23,7 +23,7 @@ const services = [
   { icon: ShoppingBag, title: 'अभिमंतृत सामग्री (Divine Store)', desc: 'गंगाजल, सिद्ध रुद्राक्ष, पारद शिवलिंग एवं प्रमाणित रत्न घर मंगाएं।', href: '/products', color: 'from-pink-500/20 to-pink-500/5' },
 ]
 
-const testimonials = [
+const fallbackTestimonials = [
   { name: 'रविंद्र दीक्षित (Ravindra Dixit)', location: 'लखनऊ', rating: 5, message: 'काशी विश्वनाथ मंदिर में की गई पूजा का अनुभव अत्यंत दिव्य था। प्रसाद भी 4 दिनों में घर मिल गया।' },
   { name: 'दीपक चौरसिया (Deepak Chaurasia)', location: 'भोपाल', rating: 5, message: 'लाइव स्ट्रीमिंग की क्वालिटी बहुत अच्छी थी। घर बैठे लग रहा था कि हम मंदिर के गर्भगृह में ही बैठे हैं।' },
   { name: 'अंजली मेनन (Anjali Menon)', location: 'बैंगलोर', rating: 5, message: 'पंडित जी ने मंत्रोच्चारण के साथ मेरा नाम और गोत्र स्पष्ट रूप से बोला। बहुत संतुष्ट हूँ।' },
@@ -43,6 +43,16 @@ export default async function HomePage() {
     include: { category: true, temple: true },
     orderBy: { createdAt: 'desc' }
   }).catch(() => [])
+
+  let testimonials = await prisma.testimonial.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: 'desc' },
+    take: 6
+  }).catch(() => [])
+
+  if (testimonials.length === 0) {
+    testimonials = fallbackTestimonials as any
+  }
 
   return (
     <div className="space-y-16 pb-16">
@@ -288,8 +298,12 @@ export default async function HomePage() {
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed italic">“{t.message}”</p>
                 <div className="flex items-center gap-3 pt-2 border-t">
-                  <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
-                    {t.name[0]}
+                  <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold overflow-hidden">
+                    {t.avatar ? (
+                      <img src={t.avatar} alt={t.name} className="h-full w-full object-cover" />
+                    ) : (
+                      t.name[0]
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-800 leading-tight">{t.name}</p>

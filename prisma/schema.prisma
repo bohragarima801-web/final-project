@@ -996,8 +996,9 @@ model Blog {
   title          String
   slug           String     @unique
   excerpt        String?
-  content        String
+  content        String   @db.Text
   coverImage     String?
+  videoUrl       String?
   status         BlogStatus @default(DRAFT)
   views          Int        @default(0)
   seoTitle       String?
@@ -1329,9 +1330,29 @@ model SpiritualTool {
   isFree      Boolean  @default(true)
   price       Decimal  @default(0) @db.Decimal(10,2)
   trialDays   Int      @default(0)
+  thumbnail   String?
+  htmlCode    String?  @db.Text
+  cssCode     String?  @db.Text
+  jsCode      String?  @db.Text
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
+  usageLogs   ToolUsageLog[]
+
   @@map("spiritual_tools")
+}
+
+model ToolUsageLog {
+  id        String   @id @default(uuid())
+  toolId    String
+  ipAddress String
+  email     String?  // Optional, if user is logged in
+  usedAt    DateTime @default(now())
+
+  tool      SpiritualTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([ipAddress])
+  @@index([toolId])
+  @@map("tool_usage_logs")
 }
 

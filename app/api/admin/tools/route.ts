@@ -14,7 +14,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, slug, description, isFree, price, trialDays, isActive } = await req.json()
+    const { name, slug, description, isFree, price, trialDays, isActive, htmlCode, cssCode, jsCode, thumbnail } = await req.json()
 
     if (!name) {
       return NextResponse.json({ ok: false, error: 'Name is required' }, { status: 400 })
@@ -32,6 +32,10 @@ export async function POST(req: NextRequest) {
         price: price ? Number(price) : 0,
         trialDays: trialDays ? Number(trialDays) : 0,
         isActive: isActive !== undefined ? !!isActive : true,
+        htmlCode,
+        cssCode,
+        jsCode,
+        thumbnail,
       },
       update: {
         name,
@@ -40,6 +44,10 @@ export async function POST(req: NextRequest) {
         price: price ? Number(price) : 0,
         trialDays: trialDays ? Number(trialDays) : 0,
         isActive: isActive !== undefined ? !!isActive : true,
+        htmlCode,
+        cssCode,
+        jsCode,
+        thumbnail,
       },
     })
 

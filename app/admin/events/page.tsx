@@ -12,7 +12,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2, Calendar, Video, MapPin, Upload, Edit2 } from 'lucide-react'
+import { Loader2, Plus, Trash2, Calendar, Video, MapPin, Upload, Edit2, Send, FileSpreadsheet, Cloud } from 'lucide-react'
+import { convertGoogleDriveUrl } from '@/lib/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function EventsPage() {
   const [events, setEvents] = useState<any[]>([])
@@ -35,6 +43,13 @@ export default function EventsPage() {
   const [isLive, setIsLive] = useState(false)
   const [streamUrl, setStreamUrl] = useState('')
   const [templeId, setTempleId] = useState('none')
+  const [driveUrl, setDriveUrl] = useState('')
+
+  // Notification states
+  const [notifyEventId, setNotifyEventId] = useState<string | null>(null)
+  const [notifyFile, setNotifyFile] = useState<File | null>(null)
+  const [notifyMessage, setNotifyMessage] = useState('')
+  const [sendingNotify, setSendingNotify] = useState(false)
 
   async function loadEventsAndTemples() {
     try {
@@ -82,6 +97,14 @@ export default function EventsPage() {
     } finally {
       setUploading(false)
     }
+  }
+
+  function handleDriveAdd() {
+    if (!driveUrl) return
+    const convertedUrl = convertGoogleDriveUrl(driveUrl)
+    setCoverImage(convertedUrl)
+    setDriveUrl('')
+    toast.success('Drive link applied as cover!')
   }
 
   // Format date helper for input type="datetime-local"
@@ -184,6 +207,37 @@ export default function EventsPage() {
       }
     } catch {
       toast.error('Network error deleting event')
+    }
+  }
+
+  async function handleSendNotifications(e: React.FormEvent) {
+    e.preventDefault()
+    if (!notifyEventId || !notifyFile) return
+
+    setSendingNotify(true)
+    const formData = new FormData()
+    formData.append('file', notifyFile)
+    formData.append('eventId', notifyEventId)
+    formData.append('messageTemplate', notifyMessage)
+
+    try {
+      const res = await fetch('/api/admin/events/notify', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success(data.data.message)
+        setNotifyEventId(null)
+        setNotifyFile(null)
+        setNotifyMessage('')
+      } else {
+        toast.error(data.error || 'Failed to send notifications')
+      }
+    } catch {
+      toast.error('Network error sending notifications')
+    } finally {
+      setSendingNotify(false)
     }
   }
 
@@ -327,6 +381,17 @@ export default function EventsPage() {
                         disabled={uploading}
                       />
                     </label>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Input
+                        placeholder="Or paste Google Drive link"
+                        value={driveUrl}
+                        onChange={(e) => setDriveUrl(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Button type="button" size="sm" onClick={handleDriveAdd} disabled={!driveUrl} className="h-8 bg-blue-600 hover:bg-blue-700">
+                        <Cloud className="h-3 w-3 mr-1" /> Use
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -389,6 +454,15 @@ export default function EventsPage() {
                 <div className="flex items-center gap-1">
                   <Button
                     size="icon"
+                    variant="outline"
+                    className="h-8 w-8 text-green-600"
+                    onClick={() => setNotifyEventId(r.id)}
+                    title="Send Notifications (CSV)"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
                     variant="ghost"
                     className="h-8 w-8 text-blue-600"
                     onClick={() => startEdit(r)}
@@ -412,6 +486,52 @@ export default function EventsPage() {
           rows={events}
         />
       )}
+
+      {/* Notification Modal */}
+      <Dialog open={!!notifyEventId} onOpenChange={(open) => !open && setNotifyEventId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send WhatsApp/Email Notifications</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file containing columns like "Name", "Phone", "Email". We will dispatch notifications to all valid rows.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSendNotifications} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Upload Contact CSV File</Label>
+              <div className="flex items-center gap-4">
+                <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium gap-2">
+                  <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                  {notifyFile ? notifyFile.name : 'Select .csv file'}
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => setNotifyFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Custom Message Template (Optional)</Label>
+              <Textarea
+                placeholder="e.g. Hello {Name}, join us for the LIVE aarti today!"
+                value={notifyMessage}
+                onChange={(e) => setNotifyMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <Button type="submit" disabled={!notifyFile || sendingNotify} className="bg-green-600 hover:bg-green-700 text-white">
+                {sendingNotify ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                {sendingNotify ? 'Dispatching...' : 'Dispatch Notifications'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
