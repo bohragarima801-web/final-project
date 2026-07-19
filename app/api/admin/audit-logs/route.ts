@@ -26,49 +26,7 @@ export async function GET() {
       take: 50
     })
 
-    // Seed some mock logs if empty
-    if (logs.length === 0) {
-      await prisma.auditLog.createMany({
-        data: [
-          {
-            userId: adminUser.id,
-            action: 'ADMIN_LOGIN',
-            resource: 'Auth',
-            ipAddress: '192.168.1.42',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-          },
-          {
-            userId: adminUser.id,
-            action: 'UPDATE_SETTINGS',
-            resource: 'Settings',
-            ipAddress: '192.168.1.42',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-          },
-          {
-            userId: adminUser.id,
-            action: 'CREATE_PUJA',
-            resource: 'Puja',
-            ipAddress: '192.168.1.42',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-          }
-        ]
-      }).catch(() => null)
 
-      logs = await prisma.auditLog.findMany({
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 50
-      })
-    }
 
     const rows = logs.map(l => ({
       id: l.id,

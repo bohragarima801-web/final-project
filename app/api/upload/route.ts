@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { Buffer } from 'buffer'
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       const fileName = `${uuidv4()}${fileExt}`
       const filePath = path.join(uploadDir, fileName)
 
-      await fs.writeFile(filePath, buffer)
+      await fs.writeFile(filePath, new Uint8Array(buffer))
 
       return NextResponse.json({
         ok: true,

@@ -14,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, UserCheck, Star, HeartHandshake, Loader2, Plus, Edit2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function UsersPage() {
+import { Suspense } from 'react'
+
+function UsersManager() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(false)
@@ -224,8 +226,6 @@ export default function UsersPage() {
           { label: 'Pandits', value: 'pandits' },
           { label: 'Volunteers', value: 'volunteers' },
         ]}
-        value={activeTab}
-        onChange={setActiveTab}
       />
 
       {loading ? (
@@ -280,5 +280,17 @@ export default function UsersPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+      </div>
+    }>
+      <UsersManager />
+    </Suspense>
   )
 }

@@ -5,6 +5,7 @@ export async function GET() {
   try {
     const events = await prisma.event.findMany({
       include: {
+        temple: { select: { name: true } },
         _count: {
           select: { registrations: true },
         },
@@ -26,7 +27,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, description, coverImage, location, startsAt, endsAt, isLive, isFeatured, streamUrl } = await req.json()
+    const { title, description, coverImage, location, startsAt, endsAt, isLive, isFeatured, streamUrl, templeId } = await req.json()
 
     if (!title || !startsAt) {
       return NextResponse.json({ ok: false, error: 'Title and Starts At date are required' }, { status: 400 })
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
         isLive: isLive !== undefined ? !!isLive : false,
         isFeatured: isFeatured !== undefined ? !!isFeatured : false,
         streamUrl,
+        templeId: templeId || null,
       },
     })
 
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { id, title, description, coverImage, location, startsAt, endsAt, isLive, isFeatured, streamUrl } = await req.json()
+    const { id, title, description, coverImage, location, startsAt, endsAt, isLive, isFeatured, streamUrl, templeId } = await req.json()
 
     if (!id) {
       return NextResponse.json({ ok: false, error: 'ID is required for editing' }, { status: 400 })
@@ -75,6 +77,7 @@ export async function PUT(req: NextRequest) {
         isLive: isLive !== undefined ? !!isLive : undefined,
         isFeatured: isFeatured !== undefined ? !!isFeatured : undefined,
         streamUrl,
+        templeId: templeId !== undefined ? (templeId || null) : undefined,
       },
     })
 

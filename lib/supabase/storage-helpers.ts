@@ -2,7 +2,7 @@ import { createAdminClient } from './admin'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function ensureBucketExists() {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
   try {
     const { data: buckets, error: listError } = await supabase.storage.listBuckets()
     if (listError) {
@@ -33,7 +33,7 @@ export async function ensureBucketExists() {
 }
 
 export async function uploadToSupabase(fileBuffer: Buffer, fileName: string, mimeType: string) {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
   await ensureBucketExists()
 
   const fileExt = fileName.split('.').pop() || 'jpg'
@@ -63,7 +63,7 @@ export async function uploadToSupabase(fileBuffer: Buffer, fileName: string, mim
 }
 
 export async function deleteFromSupabase(filePathOrUrl: string) {
-  const supabase = createAdminClient()
+  const supabase = await createAdminClient()
   
   let filePath = filePathOrUrl
   if (filePathOrUrl.includes('/images/object/public/images/')) {

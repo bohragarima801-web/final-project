@@ -12,21 +12,22 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const folder = searchParams.get('folder')
-
-    const where: any = {}
-    if (folder && folder !== 'all') {
-      where.folder = folder
+    const templeId = searchParams.get('templeId')
+    
+    let whereClause = {}
+    if (templeId && templeId !== 'all') {
+        whereClause = { templeId }
     }
 
-    let media = await prisma.mediaLibrary.findMany({
-      where,
-      orderBy: { createdAt: 'desc' }
+    const videos = await prisma.templeVideo.findMany({
+      where: whereClause,
+      include: {
+        temple: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     })
 
-
-
-    return NextResponse.json({ ok: true, data: media })
+    return NextResponse.json({ ok: true, data: videos })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || 'Database error' }, { status: 500 })
   }
@@ -39,27 +40,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { url, filename, size, mimeType, folder, type } = await req.json()
+    const { title, url, templeId } = await req.json()
 
-    if (!url) {
-      return NextResponse.json({ ok: false, error: 'URL is required' }, { status: 400 })
+    if (!title || !url || !templeId) {
+      return NextResponse.json({ ok: false, error: 'Title, URL, and Temple are required' }, { status: 400 })
     }
 
-    const media = await prisma.mediaLibrary.create({
+    const video = await prisma.templeVideo.create({
       data: {
+        title,
         url,
-        filename: filename || 'Uploaded Media',
-        size: size ? Number(size) : 0,
-        mimeType: mimeType || 'image/jpeg',
-        folder: folder || 'General',
-        type: type || 'IMAGE',
-        uploadedBy: adminUser.id
-      }
+        templeId,
+      },
+      include: {
+        temple: { select: { name: true } },
+      },
     })
 
-    return NextResponse.json({ ok: true, data: media })
+    return NextResponse.json({ ok: true, data: video })
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || 'Upload save failed' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: err?.message || 'Failed to save video' }, { status: 500 })
   }
 }
 
@@ -77,8 +77,11 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'ID is required' }, { status: 400 })
     }
 
-    await prisma.mediaLibrary.delete({ where: { id } })
-    return NextResponse.json({ ok: true, message: 'Media removed successfully' })
+    await prisma.templeVideo.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ ok: true })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || 'Delete failed' }, { status: 500 })
   }

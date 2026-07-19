@@ -51,8 +51,14 @@ export async function POST(req: NextRequest) {
         continue
       }
 
+      // Find existing to calculate change
+      const existing = await prisma.inventory.findUnique({ where: { productId: product.id } })
+      const previousQty = existing?.quantity || 0
+      const change = quantity - previousQty
+      const type = change >= 0 ? (change > 0 ? 'IN' : 'SET') : 'OUT'
+
       // Upsert inventory
-      await prisma.inventory.upsert({
+      const updated = await prisma.inventory.upsert({
         where: { productId: product.id },
         create: {
           productId: product.id,
@@ -64,6 +70,20 @@ export async function POST(req: NextRequest) {
           warehouse,
         },
       })
+      
+      if (change !== 0 || !existing) {
+        await prisma.inventoryLog.create({
+          data: {
+            inventoryId: updated.id,
+            type,
+            change,
+            previousQty,
+            newQty: quantity,
+            reason: 'CSV Bulk Upload'
+          }
+        })
+      }
+      
       updatedCount++
     }
 

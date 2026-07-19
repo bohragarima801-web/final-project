@@ -8,10 +8,29 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   try {
     await ensureDefaultCategoriesAndTemples()
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+
+    if (id) {
+      const puja = await prisma.puja.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          temple: true,
+          packages: true
+        }
+      })
+      if (!puja) {
+        return NextResponse.json({ ok: false, error: 'Puja not found' }, { status: 404 })
+      }
+      return NextResponse.json({ ok: true, puja })
+    }
+
     const pujas = await prisma.puja.findMany({
       include: {
         category: true,
-        temple: true
+        temple: true,
+        packages: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -42,7 +61,8 @@ export async function POST(req: NextRequest) {
       isOnline,
       isFeatured,
       status,
-      coverImage
+      coverImage,
+      packages
     } = data
 
     if (!name) {
@@ -77,15 +97,34 @@ export async function POST(req: NextRequest) {
 
     let puja
     if (id) {
-      // Edit mode
+      // Edit mode: update puja, and recreate packages
       puja = await prisma.puja.update({
         where: { id },
-        data: payload
+        data: {
+          ...payload,
+          packages: {
+            deleteMany: {},
+            create: Array.isArray(packages) ? packages.map((pkg: any) => ({
+              name: pkg.name,
+              price: Number(pkg.price) || 0,
+              description: pkg.description || ''
+            })) : []
+          }
+        }
       })
     } else {
       // Create mode
       puja = await prisma.puja.create({
-        data: payload
+        data: {
+          ...payload,
+          packages: {
+            create: Array.isArray(packages) ? packages.map((pkg: any) => ({
+              name: pkg.name,
+              price: Number(pkg.price) || 0,
+              description: pkg.description || ''
+            })) : []
+          }
+        }
       })
     }
 

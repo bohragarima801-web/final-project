@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Re-insert table rows
-      for (const [tableName, rows] of Object.entries(dbDump)) {
+      for (const [tableName, rows] of Object.entries(dbDump) as [string, any[]][]) {
         if (!rows || rows.length === 0) continue
         
         for (const row of rows) {

@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import imageCompression from 'browser-image-compression'
 
 interface ItemRef {
   id: string
@@ -44,6 +45,7 @@ export default function NewPujaPage() {
   const [isFeatured, setIsFeatured] = useState(false)
   const [status, setStatus] = useState('DRAFT')
   const [coverImage, setCoverImage] = useState('')
+  const [packages, setPackages] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [loadingPuja, setLoadingPuja] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -108,6 +110,7 @@ export default function NewPujaPage() {
           setIsFeatured(!!p.isFeatured)
           setStatus(p.status || 'DRAFT')
           setCoverImage(p.coverImage || '')
+          setPackages(p.packages || [])
         } else {
           toast.error('Failed to find puja details')
         }
@@ -122,20 +125,35 @@ export default function NewPujaPage() {
 
   // Handle image upload fallback
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    let file = e.target.files?.[0]
     if (!file) return
 
     setUploading(true)
+    
+    // Compress image if it's an image file
+    if (file.type.startsWith('image/')) {
+      try {
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1200,
+          useWebWorker: true,
+        }
+        file = await imageCompression(file, options)
+      } catch (error) {
+        toast.error('Image compression failed. Proceeding with original file.')
+      }
+    }
+    
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const res = await fetch('/api/storage/upload', {
+      const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       })
       const data = await res.json()
-      if (data.success && data.url) {
+      if (data.ok && data.url) {
         setCoverImage(data.url)
         toast.success('Puja file uploaded successfully!')
       } else {
@@ -146,6 +164,20 @@ export default function NewPujaPage() {
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleAddPackage = () => {
+    setPackages([...packages, { id: Date.now().toString(), name: '', price: '', description: '' }])
+  }
+
+  const handleRemovePackage = (index: number) => {
+    setPackages(packages.filter((_, i) => i !== index))
+  }
+
+  const handlePackageChange = (index: number, field: string, value: string) => {
+    const newPkgs = [...packages]
+    newPkgs[index] = { ...newPkgs[index], [field]: value }
+    setPackages(newPkgs)
   }
 
   // Submit handler
@@ -180,7 +212,8 @@ export default function NewPujaPage() {
         isOnline,
         isFeatured,
         status,
-        coverImage
+        coverImage,
+        packages
       }
 
       const res = await fetch('/api/admin/pujas', {
@@ -291,22 +324,64 @@ export default function NewPujaPage() {
 
           <Card>
             <CardHeader><CardTitle className="text-base">Pricing & Slots (मूल्य निर्धारण)</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-4">
-              <div className="space-y-2">
-                <Label>Base Price (₹)</Label>
-                <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-4">
+                <div className="space-y-2">
+                  <Label>Base Price (₹)</Label>
+                  <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>VIP Price (₹)</Label>
+                  <Input type="number" value={vipPrice} onChange={(e) => setVipPrice(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Duration (min)</Label>
+                  <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Max Members</Label>
+                  <Input type="number" value={maxMembers} onChange={(e) => setMaxMembers(e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>VIP Price (₹)</Label>
-                <Input type="number" value={vipPrice} onChange={(e) => setVipPrice(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Duration (min)</Label>
-                <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Max Members</Label>
-                <Input type="number" value={maxMembers} onChange={(e) => setMaxMembers(e.target.value)} />
+
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <Label className="text-base font-bold">Custom Packages</Label>
+                    <p className="text-xs text-muted-foreground">Add specific packages like Basic, Premium, etc.</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={handleAddPackage}>
+                    <Plus className="h-4 w-4 mr-1" /> Add Package
+                  </Button>
+                </div>
+                
+                {packages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic text-center py-4 border rounded bg-slate-50">No custom packages added. Base/VIP prices will be used.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {packages.map((pkg, i) => (
+                      <div key={pkg.id || i} className="grid sm:grid-cols-12 gap-3 p-3 border rounded-lg bg-slate-50 relative">
+                        <div className="sm:col-span-4 space-y-1">
+                          <Label className="text-xs">Package Name</Label>
+                          <Input value={pkg.name} onChange={(e) => handlePackageChange(i, 'name', e.target.value)} placeholder="e.g. Basic Pack" required />
+                        </div>
+                        <div className="sm:col-span-3 space-y-1">
+                          <Label className="text-xs">Price (₹)</Label>
+                          <Input type="number" value={pkg.price} onChange={(e) => handlePackageChange(i, 'price', e.target.value)} placeholder="e.g. 1100" required />
+                        </div>
+                        <div className="sm:col-span-4 space-y-1">
+                          <Label className="text-xs">Description</Label>
+                          <Input value={pkg.description || ''} onChange={(e) => handlePackageChange(i, 'description', e.target.value)} placeholder="Package benefits..." />
+                        </div>
+                        <div className="sm:col-span-1 flex items-end justify-end">
+                          <Button type="button" variant="destructive" size="icon" onClick={() => handleRemovePackage(i)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

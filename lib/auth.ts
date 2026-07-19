@@ -17,8 +17,52 @@ export async function getSession() {
   return data.user
 }
 
+import { getAdminSession } from '@/lib/admin-session'
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
+    // 1. Check for local Admin JWT session (used by admin dashboard)
+    const adminSession = await getAdminSession().catch(() => null)
+    if (adminSession) {
+      // Find real admin in DB or return dummy if DB fails
+      let dbAdmin = await prisma.user.findFirst({
+        where: { 
+          email: adminSession.email,
+          role: {
+            OR: [
+              { isSystem: true },
+              { slug: { in: ['admin', 'manager', 'editor', 'astrologer', 'support'] } }
+            ]
+          }
+        },
+        include: { role: true }
+      }).catch(() => null)
+      
+      if (dbAdmin) {
+        if (dbAdmin.status === 'SUSPENDED') {
+          return null // Force session invalidation
+        }
+        
+        return {
+          id: dbAdmin.id,
+          email: dbAdmin.email,
+          fullName: dbAdmin.fullName,
+          avatar: dbAdmin.avatar,
+          role: (dbAdmin.role?.slug as RoleSlug) ?? 'admin',
+          supabaseId: dbAdmin.supabaseId || 'admin-system-id',
+        }
+      }
+      
+      return {
+        id: 'admin-system-id',
+        email: adminSession.email,
+        fullName: 'System Administrator',
+        avatar: null,
+        role: 'admin',
+        supabaseId: 'admin-system-id',
+      }
+    }
+
     const supaUser = await getSession()
     if (!supaUser) return null
 

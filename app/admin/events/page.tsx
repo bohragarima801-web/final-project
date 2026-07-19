@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Loader2, Plus, Trash2, Calendar, Video, MapPin, Upload, Edit2 } from 'lucide-react'
 
 export default function EventsPage() {
   const [events, setEvents] = useState<any[]>([])
+  const [temples, setTemples] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -32,23 +34,27 @@ export default function EventsPage() {
   const [endsAt, setEndsAt] = useState('')
   const [isLive, setIsLive] = useState(false)
   const [streamUrl, setStreamUrl] = useState('')
+  const [templeId, setTempleId] = useState('none')
 
-  async function loadEvents() {
+  async function loadEventsAndTemples() {
     try {
-      const res = await fetch('/api/admin/events')
-      const data = await res.json()
-      if (data.ok) {
-        setEvents(data.data || [])
-      }
+      const [resEvents, resTemples] = await Promise.all([
+        fetch('/api/admin/events'),
+        fetch('/api/admin/temples')
+      ])
+      const dataEvents = await resEvents.json()
+      const dataTemples = await resTemples.json()
+      if (dataEvents.ok) setEvents(dataEvents.data || [])
+      if (dataTemples.ok) setTemples(dataTemples.data || [])
     } catch {
-      toast.error('Failed to load events list')
+      toast.error('Failed to load events data')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadEvents()
+    loadEventsAndTemples()
   }, [])
 
   async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -106,6 +112,7 @@ export default function EventsPage() {
         endsAt: endsAt ? new Date(endsAt).toISOString() : null,
         isLive,
         streamUrl,
+        templeId: templeId === 'none' ? null : templeId,
       }
       if (editId) payload.id = editId
 
@@ -119,7 +126,7 @@ export default function EventsPage() {
         toast.success(editId ? 'Event updated successfully!' : 'Event created and scheduled successfully!')
         setShowAddForm(false)
         resetForm()
-        loadEvents()
+        loadEventsAndTemples()
       } else {
         toast.error(data.error || 'Failed to save event')
       }
@@ -140,6 +147,7 @@ export default function EventsPage() {
     setEndsAt(formatDateForInput(event.endsAt))
     setIsLive(!!event.isLive)
     setStreamUrl(event.streamUrl || '')
+    setTempleId(event.templeId || 'none')
     setShowAddForm(true)
   }
 
@@ -158,6 +166,7 @@ export default function EventsPage() {
     setEndsAt('')
     setIsLive(false)
     setStreamUrl('')
+    setTempleId('none')
   }
 
   async function handleDelete(id: string) {
@@ -169,7 +178,7 @@ export default function EventsPage() {
       const data = await res.json()
       if (data.ok) {
         toast.success('Event deleted successfully')
-        loadEvents()
+        loadEventsAndTemples()
       } else {
         toast.error(data.error || 'Failed to delete event')
       }
@@ -213,13 +222,28 @@ export default function EventsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Location / Temple</Label>
+                <Label htmlFor="location">Location / Venue</Label>
                 <Input
                   id="location"
                   placeholder="e.g. Somnath Temple, Gujarat"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Associated Temple (Optional)</Label>
+                <Select value={templeId} onValueChange={setTempleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a Temple" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None / Independent Event</SelectItem>
+                    {temples.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -339,7 +363,11 @@ export default function EventsPage() {
               ),
             },
             { key: 'title', label: 'Event Title' },
-            { key: 'location', label: 'Location' },
+            { 
+              key: 'location', 
+              label: 'Location/Temple', 
+              render: (r) => <span>{r.temple?.name || r.location}</span> 
+            },
             {
               key: 'startsAt',
               label: 'Starts At',

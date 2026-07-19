@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Loader2, Copy, Trash2, Upload, Link as LinkIcon, Image as ImageIcon, Flame, Calendar, Star, Eye } from 'lucide-react'
+import imageCompression from 'browser-image-compression'
 
 function MediaLibraryManager() {
   const searchParams = useSearchParams()
@@ -47,9 +49,25 @@ function MediaLibraryManager() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    let fileToUpload = file
     setUploading(true)
+
+    // Compress image if it's an image
+    if (file.type.startsWith('image/')) {
+      try {
+        const options = {
+          maxSizeMB: 1, // Compress to under 1MB
+          maxWidthOrHeight: 1920,
+          useWebWorker: true
+        }
+        fileToUpload = await imageCompression(file, options)
+      } catch (error) {
+        console.warn('Image compression failed, using original file', error)
+      }
+    }
+
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', fileToUpload)
 
     try {
       // 1. Upload to /api/upload

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Building2, MapPin, Star, Trash2, Loader2, Plus, Film, Image as ImageIcon, CalendarDays, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -22,6 +22,7 @@ function TemplesManager() {
   const [temples, setTemples] = useState<any[]>([])
   const [gallery, setGallery] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
+  const [videos, setVideos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState(false)
 
@@ -29,20 +30,17 @@ function TemplesManager() {
   const [newCatName, setNewCatName] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [videoTitle, setVideoTitle] = useState('')
+  const [selectedTempleId, setSelectedTempleId] = useState('')
   
   // Dummy Categories state for temples
-  const [categories, setCategories] = useState<string[]>([
-    'Jyotirlinga (ज्योतिर्लिंग)', 
-    'Shakti Peeth (शक्तिपीठ)', 
-    'Vishnu Mandir (विष्णु मंदिर)', 
-    'Char Dham (चार धाम)'
+  const [categories, setCategories] = useState<any[]>([
+    {name: 'Jyotirlinga (ज्योतिर्लिंग)'}, 
+    {name: 'Shakti Peeth (शक्तिपीठ)'}, 
+    {name: 'Vishnu Mandir (विष्णु मंदिर)'}, 
+    {name: 'Char Dham (चार धाम)'}
   ])
 
-  // Mock videos list
-  const [videos, setVideos] = useState<any[]>([
-    { id: '1', title: 'Kashi Vishwanath Aarti Live Stream', url: 'https://youtube.com/watch?v=kashi', temple: 'Kashi Vishwanath' },
-    { id: '2', title: 'Kedarnath Temple Drone Footage', url: 'https://youtube.com/watch?v=kedarnath', temple: 'Kedarnath Temple' }
-  ])
+
 
   async function loadData() {
     try {
@@ -66,6 +64,13 @@ function TemplesManager() {
       const eventsData = await eventsRes.json()
       if (eventsData.ok) {
         setEvents(eventsData.data || [])
+      }
+
+      // Load videos
+      const videosRes = await fetch('/api/admin/temples/videos')
+      const videosData = await videosRes.json()
+      if (videosData.ok) {
+        setVideos(videosData.data || [])
       }
     } catch {
       toast.error('Failed to load temple management data')
@@ -97,18 +102,51 @@ function TemplesManager() {
   const handleAddCategory = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newCatName.trim()) return
-    setCategories([...categories, newCatName.trim()])
+    setCategories([...categories, {name: newCatName.trim()}])
     setNewCatName('')
     toast.success('Category added successfully!')
   }
 
-  const handleAddVideo = (e: React.FormEvent) => {
+  const handleAddVideo = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!videoTitle.trim() || !videoUrl.trim()) return
-    setVideos([...videos, { id: Date.now().toString(), title: videoTitle, url: videoUrl, temple: 'General Temple' }])
-    setVideoTitle('')
-    setVideoUrl('')
-    toast.success('Video link added successfully!')
+    if (!videoTitle.trim() || !videoUrl.trim() || !selectedTempleId) return
+    
+    setActing(true)
+    try {
+      const res = await fetch('/api/admin/temples/videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: videoTitle, url: videoUrl, templeId: selectedTempleId })
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Video link added successfully!')
+        setVideoTitle('')
+        setVideoUrl('')
+        setSelectedTempleId('')
+        loadData()
+      } else {
+        toast.error(data.error || 'Failed to add video')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setActing(false)
+    }
+  }
+
+  const handleDeleteVideo = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this video?')) return
+    try {
+      const res = await fetch(`/api/admin/temples/videos?id=${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success('Video deleted')
+        loadData()
+      }
+    } catch {
+      toast.error('Network error')
+    }
   }
 
   // Filter tabs bar
@@ -225,7 +263,7 @@ function TemplesManager() {
                 <CardContent>
                   <DataTableShell
                     columns={[
-                      { key: 'name', label: 'Category Name', render: (r) => <span className="font-bold text-slate-800">{r}</span> },
+                      { key: 'name', label: 'Category Name', render: (r) => <span className="font-bold text-slate-800">{r.name}</span> },
                       { key: 'type', label: 'Status', render: () => <Badge variant="success">Active</Badge> }
                     ]}
                     rows={categories}
@@ -296,7 +334,16 @@ function TemplesManager() {
                     columns={[
                       { key: 'title', label: 'Video Title' },
                       { key: 'url', label: 'YouTube / Embed Link', render: (r) => <span className="font-mono text-xs text-orange-600 hover:underline">{r.url}</span> },
-                      { key: 'temple', label: 'Temple' }
+                      { key: 'temple', label: 'Temple', render: (r) => <span>{r.temple?.name}</span> },
+                      {
+                        key: 'actions',
+                        label: 'Actions',
+                        render: (r) => (
+                          <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => handleDeleteVideo(r.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )
+                      }
                     ]}
                     rows={videos}
                     searchPlaceholder="Search videos…"
@@ -328,7 +375,20 @@ function TemplesManager() {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full bg-orange-600 hover:bg-orange-700">Add Video Link</Button>
+                    <div className="space-y-2">
+                      <Label>Select Temple *</Label>
+                      <Select value={selectedTempleId} onValueChange={setSelectedTempleId} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a temple..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {temples.map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="submit" disabled={acting} className="w-full bg-orange-600 hover:bg-orange-700">Add Video Link</Button>
                   </form>
                 </CardContent>
               </Card>
@@ -348,8 +408,8 @@ function TemplesManager() {
               <DataTableShell
                 columns={[
                   { key: 'title', label: 'Event / Festival Title' },
-                  { key: 'date', label: 'Event Date', render: (r) => <span>{new Date(r.date).toLocaleDateString('en-IN')}</span> },
-                  { key: 'location', label: 'Temple Venue' },
+                  { key: 'startsAt', label: 'Event Date', render: (r) => <span>{new Date(r.startsAt).toLocaleDateString('en-IN')}</span> },
+                  { key: 'location', label: 'Temple Venue', render: (r) => <span>{r.temple?.name || r.location}</span> },
                   { key: 'status', label: 'Status', render: () => <Badge variant="success">Upcoming</Badge> }
                 ]}
                 rows={events}

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -75,12 +75,12 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await req.json()
-    const { id, title, slug, content, categoryId, excerpt, status, seoTitle, seoDescription } = body
+    const { id, title, slug, content, categoryId, excerpt, status, seoTitle, seoDescription, coverImage } = body
 
     if (!title || !slug || !content) {
       return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 })
@@ -110,6 +110,7 @@ export async function POST(req: Request) {
           content,
           categoryId: finalCategoryId,
           excerpt,
+          coverImage,
           status: status || 'DRAFT',
           seoTitle,
           seoDescription,
@@ -127,6 +128,7 @@ export async function POST(req: Request) {
           categoryId: finalCategoryId,
           authorId: adminUser.id,
           excerpt,
+          coverImage,
           status: status || 'DRAFT',
           seoTitle,
           seoDescription,
@@ -143,7 +145,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role?.slug !== 'admin') {
+    if (!adminUser) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 

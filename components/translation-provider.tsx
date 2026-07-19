@@ -56,7 +56,7 @@ export function TranslationProvider() {
 
     // 6. Load Translate script
     const scriptId = '__google_translate_script'
-    let script = document.getElementById(scriptId)
+    let script = document.getElementById(scriptId) as HTMLScriptElement | null
     if (!script) {
       script = document.createElement('script')
       script.id = scriptId

@@ -7,6 +7,25 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Sparkles, Video, Flame } from 'lucide-react'
 import Link from 'next/link'
 
+function getEmbedUrl(url: string) {
+  if (!url) return '';
+  try {
+    if (url.includes('youtube.com/shorts/')) {
+      return url.replace('youtube.com/shorts/', 'youtube.com/embed/');
+    }
+    if (url.includes('youtube.com/watch')) {
+      const u = new URL(url);
+      const v = u.searchParams.get('v');
+      if (v) return `https://www.youtube.com/embed/${v}`;
+    }
+    if (url.includes('youtu.be/')) {
+      const v = url.split('youtu.be/')[1].split('?')[0];
+      return `https://www.youtube.com/embed/${v}`;
+    }
+  } catch (e) {}
+  return url;
+}
+
 export default function Page() {
   const [offerings, setOfferings] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,9 +99,9 @@ export default function Page() {
                   {offering.description || 'No description available for this sacred offering service.'}
                 </p>
                 {offering.videoUrl && (
-                  <div className="aspect-video w-full rounded overflow-hidden mt-2 border">
+                  <div className="aspect-video w-full rounded-md overflow-hidden mt-3 border bg-black shadow-sm">
                     <iframe
-                      src={offering.videoUrl}
+                      src={getEmbedUrl(offering.videoUrl)}
                       className="h-full w-full"
                       allowFullScreen
                       title={offering.name}

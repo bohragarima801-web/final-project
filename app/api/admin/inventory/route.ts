@@ -3,20 +3,20 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const inventory = await prisma.inventory.findMany({
+    const products = await prisma.product.findMany({
       include: {
-        product: true,
+        inventory: true,
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
     })
 
-    const mapped = inventory.map((inv) => ({
-      id: inv.id,
-      sku: inv.product?.sku || 'N/A',
-      product: inv.product?.name || 'Unknown Product',
-      quantity: inv.quantity,
-      reserved: inv.reserved,
-      warehouse: inv.warehouse || 'Main Warehouse',
+    const mapped = products.map((prod) => ({
+      id: prod.id, // using productId as the id for frontend matching
+      sku: prod.sku || 'N/A',
+      product: prod.name,
+      quantity: prod.inventory?.quantity || 0,
+      reserved: prod.inventory?.reserved || 0,
+      warehouse: prod.inventory?.warehouse || 'Main Warehouse',
     }))
 
     return NextResponse.json({ ok: true, data: mapped })
@@ -30,16 +30,40 @@ export async function POST(req: NextRequest) {
     const { id, quantity, warehouse } = await req.json()
 
     if (!id) {
-      return NextResponse.json({ ok: false, error: 'Inventory ID is required' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Product ID is required' }, { status: 400 })
     }
 
-    const updated = await prisma.inventory.update({
-      where: { id },
-      data: {
-        quantity: Number(quantity),
+    const existing = await prisma.inventory.findUnique({ where: { productId: id } })
+    const previousQty = existing?.quantity || 0
+    const newQty = Number(quantity)
+    const change = newQty - previousQty
+    const type = change >= 0 ? (change > 0 ? 'IN' : 'SET') : 'OUT'
+
+    const updated = await prisma.inventory.upsert({
+      where: { productId: id },
+      create: {
+        productId: id,
+        quantity: newQty,
+        warehouse: warehouse || null,
+      },
+      update: {
+        quantity: newQty,
         warehouse: warehouse || null,
       },
     })
+
+    if (change !== 0 || !existing) {
+      await prisma.inventoryLog.create({
+        data: {
+          inventoryId: updated.id,
+          type,
+          change,
+          previousQty,
+          newQty,
+          reason: 'Manual Admin Edit'
+        }
+      })
+    }
 
     return NextResponse.json({ ok: true, data: updated })
   } catch (err: any) {

@@ -11,7 +11,7 @@ export function PageHeader({
   title: string
   description?: string
   breadcrumbs?: BreadCrumb[]
-  action?: { label: string; href?: string; onClick?: () => void; icon?: any }
+  action?: { label: string; href?: string; onClick?: () => void; icon?: any; disabled?: boolean }
   secondaryAction?: { label: string; href?: string; onClick?: () => void }
   className?: string
 }) {

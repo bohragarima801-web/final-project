@@ -15,7 +15,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
   { title: 'Analytics', slug: 'analytics', icon: LineChart, href: '/admin/analytics' },
   { title: 'User Management', slug: 'users', icon: Users, items: [
     { title: 'All Users', href: '/admin/users' }, { title: 'Customers', href: '/admin/customers' },
-    { title: 'Admins', href: '/admin/users?tab=admins' }, { title: 'Pandits', href: '/admin/users?tab=pandits' },
+    { title: 'Sub-Admins', href: '/admin/users/admins' }, { title: 'Pandits', href: '/admin/users?tab=pandits' },
     { title: 'Volunteers', href: '/admin/users?tab=volunteers' }, { title: 'Roles', href: '/admin/users/roles' },
     { title: 'Permissions', href: '/admin/users/permissions' }, { title: 'Login History', href: '/admin/users/activity' },
   ]},

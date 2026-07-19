@@ -394,9 +394,23 @@ model Temple {
   chadhawa  Chadhawa[]
   schedules PriestSchedule[]
   bookings  Booking[]
+  videos    TempleVideo[]
+  events    Event[]
 
   @@index([slug])
   @@map("temples")
+}
+
+model TempleVideo {
+  id        String   @id @default(uuid())
+  templeId  String
+  title     String
+  url       String
+  createdAt DateTime @default(now())
+
+  temple Temple @relation(fields: [templeId], references: [id], onDelete: Cascade)
+
+  @@map("temple_videos")
 }
 
 model PriestSchedule {
@@ -467,12 +481,27 @@ model Puja {
   temple     Temple?      @relation(fields: [templeId], references: [id])
   images     PujaImage[]
   timeSlots  PujaTimeSlot[]
+  packages   PujaPackage[]
   bookings   Booking[]
   reviews    Review[]
 
   @@index([slug])
   @@index([status])
   @@map("pujas")
+}
+
+model PujaPackage {
+  id          String   @id @default(uuid())
+  pujaId      String
+  name        String
+  price       Decimal  @db.Decimal(10,2)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  puja Puja @relation(fields: [pujaId], references: [id], onDelete: Cascade)
+
+  @@map("puja_packages")
 }
 
 model PujaImage {
@@ -644,8 +673,24 @@ model Inventory {
   updatedAt DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  logs    InventoryLog[]
 
   @@map("inventory")
+}
+
+model InventoryLog {
+  id          String   @id @default(uuid())
+  inventoryId String
+  type        String   // "IN", "OUT", "SET"
+  change      Int
+  previousQty Int
+  newQty      Int
+  reason      String
+  createdAt   DateTime @default(now())
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_logs")
 }
 
 model Cart {
@@ -1070,6 +1115,9 @@ model Event {
   isFeatured  Boolean  @default(false)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
+
+  templeId    String?
+  temple      Temple?  @relation(fields: [templeId], references: [id])
 
   registrations EventRegistration[]
 

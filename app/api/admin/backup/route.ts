@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     // Write to configured local path
     const zipBuffer = zip.toBuffer()
-    await fs.writeFile(zipPath, zipBuffer)
+    await fs.writeFile(zipPath, new Uint8Array(zipBuffer))
 
     // 4. SIMULATE GOOGLE DRIVE UPLOAD (if enabled)
     let driveUploaded = false

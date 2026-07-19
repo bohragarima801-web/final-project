@@ -15,7 +15,7 @@ export default function PujaDetailsPage() {
   const { slug } = useParams()
   const [puja, setPuja] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedPackage, setSelectedPackage] = useState<'1' | '2' | '4' | '6'>('1')
+  const [selectedPackage, setSelectedPackage] = useState<string>('')
 
   useEffect(() => {
     if (!slug) return
@@ -25,6 +25,11 @@ export default function PujaDetailsPage() {
         if (data.ok) {
           const matched = (data.pujas || []).find((p: any) => p.slug === slug)
           setPuja(matched || null)
+          if (matched && matched.packages && matched.packages.length > 0) {
+            setSelectedPackage(matched.packages[0].id)
+          } else {
+            setSelectedPackage('1')
+          }
         }
       })
       .catch(() => {})
@@ -51,13 +56,25 @@ export default function PujaDetailsPage() {
     )
   }
 
-  const basePrice = Number(puja.price) || 951
-  const packages = {
-    '1': { label: 'One Member', price: basePrice, desc: `On puja day, Pandit ji will perform the rituals & chant your Name and Gotra in Sankalp. You'll receive a recorded puja video and sacred prasad at home.` },
-    '2': { label: 'Two Members', price: basePrice + 550, desc: `Pandit ji will perform the rituals & chant the Names and Gotras (up to 2 family members) in Sankalp. Recorded puja video & prasad included.` },
-    '4': { label: '4 Members', price: basePrice + 1550, desc: `Pandit ji will include up to 4 members of your family in the Sankalp. Detailed recorded puja video and pure prasad sent to your address.` },
-    '6': { label: '6 Members', price: basePrice + 2550, desc: `Full family package. Up to 6 family members included in the sacred Sankalp. Personalized video recording, blessing certificate, and premium prasad.` }
+  let displayPackages: any[] = []
+  if (puja.packages && puja.packages.length > 0) {
+    displayPackages = puja.packages.map((pkg: any) => ({
+      id: pkg.id,
+      label: pkg.name,
+      price: pkg.price,
+      desc: pkg.description
+    }))
+  } else {
+    const basePrice = Number(puja.price) || 951
+    displayPackages = [
+      { id: '1', label: 'One Member', price: basePrice, desc: `On puja day, Pandit ji will perform the rituals & chant your Name and Gotra in Sankalp. You'll receive a recorded puja video and sacred prasad at home.` },
+      { id: '2', label: 'Two Members', price: basePrice + 550, desc: `Pandit ji will perform the rituals & chant the Names and Gotras (up to 2 family members) in Sankalp. Recorded puja video & prasad included.` },
+      { id: '4', label: '4 Members', price: basePrice + 1550, desc: `Pandit ji will include up to 4 members of your family in the Sankalp. Detailed recorded puja video and pure prasad sent to your address.` },
+      { id: '6', label: '6 Members', price: basePrice + 2550, desc: `Full family package. Up to 6 family members included in the sacred Sankalp. Personalized video recording, blessing certificate, and premium prasad.` }
+    ]
   }
+
+  const selectedPkgData = displayPackages.find(p => p.id === selectedPackage) || displayPackages[0]
 
   return (
     <div className="bg-slate-50/50 min-h-screen">
@@ -174,12 +191,12 @@ export default function PujaDetailsPage() {
             <div className="space-y-4 pt-4 border-t">
               <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Select Your Puja Package (पूजा पैकेज चुनें):</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {(Object.keys(packages) as Array<'1' | '2' | '4' | '6'>).map((key) => {
-                  const isSelected = selectedPackage === key
+                {displayPackages.map((pkg, index) => {
+                  const isSelected = selectedPackage === pkg.id || (!selectedPackage && index === 0)
                   return (
                     <button
-                      key={key}
-                      onClick={() => setSelectedPackage(key)}
+                      key={pkg.id}
+                      onClick={() => setSelectedPackage(pkg.id)}
                       className={cn(
                         "text-left p-0 rounded-2xl border-2 transition-all flex flex-col justify-between bg-white overflow-hidden min-h-[200px] relative hover:scale-[1.01]",
                         isSelected 
@@ -187,12 +204,10 @@ export default function PujaDetailsPage() {
                           : "border-slate-100 hover:border-amber-200/60"
                       )}
                     >
-                      {/* Package Illustration Image */}
                       <div className="w-full h-28 overflow-hidden border-b bg-slate-50/50 p-1 flex items-center justify-center">
-                        <img src={`/package-${key}.jpg`} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
+                        <img src={`/package-${pkg.id}.jpg`} onError={(e) => { e.currentTarget.src = '/package-1.jpg' }} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
                       </div>
 
-                      {/* Checkmark icon for active package */}
                       {isSelected && (
                         <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-orange-600 flex items-center justify-center text-white z-10">
                           <CheckCircle2 className="h-3 w-3 fill-white text-orange-600" />
@@ -201,13 +216,13 @@ export default function PujaDetailsPage() {
                       
                       <div className="p-3 space-y-1 flex-1 flex flex-col justify-between">
                         <div className="space-y-0.5">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">{packages[key].label}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">{pkg.label}</span>
                           <h4 className="text-xs font-black text-slate-800 line-clamp-1">
-                            {key === '1' ? 'व्यक्तिगत पूजा' : key === '2' ? 'दम्पत्ति पूजा' : key === '4' ? 'परिवार पूजा' : 'महासंकल्प पूजा'}
+                            {pkg.label}
                           </h4>
                         </div>
                         <div className="pt-2">
-                          <span className="text-sm font-black text-slate-900">₹{packages[key].price}</span>
+                          <span className="text-sm font-black text-slate-900">₹{pkg.price}</span>
                         </div>
                       </div>
                     </button>
@@ -215,7 +230,7 @@ export default function PujaDetailsPage() {
                 })}
               </div>
               <p className="text-xs text-slate-500 bg-slate-50 p-3.5 rounded-xl border leading-relaxed italic">
-                {packages[selectedPackage].desc}
+                {selectedPkgData.desc}
               </p>
             </div>
 
@@ -232,11 +247,11 @@ export default function PujaDetailsPage() {
             <div className="fixed bottom-0 left-0 right-0 bg-slate-950 text-white p-4 md:py-5 border-t border-slate-800 z-50 shadow-2xl flex items-center justify-between">
               <div className="container max-w-6xl mx-auto flex items-center justify-between gap-4 px-4">
                 <div className="text-left space-y-0.5">
-                  <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">{packages[selectedPackage].label} Selected</p>
-                  <p className="text-lg md:text-xl font-black text-white">₹{packages[selectedPackage].price} <span className="text-xs font-normal text-slate-400">/ Total</span></p>
+                  <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">{selectedPkgData.label} Selected</p>
+                  <p className="text-lg md:text-xl font-black text-white">₹{selectedPkgData.price} <span className="text-xs font-normal text-slate-400">/ Total</span></p>
                 </div>
                 <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-black px-8 py-6 rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:scale-[1.02]" asChild>
-                  <Link href={`/bookings/new?pujaId=${puja.id}&package=${selectedPackage}&price=${packages[selectedPackage].price}`}>
+                  <Link href={`/bookings/new?pujaId=${puja.id}&package=${selectedPackage}&price=${selectedPkgData.price}`}>
                     आगे बढ़ें (Proceed) <ChevronRight className="h-5 w-5 ml-1" />
                   </Link>
                 </Button>

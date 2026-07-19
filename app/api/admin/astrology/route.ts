@@ -25,51 +25,6 @@ export async function GET() {
       }
     })
 
-    // Seed some mock reports if database is empty
-    if (reports.length === 0) {
-      await prisma.astroReport.createMany({
-        data: [
-          {
-            userId: adminUser.id,
-            type: 'KUNDALI',
-            inputData: { name: 'Mukesh Bohra', dob: '1987-10-07', tob: '10:30', pob: 'Jodhpur' },
-            status: 'COMPLETED',
-          },
-          {
-            userId: adminUser.id,
-            type: 'MILAN',
-            inputData: { groomName: 'Aarav', brideName: 'Ananya' },
-            status: 'COMPLETED',
-          },
-          {
-            userId: adminUser.id,
-            type: 'NUMEROLOGY',
-            inputData: { name: 'Divya Yagyam' },
-            status: 'COMPLETED',
-          },
-          {
-            userId: adminUser.id,
-            type: 'RATNA',
-            inputData: { rashi: 'Mesh' },
-            status: 'PENDING',
-          }
-        ]
-      }).catch(() => null)
-
-      reports = await prisma.astroReport.findMany({
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      })
-    }
 
     const rows = reports.map(r => ({
       id: r.id,

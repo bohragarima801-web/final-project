@@ -85,9 +85,12 @@ export default function Page() {
                 <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
                   {temple.description || 'No description available for this sacred destination yet.'}
                 </p>
-                <div className="pt-2 border-t flex justify-end">
-                  <Button size="sm" asChild>
-                    <Link href={`/pujas`}>Book Puja Here</Link>
+                <div className="pt-4 mt-2 border-t flex items-center justify-between gap-2">
+                  <Button size="sm" variant="outline" asChild className="flex-1">
+                    <Link href={`/temples/${temple.slug}`}>View Details & Videos</Link>
+                  </Button>
+                  <Button size="sm" asChild className="flex-1">
+                    <Link href={`/pujas`}>Book Puja</Link>
                   </Button>
                 </div>
               </CardContent>
