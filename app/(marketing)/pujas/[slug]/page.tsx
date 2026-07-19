@@ -273,11 +273,11 @@ export default function PujaDetailsPage() {
             <TabsContent value="process" className="p-6 md:p-8 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-5">
                 {[
-                  { step: '1', title: 'पैकेज चुनें (Select Package)', desc: 'संकल्प में शामिल करने के लिए सदस्यों की संख्या चुनें।', img: '/process-1.jpg' },
+                  { step: '1', title: 'पैकेज चुनें (Select Package)', desc: 'संकल्प में शामिल करने के लिए सदस्यों की संख्या चुनें।', img: '/process-5.png' },
                   { step: '2', title: 'गोत्र और नाम दर्ज करें (Details)', desc: 'चेकआउट के दौरान अपना नाम, पिता/पति का नाम और गोत्र भरें।', img: '/process-2.jpg' },
-                  { step: '3', title: 'कन्फर्म और भुगतान (Confirm Pay)', desc: 'सुरक्षित भुगतान के माध्यम से अपनी बुकिंग पूर्ण करें।', img: '/process-3.jpg' },
-                  { step: '4', title: 'पंडित जी द्वारा संकल्प (Live Havan)', desc: 'पंडित जी द्वारा मन्दिर से आपके नाम व गोत्र का लाइव संकल्प किया जाएगा।', img: '/process-4.png' },
-                  { step: '5', title: 'प्रसाद डिलीवरी (Home Prasad)', desc: 'शुद्ध मन्दिर महाप्रसाद ८-१० दिनों में आपके पते पर भेज दिया जाएगा।', img: '/process-5.png' },
+                  { step: '3', title: 'कन्फर्म और भुगतान (Confirm Pay)', desc: 'सुरक्षित भुगतान के माध्यम से अपनी बुकिंग पूर्ण करें।', img: '/process-4.png' },
+                  { step: '4', title: 'पंडित जी द्वारा संकल्प (Live Havan)', desc: 'पंडित जी द्वारा मन्दिर से आपके नाम व गोत्र का लाइव संकल्प किया जाएगा।', img: '/process-3.jpg' },
+                  { step: '5', title: 'प्रसाद डिलीवरी (Home Prasad)', desc: 'शुद्ध मन्दिर महाप्रसाद ८-१० दिनों में आपके पते पर भेज दिया जाएगा।', img: '/process-1.jpg' },
                 ].map((s) => (
                   <div key={s.step} className="p-0 border rounded-2xl bg-white overflow-hidden space-y-0 relative shadow-sm flex flex-col justify-between hover:scale-[1.01] transition-transform">
                     {/* Illustration image */}
