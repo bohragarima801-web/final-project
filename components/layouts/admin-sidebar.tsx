@@ -14,10 +14,12 @@ export function AdminSidebar() {
     <aside className="hidden lg:flex flex-col w-72 border-r border-border/60 bg-sidebar min-h-screen sticky top-0">
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border shrink-0 justify-between">
         <Link href="/admin" className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-lg om-gradient flex items-center justify-center text-white font-bold text-lg">ॐ</div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold">Divyayagyam</span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Control Center</span>
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow border border-amber-200/60 bg-white">
+            <img src="/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-bold text-slate-800">Divyayagyam</span>
+            <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Control Center</span>
           </div>
         </Link>
         <Link href="/" target="_blank" className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md border font-semibold hover:bg-primary hover:text-white transition-colors">

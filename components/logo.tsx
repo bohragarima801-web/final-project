@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export function Logo({ className, showText = true }: { className?: string; showText?: boolean }) {
-  const [logoUrl, setLogoUrl] = useState('')
+  const [logoUrl, setLogoUrl] = useState('/logo.jpg')
   const [siteName, setSiteName] = useState('दिव्ययज्ञम्')
 
   useEffect(() => {
@@ -23,11 +23,11 @@ export function Logo({ className, showText = true }: { className?: string; showT
   return (
     <Link href="/" className={cn('flex items-center gap-2 group', className)}>
       {logoUrl ? (
-        <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full shadow-md group-hover:scale-105 transition-transform bg-white border">
-          <img src={logoUrl} alt="Logo" className="h-full w-full object-contain" />
+        <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl shadow-md border border-amber-200/60 bg-white group-hover:scale-105 transition-transform">
+          <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
         </div>
       ) : (
-        <div className="relative flex h-10 w-10 items-center justify-center rounded-full om-gradient shadow-md group-hover:scale-105 transition-transform">
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-xl om-gradient shadow-md group-hover:scale-105 transition-transform">
           <span className="text-white text-xl font-bold" style={{ fontFamily: 'serif' }}>ॐ</span>
         </div>
       )}
