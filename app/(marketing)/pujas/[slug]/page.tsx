@@ -138,33 +138,100 @@ export default function PujaDetailsPage() {
               </div>
             </div>
 
-            {/* Dynamic Package Box */}
-            <div className="p-5 rounded-2xl bg-orange-50/40 border border-orange-100 space-y-4">
-              <div className="flex justify-between items-center border-b pb-3">
-                <span className="text-xs font-bold text-slate-700">Select Puja Package</span>
-                <span className="text-2xl font-black text-orange-600">₹{packages[selectedPackage].price}</span>
+            {/* Premium Puja Inclusions Checklist */}
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">All Puja Packages Include (सभी पैकेज में शामिल है):</h3>
+              <div className="grid gap-2.5 text-xs text-slate-600 font-medium">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                  <span>वैदिक ब्राह्मणों द्वारा आपके नाम और गोत्र के साथ विशिष्ट पूजा संकल्प (Personalized Sankalp).</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                  <span>पूजा अनुष्ठान का पूर्ण वीडियो रिकॉर्डिंग / लाइव स्ट्रीमिंग लिंक (Puja Video).</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                  <span>मन्दिर से अभिमंत्रित शुद्ध महाप्रसाद आपके घर की चौखट तक (Home Prasad Delivery).</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                  <span>व्हाट्सएप पर पूजा की तस्वीरें, संकल्प वीडियो और त्वरित अपडेट (WhatsApp Updates).</span>
+                </div>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {(Object.keys(packages) as Array<'1' | '2' | '4' | '6'>).map((key) => (
-                  <Button
-                    key={key}
-                    variant={selectedPackage === key ? 'default' : 'outline'}
-                    className={`h-11 flex flex-col items-center justify-center p-1 ${selectedPackage === key ? 'bg-orange-600 text-white hover:bg-orange-700' : ''}`}
-                    onClick={() => setSelectedPackage(key)}
-                  >
-                    <span className="text-[10px] font-bold">{packages[key].label}</span>
-                    <span className="text-[10px] opacity-90">₹{packages[key].price}</span>
-                  </Button>
-                ))}
+
+              {/* Optional Add-ons Notice Card */}
+              <div className="p-3 bg-amber-500/5 border border-amber-200/50 rounded-xl text-xs text-amber-800 flex items-center gap-2.5">
+                <Gift className="h-5 w-5 text-orange-500 shrink-0" />
+                <div>
+                  <span className="font-bold">अतिरिक्त दान सेवा (Optional Add-ons):</span> आप संकल्प के समय गौ-सेवा, अन्नदान, वस्त्रदान या दीप दान का चयन कर पुण्य कमा सकते हैं।
+                </div>
               </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed italic bg-white p-3 rounded-lg border">
+            </div>
+
+            {/* Interactive Package Cards Grid */}
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Select Your Puja Package (पूजा पैकेज चुनें):</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {(Object.keys(packages) as Array<'1' | '2' | '4' | '6'>).map((key) => {
+                  const isSelected = selectedPackage === key
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedPackage(key)}
+                      className={cn(
+                        "text-left p-4 rounded-2xl border-2 transition-all flex flex-col justify-between bg-white min-h-[140px] relative hover:scale-[1.01]",
+                        isSelected 
+                          ? "border-orange-500 bg-orange-50/10 shadow-sm" 
+                          : "border-slate-100 hover:border-amber-200/60"
+                      )}
+                    >
+                      {/* Checkmark icon for active package */}
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-orange-600 flex items-center justify-center text-white">
+                          <CheckCircle2 className="h-3 w-3 fill-white text-orange-600" />
+                        </div>
+                      )}
+                      
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">{packages[key].label}</span>
+                        <h4 className="text-sm font-black text-slate-800 line-clamp-1">{key === '1' ? 'व्यक्तिगत पूजा' : key === '2' ? 'दम्पत्ति पूजा' : key === '4' ? 'परिवार पूजा' : 'महासंकल्प पूजा'}</h4>
+                      </div>
+
+                      <div className="pt-4">
+                        <span className="text-lg font-black text-slate-900">₹{packages[key].price}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-slate-500 bg-slate-50 p-3.5 rounded-xl border leading-relaxed italic">
                 {packages[selectedPackage].desc}
               </p>
-              <Button size="lg" className="w-full bg-orange-600 hover:bg-orange-700 text-white font-black h-12 shadow" asChild>
-                <Link href={`/bookings/new?pujaId=${puja.id}&package=${selectedPackage}&price=${packages[selectedPackage].price}`}>
-                  Book Puja For {packages[selectedPackage].label} <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
+            </div>
+
+            {/* Trust & Certifications Row */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-4 border-t text-[10px] font-bold text-slate-500 text-center">
+              <div className="p-2.5 bg-slate-50/80 rounded-xl border">🤝 100% रिफंड गारंटी</div>
+              <div className="p-2.5 bg-slate-50/80 rounded-xl border">💰 कोई छुपा शुल्क नहीं</div>
+              <div className="p-2.5 bg-slate-50/80 rounded-xl border">🔒 ISO 27001 सुरक्षित</div>
+              <div className="p-2.5 bg-slate-50/80 rounded-xl border">🏛️ आधिकारिक मन्दिर पार्टनर</div>
+              <div className="p-2.5 bg-slate-50/80 rounded-xl border col-span-2 md:col-span-1">📞 २४/७ कस्टमर सपोर्ट</div>
+            </div>
+
+            {/* Viewport Fixed Bottom Sticky Checkout Bar */}
+            <div className="fixed bottom-0 left-0 right-0 bg-slate-950 text-white p-4 md:py-5 border-t border-slate-800 z-50 shadow-2xl flex items-center justify-between">
+              <div className="container max-w-6xl mx-auto flex items-center justify-between gap-4 px-4">
+                <div className="text-left space-y-0.5">
+                  <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">{packages[selectedPackage].label} Selected</p>
+                  <p className="text-lg md:text-xl font-black text-white">₹{packages[selectedPackage].price} <span className="text-xs font-normal text-slate-400">/ Total</span></p>
+                </div>
+                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-black px-8 py-6 rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:scale-[1.02]" asChild>
+                  <Link href={`/bookings/new?pujaId=${puja.id}&package=${selectedPackage}&price=${packages[selectedPackage].price}`}>
+                    आगे बढ़ें (Proceed) <ChevronRight className="h-5 w-5 ml-1" />
+                  </Link>
+                </Button>
+              </div>
             </div>
 
           </div>

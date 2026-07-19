@@ -60,28 +60,34 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-lg">
-      <div className="container flex h-16 items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full border-b border-amber-100/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-sm transition-all">
+      <div className="container flex h-16 items-center justify-between gap-4 px-4 md:px-6">
         <Logo />
 
-        <nav className="hidden lg:flex items-center gap-1">
+        {/* SriMandir-inspired center navigation links */}
+        <nav className="hidden lg:flex items-center gap-1.5">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}
-              className="px-3 py-2 rounded-md text-sm font-medium text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors">
+            <Link 
+              key={item.href} 
+              href={item.href}
+              className="px-3.5 py-2 rounded-full text-sm font-semibold text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-500 hover:bg-orange-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+            >
               {item.title}
             </Link>
           ))}
           <div className="relative" onMouseEnter={() => setToolsOpen(true)} onMouseLeave={() => setToolsOpen(false)}>
-            <Link href="/tools"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-foreground/80 hover:text-primary hover:bg-primary/5">
-              Tools <ChevronDown className="h-3 w-3" />
+            <Link 
+              href="/tools"
+              className="flex items-center gap-1 px-3.5 py-2 rounded-full text-sm font-semibold text-slate-700 hover:text-orange-600 dark:text-slate-200 dark:hover:text-orange-500 hover:bg-orange-50/50 dark:hover:bg-slate-900/50 transition-all duration-200"
+            >
+              Tools <ChevronDown className="h-3.5 w-3.5 opacity-60" />
             </Link>
             {toolsOpen && (
-              <div className="absolute top-full right-0 pt-2 w-72">
-                <div className="bg-popover border rounded-lg shadow-xl p-2">
+              <div className="absolute top-full right-0 pt-2 w-72 z-50">
+                <div className="bg-popover border border-amber-100 rounded-2xl shadow-xl p-2 animate-in fade-in slide-in-from-top-1 duration-150">
                   {toolsMenu.map((t) => (
-                    <Link key={t.href} href={t.href} className="block px-3 py-2 rounded-md hover:bg-muted">
-                      <div className="text-sm font-medium">{t.title}</div>
+                    <Link key={t.href} href={t.href} className="block px-3 py-2 rounded-xl hover:bg-amber-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{t.title}</div>
                       <div className="text-[11px] text-muted-foreground">{t.desc}</div>
                     </Link>
                   ))}
@@ -91,23 +97,24 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
           </div>
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" aria-label="Search" className="hidden sm:inline-flex"><Search className="h-5 w-5" /></Button>
-          <Button variant="ghost" size="icon" aria-label="Cart" asChild className="hidden sm:inline-flex">
+        {/* Right action controls */}
+        <div className="flex items-center gap-2.5">
+          <Button variant="ghost" size="icon" aria-label="Search" className="hidden sm:inline-flex rounded-full text-slate-600 hover:text-orange-600 dark:text-slate-300"><Search className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" aria-label="Cart" asChild className="hidden sm:inline-flex rounded-full text-slate-600 hover:text-orange-600 dark:text-slate-300">
             <Link href="/cart"><ShoppingBag className="h-5 w-5" /></Link>
           </Button>
           <ThemeToggle />
           
-          {/* Language Selector Dropdown */}
+          {/* SriMandir Language Selector Dropdown */}
           <div className="relative">
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1 px-2 h-9 text-slate-700 dark:text-slate-300 hover:text-primary transition-all rounded-lg"
+              className="gap-1.5 px-3 h-9 text-slate-700 dark:text-slate-300 hover:text-orange-600 hover:bg-orange-50/50 transition-all rounded-full border border-amber-100/60"
               onClick={() => setLangOpen(!langOpen)}
             >
               <Languages className="h-4 w-4 text-orange-500" />
-              <span className="text-xs font-bold uppercase">{currentLang}</span>
+              <span className="text-xs font-black uppercase tracking-wider">{currentLang}</span>
               <ChevronDown className="h-3 w-3 opacity-60" />
             </Button>
             {langOpen && (
@@ -117,8 +124,8 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
                     key={l.code}
                     onClick={() => changeLang(l.code)}
                     className={cn(
-                      "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-50/50 transition-colors",
-                      currentLang === l.code ? "text-orange-600 bg-orange-50/40" : "text-slate-700 dark:text-slate-300"
+                      "w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-amber-50/50 transition-colors",
+                      currentLang === l.code ? "text-orange-600 bg-orange-50/50" : "text-slate-700 dark:text-slate-300"
                     )}
                   >
                     {l.label}
@@ -128,22 +135,23 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
             )}
           </div>
 
+          {/* Premium Pill-shaped Account CTA */}
           {user ? (
             <div className="hidden sm:flex items-center gap-2">
-              <Button asChild size="sm" variant="outline">
-                <Link href="/dashboard"><User className="h-4 w-4 mr-1" /> {user.fullName?.split(' ')[0] || 'Account'}</Link>
+              <Button asChild size="sm" variant="outline" className="rounded-full border-amber-200 text-slate-700 hover:bg-amber-50/50 shadow-sm font-bold">
+                <Link href="/dashboard"><User className="h-4 w-4 mr-1 text-orange-500" /> {user.fullName?.split(' ')[0] || 'Account'}</Link>
               </Button>
               <form action="/auth/signout" method="post">
-                <Button type="submit" size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">
+                <Button type="submit" size="sm" variant="ghost" className="text-slate-500 hover:text-destructive rounded-full font-bold px-3">
                   Logout
                 </Button>
               </form>
             </div>
           ) : (
-            <Button asChild size="sm" className="hidden sm:inline-flex"><Link href="/login">Login</Link></Button>
+            <Button asChild size="sm" className="hidden sm:inline-flex bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-black rounded-full px-5 py-4 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] border-none"><Link href="/login">Login</Link></Button>
           )}
 
-          <Button variant="ghost" size="icon" onClick={() => setOpen(!open)} className="lg:hidden" aria-label="Menu">
+          <Button variant="ghost" size="icon" onClick={() => setOpen(!open)} className="lg:hidden rounded-full" aria-label="Menu">
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>

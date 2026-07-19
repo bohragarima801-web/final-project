@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { MediaCarousel } from '@/components/ui/media-carousel'
+import { HeroPujaSlider } from '@/components/hero-puja-slider'
 
 const upcomingPujas = [
   { name: 'महा रुद्राभिषेक (Maha Rudrabhishek)', temple: 'काशी विश्वनाथ मंदिर, वाराणसी', date: 'श्रावण सोमवार Special', img: 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600', price: 1100, vip: false },
@@ -83,14 +84,8 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-          <div className="relative">
-            <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden border-4 border-amber-200 shadow-2xl shadow-amber-500/10 bg-white">
-              <img
-                src="https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=900"
-                alt="Sacred Puja Rituals"
-                className="h-full w-full object-cover"
-              />
-            </div>
+          <div className="relative w-full flex items-center justify-center">
+            <HeroPujaSlider pujas={dbPujas} />
           </div>
         </div>
       </section>
