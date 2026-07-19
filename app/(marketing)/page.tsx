@@ -28,7 +28,7 @@ const testimonials = [
   { name: 'अंजली मेनन (Anjali Menon)', location: 'बैंगलोर', rating: 5, message: 'पंडित जी ने मंत्रोच्चारण के साथ मेरा नाम और गोत्र स्पष्ट रूप से बोला। बहुत संतुष्ट हूँ।' },
 ]
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const products = await prisma.product.findMany({
@@ -307,20 +307,46 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* APP PROMOTION BANNER */}
       <section className="container">
-        <div className="rounded-[2rem] om-gradient p-10 md:p-14 text-center text-white space-y-6">
-          <h2 className="text-3xl md:text-4xl font-black">अपनी पूजा यात्रा आज ही आरंभ करें</h2>
-          <p className="opacity-90 max-w-xl mx-auto text-sm leading-relaxed">
-            100,000+ से अधिक सनातनी परिवार दिव्ययज्ञम् के माध्यम से अपनी आस्था और विश्वास को सुदृढ़ कर रहे हैं।
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <Button size="lg" className="bg-white hover:bg-slate-100 text-slate-900 font-bold" asChild>
-              <Link href="/register">खाता बनाएं (Sign Up)</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10" asChild>
-              <Link href="/login">लॉगिन (Sign In)</Link>
-            </Button>
+        <div className="rounded-[2.5rem] bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-200/50 p-8 md:p-14 shadow-sm relative overflow-hidden">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            
+            {/* Left text column */}
+            <div className="space-y-6 text-left">
+              <Badge className="bg-amber-500/10 border border-amber-500/30 text-amber-700 hover:bg-amber-500/20 px-3 py-1 text-xs font-bold rounded-full gap-1.5 w-fit">
+                📱 दिव्ययज्ञम् ऐप • Mobile App
+              </Badge>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 leading-tight">
+                दिव्ययज्ञम् ऐप <br />
+                <span className="text-om-gradient">डाउनलोड करें</span>
+              </h2>
+              <p className="text-slate-600 text-sm md:text-base leading-relaxed">
+                भारत का सबसे प्रिय सनातन सेवा एवं भक्ति प्लेटफॉर्म। अपने मोबाइल पर दैनिक पंचांग, ज्योतिषीय परामर्श, लाइव आरती दर्शन, मंत्र जाप और अभिमंत्रित पूजन सेवाओं का लाभ कहीं भी, कभी भी उठाएं।
+              </p>
+              
+              {/* App download mockup badges */}
+              <div className="flex flex-wrap gap-4 pt-2">
+                <a href="#" className="hover:scale-105 transition-transform">
+                  <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" className="h-14 object-contain" alt="Get it on Google Play" />
+                </a>
+                <a href="#" className="hover:scale-105 transition-transform flex items-center bg-black text-white px-4 py-2.5 rounded-xl border border-slate-800 shadow">
+                  <span className="text-xs font-bold leading-tight">Download on the <br /><span className="text-sm font-black">App Store</span></span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right graphic column */}
+            <div className="flex justify-center items-center">
+              <div className="relative max-w-sm md:max-w-md rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-white">
+                <img 
+                  src="/app-promo.jpg" 
+                  className="w-full h-auto object-cover" 
+                  alt="Divyayagyam App Promotion" 
+                />
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, ShoppingCart } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({

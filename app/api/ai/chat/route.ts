@@ -7,15 +7,20 @@ export const maxDuration = 60
 type Mode = 'pandit' | 'admin_content' | 'admin_blog' | 'admin_seo'
 
 export async function POST(req: NextRequest) {
+  let doStream = true
+  let session_id = null
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
     const {
       messages = [],
       mode = 'pandit' as Mode,
       model,
-      stream: doStream = true,
-      session_id,
+      stream = true,
+      session_id: sid = null,
     } = body || {}
+
+    doStream = stream
+    session_id = sid
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ ok: false, error: 'messages required' }), { status: 400 })

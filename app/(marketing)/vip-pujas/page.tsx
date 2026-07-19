@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { MapPin, Sparkles, ShieldCheck, Flame, Star, Award, HeartHandshake, Video } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function VipPujasPage() {
   const pujas = await prisma.puja.findMany({
