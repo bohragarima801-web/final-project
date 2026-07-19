@@ -7,6 +7,7 @@ import {
   MapPin, Calendar, ShieldCheck, Video, Play, BookOpen
 } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { MediaCarousel } from '@/components/ui/media-carousel'
 
 const upcomingPujas = [
   { name: 'महा रुद्राभिषेक (Maha Rudrabhishek)', temple: 'काशी विश्वनाथ मंदिर, वाराणसी', date: 'श्रावण सोमवार Special', img: 'https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=600', price: 1100, vip: false },
@@ -90,14 +91,6 @@ export default async function HomePage() {
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-6 -left-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-5 max-w-[240px]">
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
-                <span className="text-xs font-bold text-red-500 tracking-wider">LIVE BROADCAST</span>
-              </div>
-              <p className="mt-2 text-sm font-black text-white leading-tight">सावन रुद्राभिषेक महापूजा</p>
-              <p className="text-xs text-slate-400 mt-1">काशी विश्वनाथ धाम • 2,450+ जुड़े हैं</p>
-            </div>
           </div>
         </div>
       </section>
@@ -144,10 +137,10 @@ export default async function HomePage() {
             <Link href="/pujas">सभी देखें (View All) <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
           </Button>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <MediaCarousel>
           {dbPujas.length > 0 ? (
             dbPujas.map((p) => (
-              <Card key={p.id} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
+              <Card key={p.id} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between h-full bg-white">
                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                   {p.coverImage ? (
                     p.coverImage.endsWith('.mp4') || p.coverImage.endsWith('.webm') || p.coverImage.startsWith('data:video/') ? (
@@ -185,7 +178,7 @@ export default async function HomePage() {
             ))
           ) : (
             upcomingPujas.map((p, i) => (
-              <Card key={i} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
+              <Card key={i} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between h-full bg-white">
                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                   <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   {p.vip && <Badge className="absolute top-3 left-3 bg-red-600 text-white font-bold border-none">⭐ VIP</Badge>}
@@ -210,7 +203,7 @@ export default async function HomePage() {
               </Card>
             ))
           )}
-        </div>
+        </MediaCarousel>
       </section>
 
       {/* SACRED PRODUCTS */}
@@ -226,9 +219,9 @@ export default async function HomePage() {
               <Link href="/products">सभी देखें (View All) <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <MediaCarousel>
             {products.map((p: any) => (
-              <Card key={p.id} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between">
+              <Card key={p.id} className="overflow-hidden group border border-slate-100 hover:shadow-xl transition-all flex flex-col justify-between h-full bg-white">
                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                   {p.coverImage || (p.images && p.images[0]) ? (
                     <img src={p.coverImage || p.images[0]} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -255,7 +248,7 @@ export default async function HomePage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </MediaCarousel>
         </section>
       )}
 
