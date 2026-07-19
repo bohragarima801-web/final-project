@@ -2,11 +2,22 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, ShoppingBag, User, Search, ChevronDown } from 'lucide-react'
+import { Menu, X, ShoppingBag, User, Search, ChevronDown, Languages } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
+
+const languages = [
+  { code: 'hi', label: 'हिन्दी' },
+  { code: 'en', label: 'English' },
+  { code: 'ta', label: 'தமிழ்' },
+  { code: 'te', label: 'తెలుగు' },
+  { code: 'kn', label: 'ಕನ್ನಡ' },
+  { code: 'gu', label: 'ગુજરાતી' },
+  { code: 'mr', label: 'मराठी' },
+  { code: 'bn', label: 'বাংলা' },
+]
 
 const navItems = [
   { title: 'Home', href: '/' },
@@ -32,6 +43,21 @@ const toolsMenu = [
 export function Navbar({ user }: { user?: { fullName?: string | null; email: string } | null }) {
   const [open, setOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
+  const [currentLang, setCurrentLang] = useState('hi')
+
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentLang(localStorage.getItem('lang') || 'hi')
+    }
+  })
+
+  const changeLang = (code: string) => {
+    localStorage.setItem('lang', code)
+    setCurrentLang(code)
+    setLangOpen(false)
+    window.location.reload()
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-lg">
@@ -71,6 +97,36 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
             <Link href="/cart"><ShoppingBag className="h-5 w-5" /></Link>
           </Button>
           <ThemeToggle />
+          
+          {/* Language Selector Dropdown */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 px-2 h-9 text-slate-700 dark:text-slate-300 hover:text-primary transition-all rounded-lg"
+              onClick={() => setLangOpen(!langOpen)}
+            >
+              <Languages className="h-4 w-4 text-orange-500" />
+              <span className="text-xs font-bold uppercase">{currentLang}</span>
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+            {langOpen && (
+              <div className="absolute right-0 top-full mt-2 w-32 bg-popover border border-amber-100 rounded-xl shadow-xl p-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                {languages.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => changeLang(l.code)}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-50/50 transition-colors",
+                      currentLang === l.code ? "text-orange-600 bg-orange-50/40" : "text-slate-700 dark:text-slate-300"
+                    )}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {user ? (
             <div className="hidden sm:flex items-center gap-2">

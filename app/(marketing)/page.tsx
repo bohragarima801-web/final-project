@@ -254,20 +254,20 @@ export default async function HomePage() {
 
       {/* LIVE EVENTS BANNER */}
       <section className="container">
-        <div className="rounded-3xl bg-slate-900 p-1">
-          <div className="rounded-[calc(1.5rem-4px)] bg-slate-950 p-8 md:p-12 grid md:grid-cols-2 items-center gap-6 text-white">
+        <div className="rounded-[2.5rem] bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-200/50 p-1 shadow-sm">
+          <div className="rounded-[calc(2.5rem-4px)] bg-white p-8 md:p-12 grid md:grid-cols-2 items-center gap-6 text-slate-800">
             <div className="space-y-4">
-              <Badge className="bg-red-600 text-white border-none text-xs flex items-center w-fit gap-1"><Play className="h-3 w-3 fill-white" /> LIVE</Badge>
-              <h2 className="text-3xl font-black">लाइव आरती व दिव्य दर्शन (Live Stream)</h2>
-              <p className="text-sm text-slate-400 leading-relaxed">
+              <Badge className="bg-red-600 text-white border-none text-xs flex items-center w-fit gap-1"><Play className="h-3 w-3 fill-white animate-pulse" /> LIVE</Badge>
+              <h2 className="text-3xl font-black text-slate-900">लाइव आरती व दिव्य दर्शन (Live Stream)</h2>
+              <p className="text-sm text-slate-600 leading-relaxed">
                 भारत के प्रमुख मंदिरों से साक्षात दैनिक आरती का हिस्सा बनें। हर दिन, हर पर्व पर सीधे गर्भगृह से लाइव दर्शन।
               </p>
-              <Button className="bg-orange-600 hover:bg-orange-700 text-white font-bold" asChild><Link href="/events">लाइव जुड़ें (Watch Live)</Link></Button>
+              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold" asChild><Link href="/events">लाइव जुड़ें (Watch Live)</Link></Button>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {[1,2,3,4,5,6].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-slate-900 overflow-hidden border border-slate-800">
-                  <img src={`https://images.unsplash.com/photo-15${80+i}88580000645-4562a6d2c839?w=200`} className="h-full w-full object-cover" alt="" />
+                <div key={i} className="aspect-square rounded-xl bg-amber-50/50 overflow-hidden border border-amber-100">
+                  <img src={`https://images.unsplash.com/photo-15${80+i}88580000645-4562a6d2c839?w=200`} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" alt="" />
                 </div>
               ))}
             </div>
