@@ -271,19 +271,27 @@ export default function PujaDetailsPage() {
 
             {/* Process Tab */}
             <TabsContent value="process" className="p-6 md:p-8 space-y-6">
-              <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-5">
                 {[
-                  { step: '1', title: 'Select Package', desc: 'Choose the number of members to include in the Sankalp.' },
-                  { step: '2', title: 'Enter Name & Gotra', desc: 'Provide your family names and Gotra during checkout.' },
-                  { step: '3', title: 'Confirm Booking', desc: 'Securely pay to finalize your booking slot.' },
-                  { step: '4', title: 'Pandit ji performs Puja', desc: 'Pandit ji will chant your name and gotra in live/recorded Sankalp.' },
-                  { step: '5', title: 'Video Updates', desc: 'Receive puja clip and updates directly on your WhatsApp.' },
-                  { step: '6', title: 'Prasad Delivery', desc: 'Pure temple prasad is delivered to your home within 7-9 days.' },
+                  { step: '1', title: 'पैकेज चुनें (Select Package)', desc: 'संकल्प में शामिल करने के लिए सदस्यों की संख्या चुनें।', img: '/process-1.jpg' },
+                  { step: '2', title: 'गोत्र और नाम दर्ज करें (Details)', desc: 'चेकआउट के दौरान अपना नाम, पिता/पति का नाम और गोत्र भरें।', img: '/process-2.jpg' },
+                  { step: '3', title: 'कन्फर्म और भुगतान (Confirm Pay)', desc: 'सुरक्षित भुगतान के माध्यम से अपनी बुकिंग पूर्ण करें।', img: '/process-3.jpg' },
+                  { step: '4', title: 'पंडित जी द्वारा संकल्प (Live Havan)', desc: 'पंडित जी द्वारा मन्दिर से आपके नाम व गोत्र का लाइव संकल्प किया जाएगा।', img: '/process-4.png' },
+                  { step: '5', title: 'प्रसाद डिलीवरी (Home Prasad)', desc: 'शुद्ध मन्दिर महाप्रसाद ८-१० दिनों में आपके पते पर भेज दिया जाएगा।', img: '/process-5.png' },
                 ].map((s) => (
-                  <div key={s.step} className="p-5 border rounded-2xl bg-slate-50/50 space-y-2 relative">
-                    <span className="absolute top-4 right-4 text-3xl font-black text-orange-100 select-none">0{s.step}</span>
-                    <h4 className="font-bold text-sm text-slate-800 mt-2">{s.title}</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
+                  <div key={s.step} className="p-0 border rounded-2xl bg-white overflow-hidden space-y-0 relative shadow-sm flex flex-col justify-between hover:scale-[1.01] transition-transform">
+                    {/* Illustration image */}
+                    <div className="w-full h-32 overflow-hidden border-b bg-amber-50">
+                      <img src={s.img} className="w-full h-full object-cover" alt={s.title} />
+                    </div>
+                    
+                    <div className="p-4 space-y-1.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="text-2xl font-black text-orange-200 select-none">0{s.step}</span>
+                        <h4 className="font-bold text-xs text-slate-800 line-clamp-1">{s.title}</h4>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{s.desc}</p>
+                    </div>
                   </div>
                 ))}
               </div>
