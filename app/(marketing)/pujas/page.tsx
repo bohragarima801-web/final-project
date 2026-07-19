@@ -68,7 +68,7 @@ export default async function PujasPage() {
                     {p.category?.name || 'Sanatan Seva'}
                   </Badge>
                   <h3 className="font-bold text-lg text-slate-800 line-clamp-1 group-hover:text-orange-600 transition-colors">
-                    {p.name}
+                    <Link href={`/pujas/${p.slug}`}>{p.name}</Link>
                   </h3>
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     <MapPin className="h-4 w-4 text-orange-600 shrink-0" />
@@ -84,7 +84,7 @@ export default async function PujasPage() {
                     <span className="text-lg font-black text-orange-600">₹{p.price}</span>
                   </div>
                   <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white font-bold" asChild>
-                    <Link href={`/bookings/new?pujaId=${p.id}`}>बुक करें (Book)</Link>
+                    <Link href={`/pujas/${p.slug}`}>विवरण देखें (View)</Link>
                   </Button>
                 </div>
               </CardContent>
