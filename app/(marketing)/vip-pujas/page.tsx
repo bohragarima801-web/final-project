@@ -2,10 +2,10 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { MapPin, Sparkles, ShieldCheck, Flame, Star, Award, HeartHandshake } from 'lucide-react'
+import { MapPin, Sparkles, ShieldCheck, Flame, Star, Award, HeartHandshake, Video } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function VipPujasPage() {
   const pujas = await prisma.puja.findMany({

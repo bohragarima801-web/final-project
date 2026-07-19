@@ -28,7 +28,7 @@ const testimonials = [
   { name: 'अंजली मेनन (Anjali Menon)', location: 'बैंगलोर', rating: 5, message: 'पंडित जी ने मंत्रोच्चारण के साथ मेरा नाम और गोत्र स्पष्ट रूप से बोला। बहुत संतुष्ट हूँ।' },
 ]
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function HomePage() {
   const products = await prisma.product.findMany({

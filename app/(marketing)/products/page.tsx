@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, ShoppingCart } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
     where: {
       OR: [
-        { status: 'PUBLISHED' },
-        { status: 'ACTIVE' as any }
+        { status: 'ACTIVE' },
+        { status: 'OUT_OF_STOCK' }
       ]
     },
     include: { category: true, inventory: true },

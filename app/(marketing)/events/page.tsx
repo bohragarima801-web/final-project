@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, MapPin, Video, Sparkles, AlertCircle } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 // Helper to get embeddable YouTube link if applicable
 function getEmbedUrl(url: string | null) {
