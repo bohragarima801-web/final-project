@@ -46,45 +46,45 @@ export default async function HomePage() {
   return (
     <div className="space-y-16 pb-16">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-slate-950 text-white pt-24 pb-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-600/10 via-transparent to-transparent opacity-60 pointer-events-none" />
+      <section className="relative overflow-hidden bg-gradient-to-b from-amber-50/70 via-amber-50/30 to-transparent pt-24 pb-20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent opacity-60 pointer-events-none" />
         <div className="container relative grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <Badge className="bg-orange-500/10 border-orange-500/30 text-orange-500 hover:bg-orange-500/20 px-3 py-1 text-sm font-semibold rounded-full">
+            <Badge className="bg-amber-500/10 border border-amber-500/30 text-amber-700 hover:bg-amber-500/20 px-3 py-1 text-sm font-semibold rounded-full w-fit">
               🕉️ सनातन सेवा • घर बैठे पावन दर्शन
             </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-slate-900">
               घर बैठे कराएं <br />
               <span className="text-om-gradient">पवित्र पूजा</span> व <span className="text-om-gradient">अनुष्ठान</span>
             </h1>
-            <p className="text-lg text-slate-300 leading-relaxed max-w-xl">
+            <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
               भारत के प्रसिद्ध सिद्ध पीठों व ज्योतिर्लिंगों से सीधे लाइव-स्ट्रीम पूजा। वैदिक ब्राह्मणों द्वारा आपके नाम व गोत्र के साथ विशिष्ट संकल्प। सिद्ध महाप्रसाद आपके द्वार।
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
-              <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-base px-8 py-6 rounded-xl shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.02]" asChild>
+              <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold text-base px-8 py-6 rounded-xl shadow-lg shadow-orange-500/20 transition-all hover:scale-[1.02]" asChild>
                 <Link href="/pujas">पूजा बुक करें (Book Now) <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-slate-800 bg-slate-900/50 hover:bg-slate-900 text-slate-200 hover:text-white px-8 py-6 rounded-xl transition-all" asChild>
+              <Button size="lg" variant="outline" className="border-amber-200 bg-white hover:bg-amber-50/50 text-slate-700 px-8 py-6 rounded-xl transition-all" asChild>
                 <Link href="/tools"><Sparkles className="mr-2 h-5 w-5 text-orange-500" /> आध्यात्मिक टूल्स (Tools)</Link>
               </Button>
             </div>
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-800/80">
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-amber-200/80">
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-orange-500 font-bold"><ShieldCheck className="h-5 w-5 shrink-0" /> 100% शुद्ध</div>
-                <div className="text-xs text-slate-400 font-medium">प्रमाणित वैदिक पंडित</div>
+                <div className="flex items-center gap-1.5 text-orange-600 font-bold"><ShieldCheck className="h-5 w-5 shrink-0" /> 100% शुद्ध</div>
+                <div className="text-xs text-slate-500 font-medium">प्रमाणित वैदिक पंडित</div>
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-orange-500 font-bold"><Video className="h-5 w-5 shrink-0" /> लाइव दर्शन</div>
-                <div className="text-xs text-slate-400 font-medium">घर बैठे साक्षात लाइव</div>
+                <div className="flex items-center gap-1.5 text-orange-600 font-bold"><Video className="h-5 w-5 shrink-0" /> लाइव दर्शन</div>
+                <div className="text-xs text-slate-500 font-medium">घर बैठे साक्षात लाइव</div>
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-orange-500 font-bold"><Star className="h-5 w-5 shrink-0 fill-orange-500" /> 4.9 रेटिंग</div>
-                <div className="text-xs text-slate-400 font-medium">12k+ सुखी भक्त परिवार</div>
+                <div className="flex items-center gap-1.5 text-orange-600 font-bold"><Star className="h-5 w-5 shrink-0 fill-orange-500" /> 4.9 रेटिंग</div>
+                <div className="text-xs text-slate-500 font-medium">12k+ सुखी भक्त परिवार</div>
               </div>
             </div>
           </div>
           <div className="relative">
-            <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden border-4 border-orange-500/20 shadow-2xl shadow-orange-600/10">
+            <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden border-4 border-amber-200 shadow-2xl shadow-amber-500/10 bg-white">
               <img
                 src="https://images.unsplash.com/photo-1609766418204-94aae0ecfdfc?w=900"
                 alt="Sacred Puja Rituals"
