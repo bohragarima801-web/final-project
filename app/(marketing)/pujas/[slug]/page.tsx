@@ -269,9 +269,8 @@ export default function PujaDetailsPage() {
               </div>
             </TabsContent>
 
-            {/* Process Tab */}
             <TabsContent value="process" className="p-6 md:p-8 space-y-6">
-              <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
                   { step: '1', title: 'पैकेज चुनें (Select Package)', desc: 'संकल्प में शामिल करने के लिए सदस्यों की संख्या चुनें।', img: '/process-5.png' },
                   { step: '2', title: 'गोत्र और नाम दर्ज करें (Details)', desc: 'चेकआउट के दौरान अपना नाम, पिता/पति का नाम और गोत्र भरें।', img: '/process-2.jpg' },
@@ -281,8 +280,8 @@ export default function PujaDetailsPage() {
                 ].map((s) => (
                   <div key={s.step} className="p-0 border rounded-2xl bg-white overflow-hidden space-y-0 relative shadow-sm flex flex-col justify-between hover:scale-[1.01] transition-transform">
                     {/* Illustration image */}
-                    <div className="w-full h-32 overflow-hidden border-b bg-amber-50">
-                      <img src={s.img} className="w-full h-full object-cover" alt={s.title} />
+                    <div className="w-full h-32 overflow-hidden border-b bg-slate-50 flex items-center justify-center p-1">
+                      <img src={s.img} className="max-w-full max-h-full object-contain rounded-lg" alt={s.title} />
                     </div>
                     
                     <div className="p-4 space-y-1.5 flex-1 flex flex-col justify-between">
