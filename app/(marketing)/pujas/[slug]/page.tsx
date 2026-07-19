@@ -188,8 +188,8 @@ export default function PujaDetailsPage() {
                       )}
                     >
                       {/* Package Illustration Image */}
-                      <div className="w-full h-24 overflow-hidden border-b bg-amber-50">
-                        <img src={`/package-${key}.jpg`} className="w-full h-full object-cover" alt="" />
+                      <div className="w-full h-28 overflow-hidden border-b bg-slate-50/50 p-1 flex items-center justify-center">
+                        <img src={`/package-${key}.jpg`} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
                       </div>
 
                       {/* Checkmark icon for active package */}
