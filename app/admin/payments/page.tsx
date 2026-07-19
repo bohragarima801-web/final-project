@@ -238,13 +238,13 @@ function PaymentsSettingsManager() {
                         <Upload className="h-3.5 w-3.5" />
                       )}
                       {uploading ? 'Uploading…' : 'Upload QR Code'}
-                      <input
+                      {/* <input
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleQrUpload}
                         disabled={uploading || !isUpiQrEnabled}
-                      />
+                      /> - Disabled for Vercel */}
                     </label>
                   </div>
                 </div>

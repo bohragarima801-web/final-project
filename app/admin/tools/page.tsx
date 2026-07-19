@@ -294,7 +294,7 @@ export default function AdminToolsPage() {
                 )}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} />
+                    {/* <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} /> - Replaced by Image URL input to prevent Vercel upload errors */}
                     {uploadingImage && <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />}
                   </div>
                   <div className="flex items-center gap-2">

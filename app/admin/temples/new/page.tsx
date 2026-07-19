@@ -212,14 +212,15 @@ export default function NewTemplePage() {
                   <Upload className="h-4 w-4" />
                 )}
                 {uploading ? 'Uploading…' : 'Upload Cover'}
-                <input
+                {/* <input
                   type="file"
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageUpload}
                   disabled={uploading}
-                />
+                /> - Disabled for Vercel */}
               </label>
+              <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Or paste image URL (e.g. Google Drive)" className="mt-2 text-xs" />
             </CardContent>
           </Card>
         </div>

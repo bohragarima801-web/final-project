@@ -442,7 +442,7 @@ export default function NewPujaPage() {
                   )}
                 </div>
               )}
-              <Input type="file" accept="image/*,video/*" onChange={handleImageChange} disabled={uploading} />
+              {/* <Input type="file" accept="image/*,video/*" onChange={handleImageChange} disabled={uploading} /> - Replaced by Image URL input to prevent Vercel upload errors */}
               {uploading && <div className="text-xs text-orange-600 animate-pulse">Uploading file...</div>}
               
               <div className="flex gap-2">

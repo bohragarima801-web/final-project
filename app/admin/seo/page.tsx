@@ -256,13 +256,13 @@ function SocialMediaManager() {
                               <UploadIcon className="h-3.5 w-3.5" />
                             )}
                             {uploading ? 'Uploading…' : 'Attach Photo/Video'}
-                            <input
+                            {/* <input
                               type="file"
                               accept="image/*,video/*"
                               className="hidden"
                               onChange={handleMediaUpload}
                               disabled={uploading}
-                            />
+                            /> - Disabled for Vercel */}
                           </label>
                         </div>
                       </div>

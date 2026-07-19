@@ -283,7 +283,7 @@ export default function NewProductPage() {
                   <img src={coverImage} className="h-full w-full object-cover" alt="Preview" />
                 </div>
               )}
-              <Input type="file" accept="image/*" onChange={handleImageChange} />
+              {/* <Input type="file" accept="image/*" onChange={handleImageChange} /> - Replaced by Image URL input to prevent Vercel upload errors */}
               <Input type="text" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="Or paste image URL" className="text-xs" />
             </CardContent>
           </Card>

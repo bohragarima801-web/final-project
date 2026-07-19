@@ -311,13 +311,13 @@ export default function TestimonialsPage() {
                         <Upload className="h-4 w-4" />
                       )}
                       {uploading ? 'Uploading…' : 'Upload Avatar'}
-                      <input
+                      {/* <input
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleAvatarUpload}
                         disabled={uploading}
-                      />
+                      /> - Disabled for Vercel */}
                     </label>
                     <p className="text-[10px] text-muted-foreground">Supported formats: JPG, PNG. Max size 2MB.</p>
                   </div>

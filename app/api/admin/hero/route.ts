@@ -37,6 +37,32 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const { id, title, subtitle, image, ctaText, ctaUrl, order } = await req.json()
+
+    if (!id || !title || !image) {
+      return NextResponse.json({ ok: false, error: 'ID, Title, and Image URL are required' }, { status: 400 })
+    }
+
+    const slide = await prisma.heroSlider.update({
+      where: { id },
+      data: {
+        title,
+        subtitle,
+        image,
+        ctaText,
+        ctaUrl,
+        order: order ? Number(order) : 0,
+      },
+    })
+
+    return NextResponse.json({ ok: true, data: slide })
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)

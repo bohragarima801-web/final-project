@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2, Sliders, Upload, Image as ImageIcon } from 'lucide-react'
+import { Loader2, Plus, Trash2, Edit, Sliders, Upload, Image as ImageIcon, Link as LinkIcon } from 'lucide-react'
+import { convertGoogleDriveUrl } from '@/lib/utils'
 
 export default function HeroSliderPage() {
   const [slides, setSlides] = useState<any[]>([])
@@ -17,11 +18,15 @@ export default function HeroSliderPage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  
+  // Edit mode state
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   // Form states
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [image, setImage] = useState('')
+  const [driveUrl, setDriveUrl] = useState('')
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
   const [order, setOrder] = useState('0')
@@ -44,6 +49,14 @@ export default function HeroSliderPage() {
     loadSlides()
   }, [])
 
+  function handleDriveAdd() {
+    if (!driveUrl) return
+    const converted = convertGoogleDriveUrl(driveUrl)
+    setImage(converted)
+    setDriveUrl('')
+    toast.success('Google Drive image linked!')
+  }
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -62,7 +75,7 @@ export default function HeroSliderPage() {
         setImage(data.url)
         toast.success('Slide banner image uploaded!')
       } else {
-        toast.error(data.error || 'Upload failed')
+        toast.error(data.error || 'Upload failed. Tip: Use Google Drive Link for large files.')
       }
     } catch {
       toast.error('Network error uploading image')
@@ -71,40 +84,63 @@ export default function HeroSliderPage() {
     }
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  function handleEditClick(slide: any) {
+    setEditingId(slide.id)
+    setTitle(slide.title)
+    setSubtitle(slide.subtitle || '')
+    setImage(slide.image)
+    setCtaText(slide.ctaText || '')
+    setCtaUrl(slide.ctaUrl || '')
+    setOrder(slide.order.toString())
+    setShowAddForm(true)
+  }
+
+  function resetForm() {
+    setShowAddForm(false)
+    setEditingId(null)
+    setTitle('')
+    setSubtitle('')
+    setImage('')
+    setDriveUrl('')
+    setCtaText('')
+    setCtaUrl('')
+    setOrder('0')
+  }
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!title || !image) return
+    if (!title || !image) {
+      toast.error('Title and Image are required')
+      return
+    }
 
     setSaving(true)
+    const payload = {
+      id: editingId,
+      title,
+      subtitle,
+      image,
+      ctaText,
+      ctaUrl,
+      order: Number(order),
+    }
+
     try {
       const res = await fetch('/api/admin/hero', {
-        method: 'POST',
+        method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          subtitle,
-          image,
-          ctaText,
-          ctaUrl,
-          order: Number(order),
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (data.ok) {
-        toast.success('Banner slide created successfully!')
-        setShowAddForm(false)
-        setTitle('')
-        setSubtitle('')
-        setImage('')
-        setCtaText('')
-        setCtaUrl('')
-        setOrder('0')
+        toast.success(`Slide ${editingId ? 'updated' : 'created'} successfully!`)
+        resetForm()
         loadSlides()
       } else {
-        toast.error(data.error || 'Failed to create slide')
+        toast.error(data.error || 'Failed to save slide')
       }
     } catch {
-      toast.error('Network error creating slide')
+      toast.error('Network error saving slide')
     } finally {
       setSaving(false)
     }
@@ -137,7 +173,10 @@ export default function HeroSliderPage() {
         action={{
           label: showAddForm ? 'Cancel' : 'Add Slide',
           icon: Plus,
-          onClick: () => setShowAddForm(!showAddForm),
+          onClick: () => {
+            if (showAddForm) resetForm()
+            else setShowAddForm(true)
+          },
         }}
       />
 
@@ -145,12 +184,12 @@ export default function HeroSliderPage() {
         <Card className="border-2 border-primary/20">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Sliders className="h-5 w-5 text-primary" /> Create New Slide
+              <Sliders className="h-5 w-5 text-primary" /> {editingId ? 'Edit Slide' : 'Create New Slide'}
             </CardTitle>
             <CardDescription>Setup full-width banner slides with customized links.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="grid gap-4 sm:grid-cols-2">
+            <form onSubmit={handleSave} className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Main Title / Headline</Label>
                 <Input
@@ -207,38 +246,57 @@ export default function HeroSliderPage() {
               <div className="space-y-2 sm:col-span-2">
                 <Label>Slide Banner Background Image</Label>
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-28 rounded border bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="h-20 w-36 rounded border bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                     {image ? (
                       <img src={image} alt="Slide Preview" className="h-full w-full object-cover" />
                     ) : (
                       <ImageIcon className="h-6 w-6 text-muted-foreground opacity-50" />
                     )}
                   </div>
-                  <div className="flex-1 space-y-2">
-                    <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium gap-2">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="Paste Google Drive Link here..." 
+                        value={driveUrl}
+                        onChange={e => setDriveUrl(e.target.value)}
+                      />
+                      <Button type="button" variant="secondary" onClick={handleDriveAdd} disabled={!driveUrl}>
+                        <LinkIcon className="h-4 w-4 mr-2" /> Apply Link
+                      </Button>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                      <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or Local Upload</span></div>
+                    </div>
+                    <label className="cursor-pointer inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium gap-2 w-full">
                       {uploading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Upload className="h-4 w-4" />
                       )}
-                      {uploading ? 'Uploading…' : 'Upload Banner'}
-                      <input
+                      {uploading ? 'Uploading…' : 'Upload Banner Image'}
+                      {/* <input
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleImageUpload}
                         disabled={uploading}
-                      />
+                      /> - Disabled for Vercel */}
                     </label>
                   </div>
                 </div>
               </div>
 
-              <div className="sm:col-span-2 pt-2">
+              <div className="sm:col-span-2 pt-2 flex gap-2">
                 <Button type="submit" disabled={saving}>
                   {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Slide Banner
+                  {editingId ? 'Save Changes' : 'Create Slide Banner'}
                 </Button>
+                {editingId && (
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancel Edit
+                  </Button>
+                )}
               </div>
             </form>
           </CardContent>
@@ -284,15 +342,26 @@ export default function HeroSliderPage() {
               key: 'actions',
               label: 'Actions',
               render: (r) => (
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  className="h-8 w-8"
-                  onClick={() => handleDelete(r.id)}
-                  title="Delete Slide"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 text-blue-600"
+                    onClick={() => handleEditClick(r)}
+                    title="Edit Slide"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    className="h-8 w-8"
+                    onClick={() => handleDelete(r.id)}
+                    title="Delete Slide"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               ),
             },
           ]}
@@ -302,3 +371,4 @@ export default function HeroSliderPage() {
     </div>
   )
 }
+

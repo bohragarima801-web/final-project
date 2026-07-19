@@ -251,13 +251,13 @@ export default function SettingsPage() {
                         ) : (
                           'Upload'
                         )}
-                        <input
+                        {/* <input
                           type="file"
                           accept="image/*"
                           className="hidden"
                           onChange={handleLogoUpload}
                           disabled={uploadingLogo}
-                        />
+                        /> - Disabled for Vercel */}
                       </label>
                     </div>
                   </div>

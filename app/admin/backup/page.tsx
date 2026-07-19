@@ -272,13 +272,13 @@ export default function BackupPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <input 
+                  {/* <input 
                     type="file" 
                     ref={fileInputRef} 
                     onChange={handleRestore} 
                     accept=".zip" 
                     className="hidden" 
-                  />
+                  /> - Disabled for Vercel */}
                   <Button 
                     onClick={() => fileInputRef.current?.click()}
                     disabled={backingUp || restoring}

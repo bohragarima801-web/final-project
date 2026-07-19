@@ -275,13 +275,13 @@ function ChadhawaManager() {
                         <Upload className="h-4 w-4" />
                       )}
                       {uploading ? 'Uploading…' : 'Upload Image'}
-                      <input
+                      {/* <input
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleImageUpload}
                         disabled={uploading}
-                      />
+                      /> - Disabled for Vercel */}
                     </label>
                   </div>
                 </div>

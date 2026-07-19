@@ -222,13 +222,13 @@ export default function GalleryPage() {
                   <Upload className="h-5 w-5" />
                 )}
                 {uploading ? 'Uploading and Compressing…' : 'Click to Upload Local File (Image/Video)'}
-                <input
+                {/* <input
                   type="file"
                   accept="image/*,video/*"
                   className="hidden"
                   onChange={handleUpload}
                   disabled={uploading}
-                />
+                /> - Disabled for Vercel */}
               </label>
             </div>
           </div>

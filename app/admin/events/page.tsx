@@ -373,13 +373,13 @@ export default function EventsPage() {
                         <Upload className="h-4 w-4" />
                       )}
                       {uploading ? 'Uploading…' : 'Upload Cover'}
-                      <input
+                      {/* <input
                         type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleCoverUpload}
                         disabled={uploading}
-                      />
+                      /> - Disabled for Vercel */}
                     </label>
                     <div className="flex items-center gap-2 mt-2">
                       <Input

@@ -201,13 +201,13 @@ function MediaLibraryManager() {
                   <Upload className="h-4 w-4" />
                 )}
                 {uploading ? 'Uploading…' : 'Upload Asset'}
-                <input
+                {/* <input
                   type="file"
                   accept="image/*,video/*"
                   className="hidden"
                   onChange={handleUpload}
                   disabled={uploading}
-                />
+                /> - Disabled for Vercel */}
               </label>
             </div>
           </div>

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { getAdminSession } from '@/lib/admin-session'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role !== 'admin') {
+    const session = await getAdminSession()
+    if (!session) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -90,8 +90,8 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role !== 'admin') {
+    const session = await getAdminSession()
+    if (!session) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -116,8 +116,8 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const adminUser = await getCurrentUser().catch(() => null)
-    if (!adminUser || adminUser.role !== 'admin') {
+    const session = await getAdminSession()
+    if (!session) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 

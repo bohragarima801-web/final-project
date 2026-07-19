@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { getAdminSession } from '@/lib/admin-session'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const user = await getCurrentUser().catch(() => null)
-    if (!user || user.role !== 'admin') {
+    const session = await getAdminSession()
+    if (!session) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -61,8 +61,8 @@ export async function GET() {
       ? Math.round((revenueLast30d / priorRevenue) * 100) 
       : (revenueLast30d > 0 ? 100 : 0)
 
-    // Calculate total visitors (30d) dynamically
-    const visitors30d = totalUsers * 5 + totalBookings * 15 + totalOrders * 12 + 48
+    // Calculate total visitors (30d) dynamically (No fake data, just count new users)
+    const visitors30d = newUsersLast30d
 
     // Device breakdown (realistic parsing)
     const mobilePercentage = 76
