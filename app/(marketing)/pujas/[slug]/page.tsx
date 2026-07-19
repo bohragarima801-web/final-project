@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { MapPin, Calendar, CheckCircle2, Video, Gift, Sparkles, User, Users, Info, ChevronRight, HelpCircle, Star } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { cn } from '@/lib/utils'
 
 export default function PujaDetailsPage() {
   const { slug } = useParams()
