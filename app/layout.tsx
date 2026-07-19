@@ -5,6 +5,7 @@ import { Providers } from './providers'
 import { siteConfig } from '@/lib/site-config'
 import { Toaster } from 'sonner'
 import { CustomInjector } from '@/components/custom-injector'
+import { TranslationProvider } from '@/components/translation-provider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div id="__dvj_slot" />
           <Toaster position="top-right" richColors closeButton />
           <CustomInjector />
+          <TranslationProvider />
         </Providers>
       </body>
     </html>
