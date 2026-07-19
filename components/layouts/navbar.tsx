@@ -157,29 +157,33 @@ export function Navbar({ user }: { user?: { fullName?: string | null; email: str
         </div>
       </div>
 
-      <div className={cn('lg:hidden border-t border-border/60 bg-background', open ? 'block' : 'hidden')}>
-        <nav className="container py-4 flex flex-col gap-1">
+      <div className={cn('lg:hidden border-t border-amber-100/50 bg-white dark:bg-slate-950 shadow-inner overflow-hidden transition-all duration-300', open ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0')}>
+        <nav className="container py-4 flex flex-col gap-1.5">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary/5">{item.title}</Link>
+              className="px-4 py-3 rounded-xl text-sm font-bold text-slate-700 hover:text-orange-600 dark:text-slate-200 hover:bg-orange-50/50 dark:hover:bg-slate-900/50 transition-colors">
+              {item.title}
+            </Link>
           ))}
-          <Link href="/tools" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary/5">Tools</Link>
-          <Link href="/ask-a-pandit" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-primary/5">Ask a Pandit ✨</Link>
-          <div className="border-t border-border/60 my-2" />
+          <Link href="/tools" onClick={() => setOpen(false)} className="px-4 py-3 rounded-xl text-sm font-bold text-slate-700 hover:text-orange-600 dark:text-slate-200 hover:bg-orange-50/50 dark:hover:bg-slate-900/50 transition-colors">Tools</Link>
+          <Link href="/ask-a-pandit" onClick={() => setOpen(false)} className="px-4 py-3 rounded-xl text-sm font-bold text-orange-600 bg-orange-50/50 dark:bg-slate-900/50 dark:text-orange-500 hover:bg-orange-100 transition-colors">Ask a Pandit ✨</Link>
+          <div className="border-t border-amber-100/50 my-2 mx-4" />
           {user ? (
             <>
-              <Link href="/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-primary">My Dashboard</Link>
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="px-4 py-3 rounded-xl text-sm font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 flex items-center gap-2">
+                <User className="h-4 w-4" /> My Dashboard
+              </Link>
               <form action="/auth/signout" method="post" className="w-full">
-                <button type="submit" onClick={() => setOpen(false)} className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-destructive hover:bg-destructive/5">
+                <button type="submit" onClick={() => setOpen(false)} className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                   Sign Out
                 </button>
               </form>
             </>
           ) : (
-            <>
-              <Link href="/login" className="px-3 py-2 rounded-md text-sm font-medium text-primary">Login</Link>
-              <Link href="/register" className="px-3 py-2 rounded-md text-sm font-medium">Register</Link>
-            </>
+            <div className="grid grid-cols-2 gap-3 px-4 pt-2">
+              <Link href="/login" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 text-center">Login</Link>
+              <Link href="/register" onClick={() => setOpen(false)} className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-red-600 text-center">Register</Link>
+            </div>
           )}
         </nav>
       </div>

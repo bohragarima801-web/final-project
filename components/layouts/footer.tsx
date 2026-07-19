@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useState } from 'react'
 import { Logo } from '@/components/logo'
 import { siteConfig } from '@/lib/site-config'
 import { Facebook, Instagram, Youtube, Twitter, Mail, Phone } from 'lucide-react'
@@ -56,10 +59,39 @@ export function Footer({ mapUrl }: FooterProps) {
         <div className="grid gap-10 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <Logo />
-            <p className="mt-4 text-sm text-muted-foreground max-w-sm">
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 max-w-sm">
               {siteConfig.description}
             </p>
-            <div className="mt-5 space-y-2 text-sm text-muted-foreground">
+            
+            {/* Newsletter Subscription */}
+            <div className="mt-6 bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Subscribe to our Newsletter</h4>
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  const email = (e.target as any).email.value
+                  if(!email) return
+                  try {
+                    const res = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+                    const data = await res.json()
+                    if(data.ok) {
+                      alert('Successfully subscribed!')
+                      ;(e.target as HTMLFormElement).reset()
+                    } else {
+                      alert(data.error || 'Subscription failed')
+                    }
+                  } catch (err) {
+                    alert('Network error')
+                  }
+                }}
+                className="flex gap-2"
+              >
+                <input type="email" name="email" placeholder="Enter your email" required className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                <button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">Subscribe</button>
+              </form>
+            </div>
+
+            <div className="mt-6 space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <div className="flex items-center gap-2"><Mail className="h-4 w-4" /> {siteConfig.contact.email}</div>
               <div className="flex items-center gap-2"><Phone className="h-4 w-4" /> {siteConfig.contact.phone}</div>
             </div>

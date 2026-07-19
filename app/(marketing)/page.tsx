@@ -262,19 +262,28 @@ export default async function HomePage() {
         <div className="rounded-[2.5rem] bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-200/50 p-1 shadow-sm">
           <div className="rounded-[calc(2.5rem-4px)] bg-white p-8 md:p-12 grid md:grid-cols-2 items-center gap-6 text-slate-800">
             <div className="space-y-4">
-              <Badge className="bg-red-600 text-white border-none text-xs flex items-center w-fit gap-1"><Play className="h-3 w-3 fill-white animate-pulse" /> LIVE</Badge>
-              <h2 className="text-3xl font-black text-slate-900">लाइव आरती व दिव्य दर्शन (Live Stream)</h2>
+              <Badge className="bg-red-600 text-white border-none text-xs flex items-center w-fit gap-1"><Play className="h-3 w-3 fill-white animate-pulse" /> LIVE STREAM</Badge>
+              <h2 className="text-3xl font-black text-slate-900">लाइव आरती व दिव्य दर्शन</h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                भारत के प्रमुख मंदिरों से साक्षात दैनिक आरती का हिस्सा बनें। हर दिन, हर पर्व पर सीधे गर्भगृह से लाइव दर्शन।
+                भारत के प्रमुख मंदिरों से साक्षात दैनिक आरती का हिस्सा बनें। हर दिन, हर पर्व पर सीधे गर्भगृह से लाइव दर्शन। अभी काशी विश्वनाथ मंगला आरती लाइव चल रही है।
               </p>
-              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold" asChild><Link href="/events">लाइव जुड़ें (Watch Live)</Link></Button>
+              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold" asChild><Link href="/events">पूर्ण दर्शन (Watch Full)</Link></Button>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[1,2,3,4,5,6].map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-amber-50/50 overflow-hidden border border-amber-100">
-                  <img src={`https://images.unsplash.com/photo-15${80+i}88580000645-4562a6d2c839?w=200`} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" alt="" />
-                </div>
-              ))}
+            
+            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-amber-200/50 bg-black group">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed/5hdwR25nNvw?autoplay=1&mute=1&loop=1&playlist=5hdwR25nNvw&controls=0" 
+                title="Kashi Vishwanath Live Aarti" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowFullScreen
+                className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+              ></iframe>
+              <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded animate-pulse shadow-lg flex items-center gap-1 z-10">
+                <span className="h-1.5 w-1.5 rounded-full bg-white"></span> LIVE
+              </div>
             </div>
           </div>
         </div>
