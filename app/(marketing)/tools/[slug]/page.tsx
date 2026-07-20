@@ -87,8 +87,8 @@ export default async function ToolViewPage({ params }: { params: { slug: string 
             <h2 className="text-2xl font-bold text-slate-800">Premium Access Required</h2>
             <p className="text-muted-foreground max-w-md">
               {trialExpired 
-                ? \`Your \${tool.trialDays}-day free trial has expired for this IP address. To continue using \${tool.name}, please activate premium access.\` 
-                : \`This is a premium tool. Please activate it to continue.\`}
+                ? `Your ${tool.trialDays}-day free trial has expired for this IP address. To continue using ${tool.name}, please activate premium access.` 
+                : `This is a premium tool. Please activate it to continue.`}
             </p>
             <Button size="lg" className="mt-4 bg-orange-600 hover:bg-orange-700">
               Activate for ₹{Number(tool.price)}
