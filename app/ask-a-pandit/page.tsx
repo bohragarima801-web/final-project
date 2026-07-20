@@ -16,23 +16,11 @@ export default function AskPanditPage() {
             </h1>
             <p className="mt-2 text-muted-foreground">Get instant spiritual guidance in Hindi, English or Hinglish.</p>
           </div>
-          <AiChat
-            mode="pandit"
-            emptyTitle="🙏 प्रणाम"
-            emptyDescription="Puja, mantras, festivals, astrology — kuchh bhi poochho."
-            placeholder="e.g. Ekadashi vrat kaise karein?"
-            suggestions={[
-              'Sawan Somvar puja kaise karein?',
-              'Ganesh Chaturthi ka significance kya hai?',
-              'Meditation shuru kaise karein?',
-              'Rudrabhishek ke fayde kya hain?',
-              'Kundali dosh nivaran ke upay',
-            ]}
-            streamHeight="h-[560px]"
-          />
-          <p className="mt-4 text-xs text-center text-muted-foreground">
-            ⚠️ AI-generated guidance. For important rituals, please consult a qualified Pandit.
-          </p>
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border border-amber-200/50 rounded-3xl p-8 md:p-12 shadow-sm text-center">
+            <p className="text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              हरि ओम्! 🙏 दिव्ययज्ञम् के डिजिटल पंडित कक्ष में आपका स्वागत है। वर्तमान में हमारी एआई संवाद सेवा तकनीकी रखरखाव के अंतर्गत है। यदि आपका कोई प्रश्न पूजा, अनुष्ठान या संकल्प से संबंधित है, तो आप नीचे दिए गए 'सहायता' (Support) विकल्प से हमारे मुख्य पंडितों और सहायता टीम से सीधे संपर्क कर सकते हैं। कल्याणम अस्तु! 🌸
+            </p>
+          </div>
         </div>
       </main>
       <Footer />

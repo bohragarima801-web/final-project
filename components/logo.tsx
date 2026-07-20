@@ -32,11 +32,11 @@ export function Logo({ className, showText = true }: { className?: string; showT
         </div>
       )}
       {showText && (
-        <div className="flex flex-col justify-center -space-y-0.5 leading-none">
-          <span className="text-[15px] font-black text-om-gradient tracking-wide" style={{ fontFamily: "'Outfit', 'Noto Sans Devanagari', sans-serif" }}>
+        <div className="flex flex-col justify-center">
+          <span className="text-[16px] font-black text-om-gradient tracking-wide leading-tight py-0.5" style={{ fontFamily: "'Outfit', 'Noto Sans Devanagari', sans-serif" }}>
             {siteName}
           </span>
-          <span className="text-[9px] text-slate-500 font-semibold tracking-widest uppercase">
+          <span className="text-[9px] text-slate-500 font-semibold tracking-widest uppercase mt-[-2px]">
             Sanatan Seva
           </span>
         </div>
